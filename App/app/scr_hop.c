@@ -8,6 +8,7 @@
 #include "driver/bk4819-regs.h"
 #include "driver/system.h"
 #include "functions.h"
+#include "radio.h"
 #include "scheduler.h"
 
 #define HOP_MAGIC      0x4847u   /* "GH" */
@@ -20,6 +21,8 @@
  * RX FIFO (threshold 4 words, REG_5E 0x3204) reports as "almost full".
  * 1200 bps -> 20/3 ms per byte. */
 #define HOP_ANCHOR_MS  (((16u + 4u + 8u) * 20u + 1u) / 3u)
+/* Whole burst on air: preamble + sync + 8 data + 2 CRC bytes. */
+#define HOP_BURST_MS   (((16u + 4u + 8u + 2u) * 20u + 2u) / 3u)
 
 SCR_HOP_State_t gScrHop __attribute__((section(".noncacheable")));
 
@@ -74,17 +77,22 @@ void SCR_HOP_TxBurst(void)
     BK4819_EnterTxMute();
     BK4819_DisableScramble();
     BK4819_SetupAircopy();
+    SYSTEM_DelayMs(30);                            // same settle as Messenger TX
     BK4819_WriteRegister(BK4819_REG_5D, (sizeof(words) - 1u) << 8);
     BK4819_WriteRegister(BK4819_REG_3F, BK4819_REG_3F_FSK_TX_FINISHED);
+    BK4819_WriteRegister(BK4819_REG_02, 0);
     BK4819_WriteRegister(BK4819_REG_59, 0x80F8);   // clear TX FIFO, 16-byte preamble
     BK4819_WriteRegister(BK4819_REG_59, 0x00F8);
     for (uint8_t i = 0; i < 4u; i++)
         BK4819_WriteRegister(BK4819_REG_5F, words[i]);
+    SYSTEM_DelayMs(20);
 
     BK4819_WriteRegister(BK4819_REG_59, 0x28F8);   // start FSK TX
     const uint32_t t_start = SCHEDULER_GetMs();
 
-    for (uint8_t n = 0; n < 80u && !(BK4819_ReadRegister(BK4819_REG_0C) & 1u); n++)
+    /* Never stop before the whole burst is on air, whatever REG_0C says. */
+    while (SCHEDULER_GetMs() - t_start < HOP_BURST_MS) {}
+    for (uint8_t n = 0; n < 20u && !(BK4819_ReadRegister(BK4819_REG_0C) & 1u); n++)
         SYSTEM_DelayMs(5);
 
     /* Back to voice without BK4819_ResetFSK(): it would idle REG_30 (TX off). */
@@ -137,7 +145,8 @@ void SCR_HOP_Tick(void)
         return;
 
     /* RX: the burst can arrive before the squelch state machine reports RX. */
-    if (gScrHop.rx ? (!FUNCTION_IsRx() && elapsed() > 200u)
+    if (gScrHop.rx ? ((!FUNCTION_IsRx() && elapsed() > 200u) ||
+                      gRxVfo->SCRAMBLING_TYPE != SCRAMBLE_TYPE_HOP)   // DW moved on
                    : gCurrentFunction != FUNCTION_TRANSMIT) {
         SCR_HOP_Stop();
         return;
