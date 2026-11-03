@@ -567,6 +567,9 @@ const t_sidefunction gSubMenu_SIDEFUNCTIONS[] =
 #ifdef ENABLE_GOGUFW_RF_LOG
     {"RF LOG",          ACTION_OPT_RF_LOG},
 #endif
+#ifdef ENABLE_GOGUFW_SCRAMBLER
+    {"SCRAMBLE",        ACTION_OPT_SCRAMBLE},
+#endif
 };
 
 const uint8_t gSubMenu_SIDEFUNCTIONS_size = ARRAY_SIZE(gSubMenu_SIDEFUNCTIONS);

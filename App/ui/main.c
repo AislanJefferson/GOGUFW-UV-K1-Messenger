@@ -63,7 +63,9 @@ center_line_t center_line = CENTER_LINE_NONE;
 enum
 {
     VFO_CLASSIC_BANDWIDTH_X  = 88,
-    VFO_CLASSIC_FSK_ICON_X   = 109,
+    VFO_CLASSIC_SCR_ICON_X   = 104,  // after "NAR+" (ends at x=102)
+    VFO_CLASSIC_FSK_ICON_X   = 111,
+    VFO_TINY_SCR_ICON_X      = 97,   // after "N+" (ends at x=93)
     VFO_TINY_FSK_ICON_X      = 106,
     VFO_ROGER_ICON_X         = 121,
 };
@@ -2403,6 +2405,13 @@ void UI_DisplayMain(void)
             const uint8_t fskIconX = gSetting_set_gui
                                    ? VFO_TINY_FSK_ICON_X
                                    : VFO_CLASSIC_FSK_ICON_X;
+
+#ifdef ENABLE_GOGUFW_SCRAMBLER
+            if (vfoInfo->SCRAMBLING_TYPE > 0 && gSetting_ScrambleEnable)
+                memcpy(policyLine + (gSetting_set_gui ? VFO_TINY_SCR_ICON_X
+                                                      : VFO_CLASSIC_SCR_ICON_X),
+                       BITMAP_Scrambler, sizeof(BITMAP_Scrambler));
+#endif
 
             /* FSK and Roger policy flags exist only on memory channels. */
             if (IS_MR_CHANNEL(vfoInfo->CHANNEL_SAVE))

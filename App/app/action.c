@@ -124,6 +124,29 @@ static void ACTION_OpenRfLog(void)
 }
 #endif
 
+#ifdef ENABLE_GOGUFW_SCRAMBLER
+/* Toggle the scrambler of the current channel/VFO. Turning it off remembers
+ * the type so the next press restores it; defaults to the first tone. */
+static uint8_t gScrambleLastType = 1;
+
+static void ACTION_Scramble(void)
+{
+    if (gTxVfo->SCRAMBLING_TYPE > 0) {
+        gScrambleLastType       = gTxVfo->SCRAMBLING_TYPE;
+        gTxVfo->SCRAMBLING_TYPE = 0;
+    } else {
+        gTxVfo->SCRAMBLING_TYPE = gScrambleLastType;
+    }
+
+    gRequestSaveChannel   = 1;
+    gRequestDisplayScreen = gScreenToDisplay;
+
+#ifdef ENABLE_VOICE
+    gAnotherVoiceID = gTxVfo->SCRAMBLING_TYPE ? VOICE_ID_SCRAMBLER_ON : VOICE_ID_SCRAMBLER_OFF;
+#endif
+}
+#endif
+
 void (*const action_opt_table[ACTION_OPT_LEN])(void) = {
     [ACTION_OPT_NONE] = &FUNCTION_NOP,
     [ACTION_OPT_POWER] = &ACTION_Power,
@@ -211,9 +234,13 @@ void (*const action_opt_table[ACTION_OPT_LEN])(void) = {
 #ifdef ENABLE_GOGUFW_RF_LOG
     [ACTION_OPT_RF_LOG]       = &ACTION_OpenRfLog,
 #endif
+#ifdef ENABLE_GOGUFW_SCRAMBLER
+    [ACTION_OPT_SCRAMBLE]     = &ACTION_Scramble,
+#endif
 };
 
 static_assert(ARRAY_SIZE(action_opt_table) == ACTION_OPT_LEN);
+static_assert(ACTION_OPT_SCRAMBLE == 28);
 static_assert(ACTION_OPT_BEAM == 23);
 static_assert(ACTION_OPT_MESSENGER == 24);
 static_assert(ACTION_OPT_HEARD == 25);
@@ -398,6 +425,9 @@ static bool ACTION_IsBlockedInFM(uint8_t action)
 #endif
 #ifdef ENABLE_FEAT_F4HWN_BEAM
         case ACTION_OPT_BEAM:
+#endif
+#ifdef ENABLE_GOGUFW_SCRAMBLER
+        case ACTION_OPT_SCRAMBLE:
 #endif
             return true;
 

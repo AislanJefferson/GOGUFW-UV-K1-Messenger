@@ -827,7 +827,8 @@ KEYACTIONS_LIST = ["NONE",
                    "MESSENGER",
                    "HEARD",
                    "CALLTX",
-                   "RF LOG"
+                   "RF LOG",
+                   "SCRAMBLE"
                   ]
 
 # Keep BEAM at its historical numeric slot so later GOGUFW actions retain

@@ -193,6 +193,17 @@ const uint8_t BITMAP_VFO_Lock[7] =
     0b00111100,
 };
 
+/* Double wave (approx. sign): the channel's voice scrambler is on. */
+const uint8_t BITMAP_Scrambler[6] =
+{
+    0b00100100,
+    0b00010010,
+    0b00010010,
+    0b00100100,
+    0b00100100,
+    0b00010010,
+};
+
 /* RSS-style radio waves: this memory channel permits FSK transmission. */
 const uint8_t BITMAP_FskTx[8] =
 {

@@ -3148,7 +3148,7 @@ static void ProcessKey(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 
                     BK4819_ExitDTMF_TX(false);
 
-#ifndef ENABLE_FEAT_F4HWN
+#if !defined(ENABLE_FEAT_F4HWN) || defined(ENABLE_GOGUFW_SCRAMBLER)
                     if (gCurrentVfo->SCRAMBLING_TYPE == 0 || !gSetting_ScrambleEnable)
                         BK4819_DisableScramble();
                     else
