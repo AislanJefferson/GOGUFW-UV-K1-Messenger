@@ -1,5 +1,10 @@
 #include <string.h>
 #include "app/messenger_packet.h"
+#include "helper/crypto.h"
+#ifdef ENABLE_GOGUFW_CRYPTO
+    #include "driver/bk4819.h"
+    #include "scheduler.h"
+#endif
 
 static void put_u16_le(uint8_t *p, uint16_t v)
 {
@@ -27,6 +32,42 @@ uint16_t MSG_PACKET_Crc16(const uint8_t *data, uint16_t len)
     }
     return crc;
 }
+
+#ifdef ENABLE_GOGUFW_CRYPTO
+/* Wire layout of an encrypted TEXT: bytes 64..67 salt, 68..69 key-check,
+ * payload 28..63 XOR XTEA-CTR(salt, id). Nonce = salt || id || block. */
+static uint16_t text_key_check(uint32_t salt, uint32_t n1)
+{
+    return (uint16_t)CRYPTO_Word(salt, n1 | 0xFFFFu);
+}
+
+static void encrypt_text(uint8_t *out, uint16_t id)
+{
+    const uint32_t n1   = (uint32_t)id << 16;
+    const uint32_t salt = CRYPTO_Word(((uint32_t)BK4819_ReadRegister(BK4819_REG_67) << 16) ^
+                                      SCHEDULER_GetMs(), n1);
+
+    out[5] = MSG_PKT_TYPE_TEXT_ENC;
+    memcpy(&out[64], &salt, sizeof(salt));
+    put_u16_le(&out[68], text_key_check(salt, n1));
+    CRYPTO_Ctr(salt, n1, &out[28], MSG_PKT_MAX_PAYLOAD);
+}
+
+bool MSG_PACKET_DecryptText(uint8_t *bytes)
+{
+    uint32_t salt;
+    const uint32_t n1 = (uint32_t)get_u16_le(&bytes[7]) << 16;
+
+    if (!CRYPTO_HasKey())
+        return false;
+    memcpy(&salt, &bytes[64], sizeof(salt));
+    if (get_u16_le(&bytes[68]) != text_key_check(salt, n1))
+        return false;
+    CRYPTO_Ctr(salt, n1, &bytes[28], MSG_PKT_MAX_PAYLOAD);
+    bytes[5] = MSG_PKT_TYPE_TEXT;
+    return true;
+}
+#endif
 
 static void copy_field(uint8_t *dst, uint8_t dst_len, const char *src)
 {
@@ -58,6 +99,11 @@ uint8_t MSG_PACKET_BuildText(uint8_t *out, uint8_t out_len, uint16_t id, const c
         memcpy(&out[28], text, text_len);
     }
     out[27] = text_len;
+
+#ifdef ENABLE_GOGUFW_CRYPTO
+    if (CRYPTO_HasKey())
+        encrypt_text(out, id);
+#endif
 
     uint16_t crc = MSG_PACKET_Crc16(out, MSG_PKT_WIRE_LEN - 2u);
     put_u16_le(&out[MSG_PKT_WIRE_LEN - 2u], crc);

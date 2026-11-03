@@ -50,6 +50,8 @@
 #include "driver/systick.h"
 #include "driver/st7565.h"
 #include "driver/py25q16.h"
+#include "helper/crypto.h"
+#include "app/scr_hop.h"
 #ifdef ENABLE_FEAT_F4HWN_MULTIBOOT
     #include "driver/mb_flash.h"
     #include "ui/multiboot.h"
@@ -114,6 +116,11 @@ void Main(void)
     BOARD_ADC_GetBatteryInfo(&gBatteryCurrentVoltage, &gBatteryCurrent);
 
     SETTINGS_InitEEPROM();
+
+#ifdef ENABLE_GOGUFW_CRYPTO
+    CRYPTO_Reload();
+    SCR_HOP_Reset();
+#endif
 
     #ifdef ENABLE_FEAT_F4HWN
         gDW = gEeprom.DUAL_WATCH;

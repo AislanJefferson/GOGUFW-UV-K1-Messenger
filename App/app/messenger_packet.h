@@ -15,6 +15,9 @@
 #define MSG_PKT_TYPE_PING       3u
 #define MSG_PKT_TYPE_PONG       4u
 #define MSG_PKT_TYPE_WAKE       5u
+/* TEXT with an XTEA-CTR payload (shared CryKey). Older firmware rejects
+ * unknown types, so it never shows ciphertext or ACKs it. */
+#define MSG_PKT_TYPE_TEXT_ENC   6u
 #define MSG_PKT_TO_ALL          "ALL"
 #define MSG_PKT_WIRE_LEN        94u
 #define MSG_PKT_MAX_PAYLOAD     MSG_TEXT_LEN
@@ -37,6 +40,9 @@ uint8_t MSG_PACKET_BuildAck(uint8_t *out, uint8_t out_len, uint16_t id, const ch
 uint8_t MSG_PACKET_BuildPing(uint8_t *out, uint8_t out_len, uint16_t id, const char *from);
 uint8_t MSG_PACKET_BuildPong(uint8_t *out, uint8_t out_len, uint16_t id, const char *from, const char *to, uint16_t battery_cv);
 uint8_t MSG_PACKET_BuildWake(uint8_t *out, uint8_t out_len, uint16_t id, const char *from);
+/* Decrypt a received TEXT_ENC frame in place (turns it into TEXT). False when
+ * there is no key or the key-check does not match. */
+bool MSG_PACKET_DecryptText(uint8_t *bytes);
 bool MSG_PACKET_Parse(const uint8_t *data, uint8_t len, MSG_Packet_t *pkt);
 bool MSG_PACKET_SelfTest(void);
 

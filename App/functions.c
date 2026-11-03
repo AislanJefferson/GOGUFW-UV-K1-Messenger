@@ -38,6 +38,10 @@
 #include "helper/battery.h"
 #include "misc.h"
 #include "radio.h"
+#include "app/scr_hop.h"
+#ifdef ENABLE_GOGUFW_CRYPTO
+    #include "app/main.h"
+#endif
 #include "settings.h"
 #include "ui/status.h"
 #include "ui/ui.h"
@@ -223,13 +227,12 @@ void FUNCTION_Transmit()
     }
 #endif
 
-#if defined(ENABLE_FEAT_F4HWN) && !defined(ENABLE_GOGUFW_SCRAMBLER)
-    BK4819_DisableScramble();
-#else
-    if (gCurrentVfo->SCRAMBLING_TYPE > 0 && gSetting_ScrambleEnable)
-        BK4819_EnableScramble(gCurrentVfo->SCRAMBLING_TYPE - 1);
-    else
-        BK4819_DisableScramble();
+    RADIO_ApplyScramble(gCurrentVfo, true);
+#ifdef ENABLE_GOGUFW_CRYPTO
+    /* HOP: send the seed burst (NO_FSK_TX does not apply: HOP needs it). */
+    if (gCurrentVfo->SCRAMBLING_TYPE == SCRAMBLE_TYPE_HOP && gSetting_ScrambleEnable &&
+        !gCallToneTxActive)
+        SCR_HOP_TxBurst();
 #endif
 
     if (gSetting_backlight_on_tx_rx & BACKLIGHT_ON_TR_TX) {

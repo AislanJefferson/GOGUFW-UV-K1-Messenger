@@ -45,6 +45,7 @@
 #include "radio.h"
 #include "settings.h"
 #include "ui/menu.h"
+#include "app/scr_hop.h"
 
 VFO_Info_t    *gTxVfo;
 VFO_Info_t    *gRxVfo;
@@ -763,6 +764,28 @@ BK4819_FilterBandwidth_t RADIO_GetAMFilterBandwidth(const VFO_Info_t *pVfo)
     return (pVfo->CHANNEL_BANDWIDTH == BANDWIDTH_WIDE) ? BK4819_FILTER_BW_WIDE : BK4819_FILTER_BW_AM;
 }
 
+void RADIO_ApplyScramble(const VFO_Info_t *pVfo, bool tx)
+{
+#if !defined(ENABLE_FEAT_F4HWN) || defined(ENABLE_GOGUFW_SCRAMBLER)
+    const uint8_t type = pVfo->SCRAMBLING_TYPE;
+
+    if (type == 0 || !gSetting_ScrambleEnable) {
+        BK4819_DisableScramble();
+        return;
+    }
+#ifdef ENABLE_GOGUFW_CRYPTO
+    if (type == SCRAMBLE_TYPE_HOP) {
+        SCR_HOP_Apply(tx);
+        return;
+    }
+#endif
+    BK4819_EnableScramble(type - 1);
+#else
+    BK4819_DisableScramble();
+#endif
+    (void)tx;
+}
+
 void RADIO_SetupRegisters(bool switchToForeground)
 {
     BK4819_FilterBandwidth_t Bandwidth = gRxVfo->CHANNEL_BANDWIDTH;
@@ -895,14 +918,7 @@ void RADIO_SetupRegisters(bool switchToForeground)
                     break;
             }
 
-#if !defined(ENABLE_FEAT_F4HWN) || defined(ENABLE_GOGUFW_SCRAMBLER)
-            if (gRxVfo->SCRAMBLING_TYPE > 0 && gSetting_ScrambleEnable)
-                BK4819_EnableScramble(gRxVfo->SCRAMBLING_TYPE - 1);
-            else
-                BK4819_DisableScramble();
-#else
-                BK4819_DisableScramble();
-#endif
+            RADIO_ApplyScramble(gRxVfo, false);
         }
     }
     #ifdef ENABLE_NOAA

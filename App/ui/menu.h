@@ -192,6 +192,9 @@ enum
     /* Keep existing F4HWN/Messenger menu IDs stable. */
     MENU_SCR,
 #endif
+#if defined(ENABLE_FEAT_F4HWN) && defined(ENABLE_GOGUFW_SCRAMBLER) && defined(ENABLE_MESSENGER)
+    MENU_CRY_KEY,   // shared passphrase: encrypted Messenger + HOP scrambler
+#endif
 };
 
 #ifdef ENABLE_FEAT_F4HWN_MENU_CAT
@@ -287,7 +290,11 @@ extern const char        gSubMenu_BAT_TXT[3][8];
 extern const char        gSubMenu_BATTYP[5][12];
 
 #if !defined(ENABLE_FEAT_F4HWN) || defined(ENABLE_GOGUFW_SCRAMBLER)
+#if defined(ENABLE_FEAT_F4HWN) && defined(ENABLE_GOGUFW_SCRAMBLER) && defined(ENABLE_MESSENGER)
+    extern const char        gSubMenu_SCRAMBLER[12][7];
+#else
     extern const char        gSubMenu_SCRAMBLER[11][7];
+#endif
 #endif
 
 typedef struct {char* name; uint8_t id;} t_sidefunction;

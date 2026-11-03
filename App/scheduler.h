@@ -31,5 +31,6 @@ static void inline SCHEDULER_Disable()
 #ifdef ENABLE_FEAT_F4HWN_OVERLAY_APPS
 uint32_t SCHEDULER_GetTick10ms(void);
 #endif
+uint32_t SCHEDULER_GetMs(void);
 
 #endif

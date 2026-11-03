@@ -264,7 +264,10 @@ enable_feature(ENABLE_FEAT_F4HWN_RESCUE_OPS)
 enable_feature(ENABLE_FEAT_F4HWN_VOL)
 enable_feature(ENABLE_FEAT_F4HWN_AUDIO)
 enable_feature(ENABLE_FEAT_F4HWN_RESET_VFO)
-enable_feature(ENABLE_GOGUFW_SCRAMBLER)
+enable_feature(ENABLE_GOGUFW_SCRAMBLER
+    helper/crypto.c
+    app/scr_hop.c
+)
 enable_feature(ENABLE_FEAT_F4HWN_DEBUG)
 enable_feature(ENABLE_FEAT_F4HWN_MEM)
 enable_feature(ENABLE_FEAT_F4HWN_ACTION_PICKER)

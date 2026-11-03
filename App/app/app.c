@@ -91,6 +91,7 @@
 #include "ui/status.h"
 #include "ui/ui.h"
 #include "ui/welcome.h"
+#include "app/scr_hop.h"
 
 #ifdef ENABLE_FEAT_F4HWN_SCREENSHOT
     #include "screenshot.h"
@@ -1483,6 +1484,9 @@ static void APP_ModalRadioServiceInternal(bool updateFunction)
 
     if (gCurrentFunction != FUNCTION_POWER_SAVE || !gRxIdleMode)
         CheckRadioInterrupts();
+#ifdef ENABLE_GOGUFW_CRYPTO
+    SCR_HOP_Tick();
+#endif
 
     /* The Apps menu is only a modal UI: keep the complete foreground RX state
      * machine alive so an ended reception closes its timer/status indication.
@@ -1518,6 +1522,9 @@ void APP_OverlayRadioService(void)
 
 void APP_EndTransmission(void)
 {
+#ifdef ENABLE_GOGUFW_CRYPTO
+    SCR_HOP_Stop();
+#endif
     // back to RX mode
     RADIO_SendEndOfTransmission();
 
@@ -2124,6 +2131,9 @@ void APP_TimeSlice10ms(void)
         gActionPickerKey = 0;
         gUpdateDisplay = true;
     }
+#endif
+#ifdef ENABLE_GOGUFW_CRYPTO
+        SCR_HOP_Tick();
 #endif
 #ifdef ENABLE_MESSENGER
         MSG_RF_Tick10ms();
@@ -3148,14 +3158,7 @@ static void ProcessKey(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 
                     BK4819_ExitDTMF_TX(false);
 
-#if !defined(ENABLE_FEAT_F4HWN) || defined(ENABLE_GOGUFW_SCRAMBLER)
-                    if (gCurrentVfo->SCRAMBLING_TYPE == 0 || !gSetting_ScrambleEnable)
-                        BK4819_DisableScramble();
-                    else
-                        BK4819_EnableScramble(gCurrentVfo->SCRAMBLING_TYPE - 1);
-#else
-                        BK4819_DisableScramble();
-#endif
+                    RADIO_ApplyScramble(gCurrentVfo, true);
                 }
             }
             else {

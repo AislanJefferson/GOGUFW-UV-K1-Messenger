@@ -274,6 +274,7 @@ struct {
 u8 ggfw_call_tone;
 u8 ggfw_call_vol;
 u8 ggfw_rng_rsp;
+char ggfw_crypto_key[16];
 
 // --------------------
 
@@ -543,7 +544,7 @@ SET_OFF_ON_LIST = ["OFF", "ON"]
 # Per-channel BK4819 voice inversion frequency.  The firmware stores OFF as
 # zero and 2600..3500 Hz as values 1..10 in the final channel-record byte.
 SCRAMBLER_LIST = ["OFF", "2600Hz", "2700Hz", "2800Hz", "2900Hz", "3000Hz",
-                  "3100Hz", "3200Hz", "3300Hz", "3400Hz", "3500Hz"]
+                  "3100Hz", "3200Hz", "3300Hz", "3400Hz", "3500Hz", "HOP"]
 
 # SET_lck f4hwn
 SET_LCK_LIST = ["KEYS", "KEYS+PTT"]
@@ -2170,6 +2171,9 @@ class UVK5RadioEgzumer(chirp_common.CloneModeRadio):
                     _mem.ggfw_call_vol = int(element.value)
                 elif elname == "ggfw_rng_rsp":
                     _mem.ggfw_rng_rsp = int(element.value)
+                elif elname == "ggfw_crypto_key":
+                    key = _ggfw_clean_text(element.value, 10, GGFW_DRAFT_CHARS)
+                    _mem.ggfw_crypto_key = (key + "\x00" * 16)[:16]
                 elif elname == "ggfw_msg_callsign":
                     _mem.ggfw_msg_callsign = _ggfw_char_to_slot(element.value, 9, GGFW_CALLSIGN_CHARS)
                 elif elname.startswith("ggfw_msg_draft_"):
@@ -3169,6 +3173,13 @@ class UVK5RadioEgzumer(chirp_common.CloneModeRadio):
 
         val = RadioSettingValueList(GGFW_MSG_OFF_ON_LIST, GGFW_MSG_OFF_ON_LIST[int(_mem.ggfw_rng_rsp)])
         ggfw.append(RadioSetting("ggfw_rng_rsp", "RngRsp", val))
+
+        current_key = _ggfw_char_from_slot(_mem.ggfw_crypto_key)[:10]
+        val = RadioSettingValueString(0, 10, current_key, autopad=False)
+        val.set_charset(GGFW_DRAFT_CHARS)
+        rs = RadioSetting("ggfw_crypto_key", "CryKey", val)
+        rs.set_doc('Shared passphrase (up to 10 characters) for encrypted Messenger text and the HOP voice scrambler. Leave empty to disable.')
+        ggfw.append(rs)
 
         current_callsign = _ggfw_char_from_slot(_mem.ggfw_msg_callsign)
         val = RadioSettingValueString(0, 6, current_callsign)

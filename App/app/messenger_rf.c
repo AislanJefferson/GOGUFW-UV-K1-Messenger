@@ -15,6 +15,9 @@
 #include "functions.h"
 #include "frequencies.h"
 #include "helper/battery.h"
+#include "helper/crypto.h"
+#include "app/scr_hop.h"
+#include "scheduler.h"
 #include "misc.h"
 #include "radio.h"
 #include "settings.h"
@@ -1501,15 +1504,21 @@ static bool parse_aircopy_native_packet(MSG_Packet_t *pkt)
         if (bytes[0] != MSG_PKT_MAGIC0 || bytes[1] != MSG_PKT_MAGIC1 ||
             bytes[2] != MSG_PKT_MAGIC2 || bytes[3] != MSG_PKT_MAGIC3) continue;
         if (bytes[4] != MSG_PKT_VERSION) continue;
-        if (bytes[5] != MSG_PKT_TYPE_TEXT && bytes[5] != MSG_PKT_TYPE_ACK &&
-            bytes[5] != MSG_PKT_TYPE_PING && bytes[5] != MSG_PKT_TYPE_PONG &&
-            bytes[5] != MSG_PKT_TYPE_WAKE) continue;
+#ifdef ENABLE_GOGUFW_CRYPTO
+        if (bytes[5] == 0u || bytes[5] > MSG_PKT_TYPE_TEXT_ENC) continue;
+#else
+        if (bytes[5] == 0u || bytes[5] > MSG_PKT_TYPE_WAKE) continue;
+#endif
         if (bytes[27] > MSG_RF_TEXT_LIMIT) continue;
 
         const uint16_t got = (uint16_t)bytes[MSG_PKT_WIRE_LEN - 2u] |
                              ((uint16_t)bytes[MSG_PKT_WIRE_LEN - 1u] << 8);
         const uint16_t want = MSG_PACKET_Crc16(bytes, MSG_PKT_WIRE_LEN - 2u);
         if (got != want) continue;
+#ifdef ENABLE_GOGUFW_CRYPTO
+        /* Wrong or missing CryKey: drop silently (no Inbox, no ACK). */
+        if (bytes[5] == MSG_PKT_TYPE_TEXT_ENC && !MSG_PACKET_DecryptText(bytes)) continue;
+#endif
 
         memset(pkt, 0, sizeof(*pkt));
         pkt->type = bytes[5];
@@ -1815,7 +1824,17 @@ void MSG_RF_OnRadioInterrupt(uint16_t status)
             gFSKWriteIndex = 0;
             memset(g_FSK_Buffer, 0, sizeof(g_FSK_Buffer));
         }
-        if (fsk_sync) MSG_RF_FskSyncHoldStart(gEeprom.RX_VFO);
+        if (fsk_sync) {
+#ifdef ENABLE_GOGUFW_CRYPTO
+            /* HOP channel: the frame may be a seed burst. Defer the Messenger
+             * VFO hold until the first FIFO words tell which one it is. */
+            if (gRxVfo->SCRAMBLING_TYPE == SCRAMBLE_TYPE_HOP) {
+                gScrHop.rx_wait = 1;
+                gScrHop.stamp   = SCHEDULER_GetMs();
+            } else
+#endif
+            MSG_RF_FskSyncHoldStart(gEeprom.RX_VFO);
+        }
         s_rx_capture_active = true;
         s_rx_stale_ticks = MSG_RF_RX_STALE_TICKS;
         MSG_RF_NarrowLockBegin();
@@ -1831,6 +1850,24 @@ void MSG_RF_OnRadioInterrupt(uint16_t status)
         s_rx_stale_ticks = MSG_RF_RX_STALE_TICKS;
         MSG_RF_NarrowLockBegin();
         MSG_RF_MuteFskAudio();
+#ifdef ENABLE_GOGUFW_CRYPTO
+        if (gScrHop.rx_wait) {
+            gScrHop.rx_wait = 0;
+            if (s_rx_words == 4u && SCR_HOP_RxStart(g_FSK_Buffer, gScrHop.stamp)) {
+                /* Seed burst: drop the capture and give the audio back. */
+                s_rx_capture_active = false;
+                s_rx_words = 0;
+                gFSKWriteIndex = 0;
+                MSG_RF_KeepFskRxEnabled();
+                MSG_RF_NarrowLockEnd();
+                SYSTEM_DelayMs(20);   // burst CRC tail stays muted
+                MSG_RF_RestoreFskAudioMute();
+                return;
+            }
+            if (g_FSK_Buffer[0] == 0xABCDu)
+                MSG_RF_FskSyncHoldStart(gEeprom.RX_VFO);
+        }
+#endif
     }
 
     if (rx_finished) {
@@ -1841,6 +1878,22 @@ void MSG_RF_OnRadioInterrupt(uint16_t status)
         try_store_rx_packet();
         if (s_rx_capture_active) MSG_RF_FinishRxAttempt(false);
     }
+
+#ifdef ENABLE_GOGUFW_CRYPTO
+    /* Waiting for the burst's first FIFO IRQ: spin on the IRQ line (REG_0C)
+     * without touching REG_02, so CheckRadioInterrupts() still handles every
+     * status bit, and stamp the time to ~1 ms for the HOP slot clock. */
+    if (gScrHop.rx_wait) {
+        const uint32_t t = SCHEDULER_GetMs();
+        while (!(BK4819_ReadRegister(BK4819_REG_0C) & 1u)) {
+            if (SCHEDULER_GetMs() - t > 80u) {
+                gScrHop.rx_wait = 0;
+                return;
+            }
+        }
+        gScrHop.stamp = SCHEDULER_GetMs();
+    }
+#endif
 #else
     (void)status;
 #endif

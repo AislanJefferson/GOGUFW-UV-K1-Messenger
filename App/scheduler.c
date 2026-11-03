@@ -51,6 +51,22 @@ uint32_t SCHEDULER_GetTick10ms(void)
 }
 #endif
 
+/* Milliseconds since boot (1 ms resolution, from the SysTick down-counter). */
+uint32_t SCHEDULER_GetMs(void)
+{
+    uint32_t tick, val;
+
+    do {
+        tick = gGlobalSysTickCounter;
+        val  = SysTick->VAL;
+    } while (tick != gGlobalSysTickCounter);
+    if (SCB->ICSR & SCB_ICSR_PENDSTSET_Msk) {   // wrapped, IRQ not served yet
+        val = SysTick->VAL;
+        tick++;
+    }
+    return tick * 10u + ((SysTick->LOAD - val) * 10u) / (SysTick->LOAD + 1u);
+}
+
 // we come here every 10ms
 void SysTick_Handler(void)
 {

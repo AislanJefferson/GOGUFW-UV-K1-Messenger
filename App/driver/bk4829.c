@@ -1953,6 +1953,11 @@ void BK4819_PlayRogerMDC(void)
         { BK4819_REG_5C, 0xAA30 },  // Disable CRC
     };
 
+    /* MDC rewrites the FSK sync word; restore it so Messenger/HOP keep
+     * decoding after a Roger=MDC transmission. */
+    const uint16_t sync_a = BK4819_ReadRegister(BK4819_REG_5A);
+    const uint16_t sync_b = BK4819_ReadRegister(BK4819_REG_5B);
+
     BK4819_SetAF(BK4819_AF_MUTE);
 
     for (unsigned int i = 0; i < ARRAY_SIZE(RogerMDC_Configuration); i++) {
@@ -1975,6 +1980,8 @@ void BK4819_PlayRogerMDC(void)
     BK4819_WriteRegister(BK4819_REG_59, 0x0068);
     BK4819_WriteRegister(BK4819_REG_70, 0x0000);
     BK4819_WriteRegister(BK4819_REG_58, 0x0000);
+    BK4819_WriteRegister(BK4819_REG_5A, sync_a);
+    BK4819_WriteRegister(BK4819_REG_5B, sync_b);
 }
 
 void BK4819_PlayRoger(BK4819_FilterBandwidth_t Bandwidth)
