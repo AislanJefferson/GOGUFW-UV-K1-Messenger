@@ -126,8 +126,10 @@ static void ACTION_OpenRfLog(void)
 
 #ifdef ENABLE_GOGUFW_SCRAMBLER
 /* Toggle the scrambler of the current channel/VFO. Turning it off remembers
- * the type so the next press restores it; defaults to the first tone. */
-static uint8_t gScrambleLastType = 1;
+ * the type so the next press restores it. Defaults to 3200 Hz: index 7 of
+ * gSubMenu_SCRAMBLER (0 = OFF, 1 = 2600 Hz ... 7 = 3200 Hz). */
+#define SCRAMBLE_DEFAULT_TYPE 7u
+static uint8_t gScrambleLastType = SCRAMBLE_DEFAULT_TYPE;
 
 static void ACTION_Scramble(void)
 {

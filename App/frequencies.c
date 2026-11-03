@@ -168,95 +168,14 @@ int32_t TX_freq_check(const uint32_t Frequency)
 
     switch (gSetting_F_LOCK)
     {
-        case F_LOCK_DEF:
-            if (Frequency >= frequencyBandTable[BAND3_137MHz].lower && Frequency < frequencyBandTable[BAND3_137MHz].upper)
-                return 0;
-            if (Frequency >= frequencyBandTable[BAND4_174MHz].lower && Frequency < frequencyBandTable[BAND4_174MHz].upper)
-            #ifndef ENABLE_FEAT_F4HWN
-                if (gSetting_200TX)
-            #endif
-                    return 0;
-            if (Frequency >= frequencyBandTable[BAND5_350MHz].lower && Frequency < frequencyBandTable[BAND5_350MHz].upper)
-            #ifndef ENABLE_FEAT_F4HWN
-                if (gSetting_350TX && gSetting_350EN)
-            #else
-                if (gSetting_350EN)                
-            #endif
-                    return 0;
-            if (Frequency >= frequencyBandTable[BAND6_400MHz].lower && Frequency < frequencyBandTable[BAND6_400MHz].upper)
-                return 0;
-            if (Frequency >= frequencyBandTable[BAND7_470MHz].lower && Frequency <= 60000000)
-            #ifndef ENABLE_FEAT_F4HWN
-                if (gSetting_500TX)
-            #endif
-                    return 0;
-            break;
-
-        case F_LOCK_FCC:
-            if (Frequency >= 14400000 && Frequency < 14800000)
-                return 0;
-            if (Frequency >= 42000000 && Frequency < 45000000)
+        case F_LOCK_BR:
+            // Anatel Ato 14448, item 15.1.1 / Tabela XII: general-use radio
+            // channels 01-13 (462.5625-462.7125 MHz) and 14-26
+            // (467.5625-467.7125 MHz), 12.5 kHz apart.
+            if ((Frequency >= 46256250 && Frequency <= 46271250) ||
+                (Frequency >= 46756250 && Frequency <= 46771250))
                 return 0;
             break;
-
-        case F_LOCK_CE:
-            if (Frequency >= 14400000 && Frequency < 14600000)
-                return 0;
-            if (Frequency >= 43000000 && Frequency < 44000000)
-                return 0;
-            break;
-
-        case F_LOCK_GB:
-            if (Frequency >= 14400000 && Frequency < 14800000)
-                return 0;
-            if (Frequency >= 43000000 && Frequency < 44000000)
-                return 0;
-            break;
-
-        case F_LOCK_430:
-            if (Frequency >= frequencyBandTable[BAND3_137MHz].lower && Frequency < 17400000)
-                return 0;
-            if (Frequency >= 40000000 && Frequency < 43000000)
-                return 0;
-            break;
-
-        case F_LOCK_438:
-            if (Frequency >= frequencyBandTable[BAND3_137MHz].lower && Frequency < 17400000)
-                return 0;
-            if (Frequency >= 40000000 && Frequency < 43800000)
-                return 0;
-            break;
-
-#ifdef ENABLE_FEAT_F4HWN_PMR
-        case F_LOCK_PMR:
-            if (Frequency >= 44600625 && Frequency <= 44619375)
-                return 0;
-            break;
-#endif
-
-#ifdef ENABLE_FEAT_F4HWN_GMRS_FRS_MURS
-        case F_LOCK_GMRS_FRS_MURS:
-            // https://forums.radioreference.com/threads/the-great-unofficial-radioreference-frs-gmrs-murs-fact-sheet.275370/
-            if ((Frequency >= 46255000 && Frequency <= 46272500) ||
-                (Frequency >= 46755000 && Frequency <= 46772500)) // FRS/GMRS
-                return 0;
-            if (Frequency == 15182000 || 
-                Frequency == 15188000 || 
-                Frequency == 15194000 || 
-                Frequency == 15457000 || 
-                Frequency == 15460000) // MURS
-                return 0;
-            break;
-#endif
-
-#ifdef ENABLE_FEAT_F4HWN_CA 
-        case F_LOCK_CA:
-            if (Frequency >= 14400000 && Frequency < 14800000)
-                return 0;
-            if (Frequency >= 43000000 && Frequency < 45000000)
-                return 0;
-            break;
-#endif
 
         case F_LOCK_ALL:
             break;

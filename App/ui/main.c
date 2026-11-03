@@ -128,7 +128,10 @@ bool UI_DisplayActionPicker(void)
 
 #ifdef ENABLE_FEAT_F4HWN_SCAN_PROGRESS
 #define SCAN_PROGRESS_MR_CHANNEL_BYTES ((MR_CHANNELS_MAX + 7u) / 8u)
-#define SCAN_LIST_NAME_HOLD_500MS       (2000u / 500u)
+// Scan-list name hold, in 10 ms ticks. Counted down on the 10 ms timeslice (not the
+// 500 ms one) so the hold is accurate to a single tick instead of +/- 500 ms. Stored
+// in a uint8_t, so the practical ceiling is 255 ticks = 2.55 s.
+#define SCAN_LIST_NAME_HOLD_10MS        (1000u / 10u)
 
 static bool     gScanProgressSessionActive;
 static bool     gScanProgressSessionIsMemory;
@@ -143,7 +146,7 @@ static bool     gScanProgressPrevResetVfosFlag;
 static bool     gScanProgressForceRebuild;
 static uint16_t gScanProgressLastMemoryIndex;
 static uint8_t  gScanProgressPriorityState;
-static uint8_t  gScanListNameCountdown_500ms;
+static uint8_t  gScanListNameCountdown_10ms;
 #define SCAN_PROGRESS_PRIORITY_LABEL_MASK 0x03u
 #define SCAN_PROGRESS_PRIORITY_SEEN_SHIFT 2
 #define SCAN_PROGRESS_PRIORITY_SEEN_MASK  0x1cu
@@ -152,15 +155,24 @@ static uint8_t  gScanListNameCountdown_500ms;
 #define SCAN_PROGRESS_PRIORITY_HOLD_FRAMES 6
 #endif
 
+#if defined(ENABLE_FEAT_F4HWN_BEAM) || defined(ENABLE_FEAT_F4HWN_SCAN_PROGRESS)
+// Shared center-line renderer: clear the line and print bold text on it.
+static void UI_MAIN_DrawCenterBoldLine(const char *text, uint8_t start)
+{
+#ifdef ENABLE_FEAT_F4HWN
+    const uint8_t line = isMainOnly() ? 5 : 3;
+#else
+    const uint8_t line = 3;
+#endif
+    memset(gFrameBuffer[line], 0, LCD_WIDTH);
+    UI_PrintStringSmallBold(text, start, LCD_WIDTH - 1, line);
+}
+#endif
+
 #ifdef ENABLE_FEAT_F4HWN_BEAM
 static void UI_MAIN_DrawBeamLine(void)
 {
     const char *text;
-#ifdef ENABLE_FEAT_F4HWN
-    const unsigned int line = isMainOnly() ? 5 : 3;
-#else
-    const unsigned int line = 3;
-#endif
 
     switch (gBeamStatus) {
     case BEAM_STATUS_TX_WAIT:
@@ -187,8 +199,7 @@ static void UI_MAIN_DrawBeamLine(void)
         break;
     }
 
-    memset(gFrameBuffer[line], 0, LCD_WIDTH);
-    UI_PrintStringSmallBold(text, 2, 127, line);
+    UI_MAIN_DrawCenterBoldLine(text, 2);
 }
 #endif
 
@@ -276,7 +287,7 @@ static void ScanProgress_ResetSession(void)
     gScanProgressForceRebuild = false;
     gScanProgressLastMemoryIndex = 0;
     gScanProgressPriorityState = 0;
-    gScanListNameCountdown_500ms = 0;
+    gScanListNameCountdown_10ms = 0;
 }
 
 void UI_MAIN_NotifyScanProgressDataChanged(void)
@@ -288,13 +299,16 @@ void UI_MAIN_NotifyScanProgressDataChanged(void)
 void UI_MAIN_NotifyScanListChanged(void)
 {
     UI_MAIN_NotifyScanProgressDataChanged();
-    gScanListNameCountdown_500ms = SCAN_LIST_NAME_HOLD_500MS;
+    gScanListNameCountdown_10ms = SCAN_LIST_NAME_HOLD_10MS;
     gUpdateDisplay = true;
 }
 
+// True while the "SCAN LIST xxx" name actually occupies the screen. Used to
+// freeze the scan so it does not race ahead of the (hidden) progress gauge.
+// The name is only drawn during a memory (channel) scan, hence IS_MR_CHANNEL().
 bool UI_MAIN_ShouldHoldScanResume(void)
 {
-    return gScanListNameCountdown_500ms > 0 && IS_MR_CHANNEL(gNextMrChannel);
+    return gScanListNameCountdown_10ms > 0 && IS_MR_CHANNEL(gNextMrChannel);
 }
 
 static inline void ScanProgress_SetBit(uint8_t *map, uint16_t ch)
@@ -321,7 +335,6 @@ static uint8_t ScanProgress_GetActiveScanList(void)
 static void UI_MAIN_DrawScanListName(void)
 {
     const uint8_t scan_list = ScanProgress_GetActiveScanList();
-    const uint8_t line = isMainOnly() ? 5 : 3;
     char text[16];
 
     strcpy(text, "SCAN LIST ");
@@ -344,8 +357,7 @@ static void UI_MAIN_DrawScanListName(void)
     }
     *p = '\0';
 
-    memset(gFrameBuffer[line], 0, LCD_WIDTH);
-    UI_PrintStringSmallBold(text, 0, LCD_WIDTH - 1, line);
+    UI_MAIN_DrawCenterBoldLine(text, 0);
 }
 
 static bool ScanProgress_ChannelBelongsToList(uint16_t channel, const ChannelAttributes_t *att, uint8_t scan_list)
@@ -595,7 +607,8 @@ static bool UI_DrawScanProgress(void)
         return false;
     }
 
-    if (show_memory && gScanListNameCountdown_500ms > 0) {
+    // Right after a scan-list change, briefly show its name instead of the progress bar
+    if (show_memory && gScanListNameCountdown_10ms > 0) {
         UI_MAIN_DrawScanListName();
         return true;
     }
@@ -1288,13 +1301,21 @@ void UI_DisplayAudioScopeOverlay(uint8_t line, bool active)
 }
 #endif
 
+#ifdef ENABLE_FEAT_F4HWN_SCAN_PROGRESS
+// Count the scan-list name hold down on the 10 ms tick, so the hold is accurate to
+// one tick. Only ticks on DISPLAY_MAIN, where the name can actually be on screen.
+void UI_MAIN_TimeSlice10ms(void)
+{
+    if (gScreenToDisplay == DISPLAY_MAIN
+        && gScanListNameCountdown_10ms > 0
+        && --gScanListNameCountdown_10ms == 0)
+        gUpdateDisplay = true;
+}
+#endif
+
 void UI_MAIN_TimeSlice500ms(void)
 {
     if(gScreenToDisplay==DISPLAY_MAIN) {
-#ifdef ENABLE_FEAT_F4HWN_SCAN_PROGRESS
-        if (gScanListNameCountdown_500ms > 0 && --gScanListNameCountdown_500ms == 0)
-            gUpdateDisplay = true;
-#endif
 #ifdef ENABLE_AGC_SHOW_DATA
         UI_MAIN_PrintAGC(true);
         return;

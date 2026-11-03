@@ -35,6 +35,9 @@
 #include "settings.h"
 #include "ui/battery.h"
 #include "ui/helper.h"
+#ifdef ENABLE_FEAT_F4HWN_MENU_CAT
+#include "ui/menu.h"
+#endif
 #include "ui/ui.h"
 #include "ui/status.h"
 
@@ -255,6 +258,11 @@ void UI_DisplayStatus()
         x += sizeof(gFontDWR) + 3;
     #endif
 
+#ifdef ENABLE_FEAT_F4HWN_MENU_CAT
+    // End of the MO/DWR/FWR/XB slot: the menu capsule clears up to here.
+    const unsigned int dwSlotEnd = x;
+#endif
+
 #ifdef ENABLE_VOX
     // VOX owns this slot whenever it is enabled.  Otherwise Auto Check may
     // reuse the already-reserved space without moving any following icons.
@@ -362,6 +370,26 @@ void UI_DisplayStatus()
             */
             break;
     }
+
+#ifdef ENABLE_FEAT_F4HWN_MENU_CAT
+    if (gScreenToDisplay == DISPLAY_MENU) {
+        // "MENU" at category level, otherwise the uppercased category name.
+        const char *source = gMenuLevel == MENU_LEVEL_CAT
+                           ? "MENU"
+                           : CategoryNames[gMenuCategory];
+        char text[9];   // longest label ("Channels") + NUL
+        uint8_t n = 0;
+
+        // & 0xDF uppercases letters and keeps the NUL (labels are letters only).
+        while ((text[n] = (char)(source[n] & 0xDFu)) != '\0')
+            n++;
+
+        // Clear through the end of the DWR/FWR slot (DWR ends at column 35),
+        // so no part of that indicator is left next to the capsule.
+        memset(line, 0, MAX(dwSlotEnd, 35u));
+        GUI_DisplaySmallestInverse(text, 2, 0, true, true, (uint8_t)(2u + n * 4u));
+    }
+#endif
 
     // **************
 

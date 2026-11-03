@@ -128,7 +128,9 @@ static KEY_Code_t gScreenSaverWakeKey = KEY_INVALID;
 static void ProcessKey(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld);
 
 
-void (*const ProcessKeysFunctions[])(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld) = {
+/* Sized by DISPLAY_N_ELEM: screens without a resident handler in this build
+ * (e.g. FM when it is not embedded) stay NULL instead of shrinking the table. */
+void (*const ProcessKeysFunctions[DISPLAY_N_ELEM])(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld) = {
     [DISPLAY_MAIN] = &MAIN_ProcessKeys,
     [DISPLAY_MENU] = &MENU_ProcessKeys,
     [DISPLAY_SCANNER] = &SCANNER_ProcessKeys,
@@ -149,12 +151,8 @@ void (*const ProcessKeysFunctions[])(KEY_Code_t Key, bool bKeyPressed, bool bKey
 #endif
 };
 
-#ifdef ENABLE_REGA
-// This is a hack for REGA as I need a special display element only for it with no key
-static_assert(ARRAY_SIZE(ProcessKeysFunctions) == DISPLAY_N_ELEM-1);
-#else
+// REGA has a display element with no key handler: its entry simply stays NULL.
 static_assert(ARRAY_SIZE(ProcessKeysFunctions) == DISPLAY_N_ELEM);
-#endif
 
 #ifdef ENABLE_FEAT_F4HWN_LOGO_SAV
 static uint8_t ScreenSaverRandom(void)
@@ -2117,6 +2115,8 @@ void APP_TimeSlice10ms(void)
     if (gReducedService)
         return;
 
+    UI_MAIN_TimeSlice10ms();   // scan-list name hold countdown (10 ms resolution)
+
     if (gCurrentFunction != FUNCTION_POWER_SAVE || !gRxIdleMode)
         CheckRadioInterrupts();
 #ifdef ENABLE_FEAT_F4HWN_ACTION_PICKER
@@ -3342,7 +3342,10 @@ Skip:
         gFlagRefreshSetting = false;
         gMenuCountdown      = menu_timeout_500ms;
 
-        MENU_ShowCurrentSetting();
+#ifdef ENABLE_FEAT_F4HWN_MENU_CAT
+        if (gMenuLevel != MENU_LEVEL_CAT)
+#endif
+            MENU_ShowCurrentSetting();
     }
 
     if (gFlagPrepareTX) {

@@ -56,7 +56,8 @@ bool              gAskToSave;
 bool              gAskToDelete;
 
 
-void (*const UI_DisplayFunctions[])(void) = {
+/* Sized by DISPLAY_N_ELEM, see ProcessKeysFunctions in app/app.c. */
+void (*const UI_DisplayFunctions[DISPLAY_N_ELEM])(void) = {
     [DISPLAY_MAIN] = &UI_DisplayMain,
     [DISPLAY_MENU] = &UI_DisplayMenu,
     [DISPLAY_SCANNER] = &UI_DisplayScanner,

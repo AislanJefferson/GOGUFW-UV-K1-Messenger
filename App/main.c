@@ -158,19 +158,17 @@ void Main(void)
         #ifdef ENABLE_FEAT_F4HWN
             gEeprom.KEY_LOCK = 0;
             SETTINGS_SaveSettings();
+            #ifdef ENABLE_FEAT_F4HWN_MENU_CAT
+                gMenuLevel    = MENU_LEVEL_ITEMS;
+                gMenuCategory = CAT_ALL;
+            #endif
             gMenuCursor = UI_MENU_GetMenuIdx(FIRST_HIDDEN_MENU_ITEM);
             gSubMenuSelection = gSetting_F_LOCK;
         #endif
     }
 
-    // count the number of menu items
-    gMenuListCount = 0;
-    while (MenuList[gMenuListCount].name[0] != '\0') {
-        if(!gF_LOCK && MenuList[gMenuListCount].menu_id == FIRST_HIDDEN_MENU_ITEM)
-            break;
-
-        gMenuListCount++;
-    }
+    // build the current menu view (All = flat list, original order)
+    UI_MENU_BuildView();
 
     // wait for user to release all butts before moving on
     if (GPIO_IsPttPressed() ||
@@ -213,23 +211,6 @@ void Main(void)
         ST7565_FillScreen(0x00);
         UI_DisplayWelcome();
         BACKLIGHT_TurnOn();
-
-#ifdef ENABLE_FEAT_F4HWN
-            if (gEeprom.POWER_ON_DISPLAY_MODE != POWER_ON_DISPLAY_MODE_NONE && gEeprom.POWER_ON_DISPLAY_MODE != POWER_ON_DISPLAY_MODE_SOUND)
-#else
-            if (gEeprom.POWER_ON_DISPLAY_MODE != POWER_ON_DISPLAY_MODE_NONE)
-#endif
-            {   // 2.55 second boot-up screen
-                while (boot_counter_10ms > 0)
-                {
-                    if (KEYBOARD_Poll() != KEY_INVALID)
-                    {   // halt boot beeps
-                        boot_counter_10ms = 0;
-                        break;
-                    }
-                }
-                RADIO_SetupRegisters(true);
-            }
 #ifdef ENABLE_PWRON_PASSWORD
         if (gEeprom.POWER_ON_PASSWORD < 1000000)
         {

@@ -259,146 +259,16 @@ void UI_DisplayScreenSaver(uint8_t mode)
 }
 #endif
 
+// POnMsg was removed: the boot screen always behaves as NONE (blank LCD, no
+// message, no delay). The boot message text stays in flash for CHIRP and for
+// the APRS apps' callsign fallback.
 void UI_DisplayWelcome(void)
 {
     UI_StatusClear();
 
 #if defined(ENABLE_FEAT_F4HWN_CTR) || defined(ENABLE_FEAT_F4HWN_INV)
-        ST7565_ContrastAndInv();
+    ST7565_ContrastAndInv();
 #endif
     UI_DisplayClear();
-
-#ifdef ENABLE_FEAT_F4HWN
-    /* Do not blit an empty frame before the selected boot screen is ready.
-     * The 5.6.0 boot-flow refactor reused the logo path but the early blank
-     * blit left the LCD visibly white/empty while the welcome/logo data was
-     * still being prepared.  For NONE/SOUND we still blank the LCD explicitly;
-     * for LOGO/ALL/VOLTAGE we wait and blit the final screen once below. */
-    if (gEeprom.POWER_ON_DISPLAY_MODE == POWER_ON_DISPLAY_MODE_NONE || gEeprom.POWER_ON_DISPLAY_MODE == POWER_ON_DISPLAY_MODE_SOUND) {
-        ST7565_FillScreen(0x00);
-        return;
-    }
-#else
-    if (gEeprom.POWER_ON_DISPLAY_MODE == POWER_ON_DISPLAY_MODE_NONE || gEeprom.POWER_ON_DISPLAY_MODE == POWER_ON_DISPLAY_MODE_FULL_SCREEN) {
-        ST7565_FillScreen(0xFF);
-        return;
-    }
-#endif
-#ifdef ENABLE_FEAT_F4HWN_LOGO
-    else if (gEeprom.POWER_ON_DISPLAY_MODE == POWER_ON_DISPLAY_MODE_LOGO) {
-        UI_LoadLogo();
-    }
-#endif
-    else {
-        char WelcomeString0[16];
-        char WelcomeString1[16];
-        char WelcomeString2[16];
-        char WelcomeString3[32];
-
-        // 0x0EB0
-        PY25Q16_ReadBuffer(0x00A0C8, WelcomeString0, 16);
-        // 0x0EC0
-        PY25Q16_ReadBuffer(0x00A0D8, WelcomeString1, 16);
-
-        sprintf(WelcomeString2, "%u.%02uV %u%%",
-                gBatteryVoltageAverage / 100,
-                gBatteryVoltageAverage % 100,
-                BATTERY_VoltsToPercent(gBatteryVoltageAverage));
-
-        if (gEeprom.POWER_ON_DISPLAY_MODE == POWER_ON_DISPLAY_MODE_VOLTAGE)
-        {
-            strcpy(WelcomeString0, "VOLTAGE");
-            strcpy(WelcomeString1, WelcomeString2);
-        }
-        else if(gEeprom.POWER_ON_DISPLAY_MODE == POWER_ON_DISPLAY_MODE_ALL)
-        {
-            if(strlen(WelcomeString0) == 0 && strlen(WelcomeString1) == 0)
-            {
-                strcpy(WelcomeString0, "WELCOME");
-                strcpy(WelcomeString1, WelcomeString2);
-            }
-            else if(strlen(WelcomeString0) == 0 || strlen(WelcomeString1) == 0)
-            {
-                if(strlen(WelcomeString0) == 0)
-                {
-                    strcpy(WelcomeString0, WelcomeString1);
-                }
-                strcpy(WelcomeString1, WelcomeString2);
-            }
-        }
-        else if(gEeprom.POWER_ON_DISPLAY_MODE == POWER_ON_DISPLAY_MODE_MESSAGE)
-        {
-            if(strlen(WelcomeString0) == 0)
-            {
-                strcpy(WelcomeString0, "WELCOME");
-            }
-
-            if(strlen(WelcomeString1) == 0)
-            {
-                strcpy(WelcomeString1, "BIENVENUE");
-            }
-        }
-
-        UI_PrintString(WelcomeString0, 0, 127, 0, 10);
-        UI_PrintString(WelcomeString1, 0, 127, 2, 10);
-
-#ifdef ENABLE_FEAT_F4HWN
-        UI_PrintStringSmallNormal(Version, 0, 127, 4);
-
-        /* Size the inverted capsule from the actual rendered version string
-         * so longer release labels stay inside the highlighted area. */
-        {
-            const uint8_t version_len = (uint8_t)strlen(Version);
-            const uint8_t version_w = (uint8_t)(version_len * 7U);
-            uint8_t x0 = (version_w >= 126U) ? 0U : (uint8_t)((128U - version_w) / 2U);
-            uint8_t x1;
-            x0 = (x0 > 2U) ? (uint8_t)(x0 - 2U) : 0U;
-            x1 = (uint8_t)(x0 + version_w + 3U);
-            if (x1 > 127U) x1 = 127U;
-
-            if (x0 > 1U) UI_DrawLineBuffer(gFrameBuffer, 0, 35, (uint8_t)(x0 - 2U), 35, 1);
-            gFrameBuffer[4][x0] ^= 0x7F;
-            for (uint8_t x = (uint8_t)(x0 + 1U); x < x1; x++)
-            {
-                gFrameBuffer[4][x] ^= 0xFF;
-                gFrameBuffer[3][x] ^= 0x80;
-            }
-            gFrameBuffer[4][x1] ^= 0x7F;
-            if (x1 < 126U) UI_DrawLineBuffer(gFrameBuffer, (uint8_t)(x1 + 1U), 35, 127, 35, 1);
-        }
-
-        /*
-        #ifdef ENABLE_FEAT_F4HWN_MEM
-            uint32_t ram_used   = 0;
-            uint32_t flash_used = 0;
-            build_usage(&ram_used, &flash_used);
-
-            const uint16_t ram_pct   = pct_x100(ram_used,   RAM_SIZE_BYTES);
-            const uint16_t flash_pct = pct_x100(flash_used, FLASH_SIZE_BYTES);
-
-            // No floats: 7559 => 75.59%
-            sprintf(WelcomeString3,
-            "FLASH %u.%02u %% - SRAM  %u.%02u %%",
-            (unsigned)(flash_pct / 100), (unsigned)(flash_pct % 100),
-            (unsigned)(ram_pct / 100),   (unsigned)(ram_pct % 100));
-
-            GUI_DisplaySmallest(WelcomeString3, 5, 1, true, true);
-            ST7565_BlitStatusLine();
-        #endif
-        */
-
-        sprintf(WelcomeString3, "%s Edition", Edition);
-        UI_PrintStringSmallNormal(WelcomeString3, 0, 127, 6);
-
-#else
-        UI_PrintStringSmallNormal(Version, 0, 127, 6);
-#endif
-    }
-
-    ST7565_BlitStatusLine();
-    ST7565_BlitFullScreen();
-
-    #ifdef ENABLE_FEAT_F4HWN_SCREENSHOT
-        SCREENSHOT_Update(true);
-    #endif
+    ST7565_FillScreen(0x00);
 }

@@ -273,11 +273,7 @@ gEeprom.FreqChannel[1]   = IS_FREQ_CHANNEL(Data16[5]) ? Data16[5] : (FREQ_CHANNE
     gEeprom.KEY_2_LONG_PRESS_ACTION      = (Data[4] < ACTION_OPT_LEN) ? Data[4] : ACTION_OPT_NONE;
     gEeprom.SCAN_RESUME_MODE             = (Data[5] < 105)            ? Data[5] : 14;
     gEeprom.AUTO_KEYPAD_LOCK             = (Data[6] < 41)             ? Data[6] : 0;
-#ifdef ENABLE_FEAT_F4HWN
-    gEeprom.POWER_ON_DISPLAY_MODE        = (Data[7] < 6)              ? Data[7] : POWER_ON_DISPLAY_MODE_VOLTAGE;
-#else
-    gEeprom.POWER_ON_DISPLAY_MODE        = (Data[7] < 4)              ? Data[7] : POWER_ON_DISPLAY_MODE_VOLTAGE;
-#endif
+    // Data[7] was POnMsg: removed, the boot always behaves as NONE.
 
     // 0E98..0E9F
     #ifdef ENABLE_PWRON_PASSWORD
@@ -369,7 +365,9 @@ gEeprom.FreqChannel[1]   = IS_FREQ_CHANNEL(Data16[5]) ? Data16[5] : (FREQ_CHANNE
 
     // 0F40..0F47
     PY25Q16_ReadBuffer(0x00A150, Data, 8);
-    gSetting_F_LOCK            = (Data[0] < F_LOCK_LEN) ? Data[0] : F_LOCK_DEF;
+    gSetting_F_LOCK            = (Data[0] == F_LOCK_STORED_NONE) ? F_LOCK_NONE
+                               : (Data[0] == F_LOCK_STORED_ALL)  ? F_LOCK_ALL
+                               : F_LOCK_BR;
 #ifndef ENABLE_FEAT_F4HWN
     gSetting_350TX             = (Data[1] < 2) ? Data[1] : false;  // was true
 #endif
@@ -1061,7 +1059,7 @@ void SETTINGS_SaveSettings(void)
     State[4] = gEeprom.KEY_2_LONG_PRESS_ACTION;
     State[5] = gEeprom.SCAN_RESUME_MODE;
     State[6] = gEeprom.AUTO_KEYPAD_LOCK;
-    State[7] = gEeprom.POWER_ON_DISPLAY_MODE;
+    State[7] = POWER_ON_DISPLAY_MODE_NONE;   // POnMsg removed; keep the byte as NONE for CHIRP
 
     // 0x0E98
     #ifdef ENABLE_PWRON_PASSWORD
@@ -1140,7 +1138,9 @@ void SETTINGS_SaveSettings(void)
 
     // 0x0F40
     State = SecBuf;
-    State[0]  = gSetting_F_LOCK;
+    State[0]  = (gSetting_F_LOCK == F_LOCK_NONE) ? F_LOCK_STORED_NONE
+              : (gSetting_F_LOCK == F_LOCK_ALL)  ? F_LOCK_STORED_ALL
+              : F_LOCK_STORED_BR;
 #ifndef ENABLE_FEAT_F4HWN
     State[1]  = gSetting_350TX;
 #endif

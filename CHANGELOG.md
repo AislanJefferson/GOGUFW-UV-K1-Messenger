@@ -1,5 +1,55 @@
 # Changelog
 
+## Unreleased
+
+- Scan interface aligned with F4HWN: the Fusion build now enables the scan
+  progress bar (`nn/total`, `P1`/`P2`, excluded columns), the scan-list name
+  and the RSSI sparkline (`ENABLE_FEAT_F4HWN_SCAN_PROGRESS` and
+  `ENABLE_FEAT_F4HWN_SCAN_RSSI`).
+- The scan-list name is now counted on the 10 ms tick and stays on screen for
+  one second, as in F4HWN.
+- Holding MENU to exclude a memory channel during a scan no longer shows the
+  list name or pauses the scan; the bar is rebuilt and scanning continues.
+- Added F4HWN menu categories (`ENABLE_FEAT_F4HWN_MENU_CAT`) with a GOGUFW
+  `Msg` category for the Messenger settings, CALLTX settings under Audio and
+  Scramb under Channels. The status bar shows `MENU` or the open category.
+- Removed `POnMsg`. The radio always boots as with `NONE`: no welcome screen,
+  no boot beeps and no boot delay. The settings byte is written as `NONE`; the
+  boot message text is kept for CHIRP and for the APRS apps' callsign fallback.
+- Removed K5Viewer and RF Log Lite from the Fusion build to free RAM and Flash
+  for the scan interface. A side key still set to RF LOG does nothing.
+- Spectrum (F+5): ported the F4HWN fix that keeps the trigger line off the
+  `12.5k`/`6.25k` bandwidth text. SIDE1 no longer also excludes the first
+  step/memory, the exclusion list no longer empties itself after 256
+  exclusions, and with more than 128 steps (large MR lists or long scan
+  ranges) excluding a peak no longer stops its neighbouring steps from being
+  measured, and its column keeps showing their signal. Key 6 is ignored while
+  MR Spectrum is sweeping (each channel's own bandwidth is applied there) but
+  still changes the listening bandwidth while parked on a peak. MR sweeps no
+  longer rescan the channel list from the start on every step.
+- F Lock now offers only **BRASIL** (Anatel Ato 14448 general-use channels,
+  462.5625–462.7125 and 467.5625–467.7125 MHz), **DISABLE ALL** and
+  **UNLOCK ALL**. The DEFAULT+, FCC/CA/CE/GB HAM, 430/438, PMR 446 and
+  GMRS/FRS/MURS plans were removed, along with their build flags. The stored
+  byte keeps the legacy codes: radios set to DISABLE ALL or UNLOCK ALL keep
+  them, and any other stored plan (including the former DEFAULT+) loads as
+  BRASIL, so 2 m/70 cm TX now needs UNLOCK ALL. The CHIRP module is unchanged
+  and still shows the old labels; any choice other than DISABLE/UNLOCK ALL
+  becomes BRASIL on the radio.
+- The per-screen key and display tables are now sized by `DISPLAY_N_ELEM`, so
+  builds without both Messenger and RF Log (e.g. `RDSProbe`) compile again.
+- The SCRAMBLE side-key action now enables 3200 Hz by default (was 2600 Hz)
+  when no scrambler tone has been used since power-on.
+- Version string is now `v3.3.5m` (radio identity `GOGUFW v3.3.5m`; multiboot
+  image `f4hwn.gogufw.v3.3.5m.bin`). The first boot after updating runs the
+  usual version-change reset of KEY_LOCK, MENU_LOCK, SET_KEY and SET_INV.
+- Release C flags add `-fno-tree-ch -fno-ssa-phiopt` (measured -276 bytes).
+  `mb_flash.c` restores both passes, so the multiboot RAM stub stays
+  byte-identical (920 bytes, 85 checked branches).
+- Final image: 118,932 / 120,832 bytes (1,900 bytes free), including the
+  920-byte multiboot load image. Linked firmware uses 118,012 bytes; RAM usage
+  is 16,328 / 16,384 bytes, and multiboot RAM-stub isolation checks pass.
+
 ## GOGUFW 3.3.5 — 2026-11-01
 
 - Replaced the generic new-message double beep with the measured timing of the

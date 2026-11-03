@@ -56,6 +56,7 @@
 #include "settings.h"
 #include "ui/inputbox.h"
 #include "ui/main.h"
+#include "ui/menu.h"
 #include "ui/ui.h"
 #include <stdlib.h>
 
@@ -1187,7 +1188,7 @@ static void MAIN_Key_MENU(bool bKeyPressed, bool bKeyHeld)
                     att->exclude = true;
 
                     MR_SaveChannelAttributesToFlash(lastFoundFrqOrChan, att);
-                    UI_MAIN_NotifyScanListChanged();
+                    UI_MAIN_NotifyScanProgressDataChanged();
 
                     gVfoConfigureMode = VFO_CONFIGURE;
                     gFlagResetVfos    = true;
@@ -1241,6 +1242,11 @@ static void MAIN_Key_MENU(bool bKeyPressed, bool bKeyHeld)
 
             gFlagRefreshSetting = true;
             gRequestDisplayScreen = DISPLAY_MENU;
+#ifdef ENABLE_FEAT_F4HWN_MENU_CAT
+            gMenuLevel  = MENU_LEVEL_CAT;
+            UI_MENU_BuildCategoryScreen();
+            gMenuCursor = (gMenuCatCursor < gMenuListCount) ? gMenuCatCursor : 0;
+#endif
             #ifdef ENABLE_VOICE
                 gAnotherVoiceID   = VOICE_ID_MENU;
             #endif

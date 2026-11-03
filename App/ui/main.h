@@ -69,10 +69,12 @@ bool UI_DisplayActionPicker(void);
 void UI_MAIN_NotifyScanProgressDataChanged(void);
 void UI_MAIN_NotifyScanListChanged(void);
 bool UI_MAIN_ShouldHoldScanResume(void);
+void UI_MAIN_TimeSlice10ms(void);
 #else
 static inline void UI_MAIN_NotifyScanProgressDataChanged(void) {}
 static inline void UI_MAIN_NotifyScanListChanged(void) {}
 static inline bool UI_MAIN_ShouldHoldScanResume(void) { return false; }
+static inline void UI_MAIN_TimeSlice10ms(void) {}
 #endif
 
 #ifdef ENABLE_AGC_SHOW_DATA

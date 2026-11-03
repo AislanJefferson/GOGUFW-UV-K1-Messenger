@@ -98,7 +98,6 @@ const t_menu_item MenuList[] =
     {"Mic",         MENU_MIC           },
     {"MicBar",      MENU_MIC_BAR       },
     {"ChDisp",      MENU_MDF           }, // was "MDF"
-    {"POnMsg",      MENU_PONMSG        },
     {"BLTime",      MENU_ABR           }, // was "ABR"
     {"BLMin",       MENU_ABR_MIN       },
     {"BLMax",       MENU_ABR_MAX       },
@@ -317,21 +316,6 @@ const char* const gSubMenu_PTT_ID[] =
     "APOLLO\nQUINDAR"
 };
 
-const char gSubMenu_PONMSG[][8] =
-{
-#ifdef ENABLE_FEAT_F4HWN
-    "ALL",
-    "SOUND",
-#else
-    "FULL",
-#endif
-    "MESSAGE",
-    "VOLTAGE",
-#ifdef ENABLE_FEAT_F4HWN_LOGO
-    "LOGO",
-#endif
-    "NONE"
-};
 
 const char gSubMenu_ROGER[][6] =
 {
@@ -348,21 +332,7 @@ const char gSubMenu_RESET[][4] =
 
 const char * const gSubMenu_F_LOCK[] =
 {
-    "DEFAULT+\n137-174\n400-470",
-    "FCC HAM\n144-148\n420-450",
-#ifdef ENABLE_FEAT_F4HWN_CA
-    "CA HAM\n144-148\n430-450",
-#endif
-    "CE HAM\n144-146\n430-440",
-    "GB HAM\n144-148\n430-440",
-    "137-174\n400-430",
-    "137-174\n400-438",
-#ifdef ENABLE_FEAT_F4HWN_PMR
-    "PMR 446",
-#endif
-#ifdef ENABLE_FEAT_F4HWN_GMRS_FRS_MURS
-    "GMRS\nFRS\nMURS",
-#endif
+    "BRASIL\n462 MHz\n467 MHz",
     "DISABLE\nALL",
     "UNLOCK\nALL",
 };
@@ -576,9 +546,15 @@ const uint8_t gSubMenu_SIDEFUNCTIONS_size = ARRAY_SIZE(gSubMenu_SIDEFUNCTIONS);
 
 bool    gIsInSubMenu;
 uint8_t gMenuCursor;
+uint8_t gMenuIndices[ARRAY_SIZE(MenuList)]; // current view: shown position -> MenuList index
+
 int UI_MENU_GetCurrentMenuId() {
-    if(gMenuCursor < ARRAY_SIZE(MenuList))
-        return MenuList[gMenuCursor].menu_id;
+#ifdef ENABLE_FEAT_F4HWN_MENU_CAT
+    if (gMenuLevel == MENU_LEVEL_CAT)
+        return 0xFF;   // no current item on the category screen
+#endif
+    if(gMenuCursor < gMenuListCount)
+        return MenuList[gMenuIndices[gMenuCursor]].menu_id;
 
     return MenuList[ARRAY_SIZE(MenuList)-1].menu_id;
 }
@@ -589,6 +565,229 @@ uint8_t UI_MENU_GetMenuIdx(uint8_t id)
         if(MenuList[i].menu_id == id)
             return i;
     return 0;
+}
+
+// Position of 'id' in the current view, or gMenuCursor if it is not shown.
+uint8_t UI_MENU_GetViewPos(uint8_t id)
+{
+    for (uint8_t i = 0; i < gMenuListCount; i++)
+        if (MenuList[gMenuIndices[i]].menu_id == id)
+            return i;
+    return gMenuCursor;
+}
+
+#ifdef ENABLE_FEAT_F4HWN_MENU_CAT
+// Each list holds the menu IDs of one category, in display order. IDs whose
+// item is not compiled into MenuList are skipped at run time. CAT_ALL has no
+// list: it is MenuList as is, so the original order and numbers are kept.
+const char *const CategoryNames[CAT_COUNT] = {
+    [CAT_CHANNELS] = "Channels",
+    [CAT_SCAN]     = "Scan",
+    [CAT_KEYS]     = "Keys",
+    [CAT_POWER]    = "Power",
+    [CAT_DISPLAY]  = "Display",
+    [CAT_TIMERS]   = "Timers",
+    [CAT_AUDIO]    = "Audio",
+    [CAT_RADIO]    = "Radio",
+    [CAT_DTMF]     = "DTMF",
+#ifdef ENABLE_MESSENGER
+    [CAT_MSG]      = "Msg",
+#endif
+    [CAT_SERVICE]  = "Service",
+    [CAT_ALL]      = "All",
+};
+
+static const uint8_t CatChannels[] = {
+    MENU_STEP, MENU_TXP, MENU_SET_PWR, MENU_R_DCS, MENU_R_CTCS, MENU_T_DCS,
+    MENU_T_CTCS, MENU_SFT_D, MENU_OFFSET, MENU_W_N,
+#ifdef ENABLE_FEAT_F4HWN_NARROWER
+    MENU_SET_NFM,
+#endif
+#ifdef ENABLE_GOGUFW_SCRAMBLER
+    MENU_SCR,
+#endif
+    MENU_BCL, MENU_COMPAND, MENU_AM, MENU_TX_LOCK, MENU_PTT_ID, MENU_LIST_CH,
+    MENU_MEM_CH, MENU_DEL_CH, MENU_MEM_NAME,
+#ifdef ENABLE_FEAT_F4HWN_MULTIBOOT
+    MENU_SET_CFG,
+#endif
+};
+static const uint8_t CatScan[]    = {
+    MENU_S_LIST, MENU_S_PRI, MENU_S_PRI_CH_1, MENU_S_PRI_CH_2, MENU_SC_REV,
+#ifdef ENABLE_FEAT_F4HWN_SCAN_FASTER
+    MENU_SET_SCN,
+#endif
+};
+static const uint8_t CatKeys[]    = {
+    MENU_F1SHRT, MENU_F1LONG, MENU_F2SHRT, MENU_F2LONG, MENU_MLONG, MENU_AUTOLK, MENU_SET_LCK,
+#ifdef ENABLE_FEAT_F4HWN_RESCUE_OPS
+    MENU_SET_KEY,
+#endif
+    MENU_SET_PTT, MENU_1_CALL,
+};
+static const uint8_t CatPower[]   = {
+    MENU_SAVE, MENU_BAT_TXT,
+#ifdef ENABLE_FEAT_F4HWN_SLEEP
+    MENU_SET_OFF,
+#endif
+#ifdef ENABLE_FEAT_F4HWN_LOGO_SAV
+    MENU_SET_SAV,
+#endif
+};
+static const uint8_t CatDisplay[] = { MENU_MDF, MENU_ABR, MENU_ABR_MIN, MENU_ABR_MAX, MENU_ABR_ON_TX_RX, MENU_SET_CTR, MENU_SET_INV, MENU_SET_MET, MENU_SET_GUI, MENU_VOL };
+static const uint8_t CatTimers[]  = { MENU_TOT, MENU_SET_TOT, MENU_SET_EOT, MENU_SET_TMR };
+static const uint8_t CatAudio[]   = {
+    MENU_MIC, MENU_MIC_BAR, MENU_BEEP,
+#ifdef ENABLE_FEAT_F4HWN_VOL
+    MENU_SET_VOL,
+#endif
+#ifdef ENABLE_FEAT_F4HWN_AUDIO
+    MENU_SET_AUD,
+#endif
+#ifdef ENABLE_GOGUFW_CALLTX
+    MENU_CALL_TONE, MENU_CALL_VOL,
+#endif
+};
+static const uint8_t CatRadio[]   = { MENU_SQL, MENU_STE, MENU_RP_STE, MENU_ROGER, MENU_VOX, MENU_TDR };
+static const uint8_t CatDtmf[]    = { MENU_UPCODE, MENU_DWCODE, MENU_D_ST, MENU_D_PRE, MENU_D_LIVE_DEC };
+#ifdef ENABLE_MESSENGER
+static const uint8_t CatMsg[]     = { MENU_MSG_RX, MENU_MSG_ACK, MENU_MSG_BEEP, MENU_MSG_LED, MENU_MSG_CSG, MENU_RNG_RSP };
+#endif
+static const uint8_t CatService[] = { MENU_F_LOCK, MENU_350EN, MENU_BATCAL, MENU_BATTYP, MENU_SET_NAV, MENU_RESET };
+
+typedef struct { const uint8_t *ids; uint8_t len; } cat_list_t;
+
+static const cat_list_t CategoryLists[CAT_COUNT] = {
+    [CAT_CHANNELS] = { CatChannels, ARRAY_SIZE(CatChannels) },
+    [CAT_SCAN]     = { CatScan,     ARRAY_SIZE(CatScan)     },
+    [CAT_KEYS]     = { CatKeys,     ARRAY_SIZE(CatKeys)     },
+    [CAT_POWER]    = { CatPower,    ARRAY_SIZE(CatPower)    },
+    [CAT_DISPLAY]  = { CatDisplay,  ARRAY_SIZE(CatDisplay)  },
+    [CAT_TIMERS]   = { CatTimers,   ARRAY_SIZE(CatTimers)   },
+    [CAT_AUDIO]    = { CatAudio,    ARRAY_SIZE(CatAudio)    },
+    [CAT_RADIO]    = { CatRadio,    ARRAY_SIZE(CatRadio)    },
+    [CAT_DTMF]     = { CatDtmf,     ARRAY_SIZE(CatDtmf)     },
+#ifdef ENABLE_MESSENGER
+    [CAT_MSG]      = { CatMsg,      ARRAY_SIZE(CatMsg)      },
+#endif
+    [CAT_SERVICE]  = { CatService,  ARRAY_SIZE(CatService)  },
+    [CAT_ALL]      = { NULL, 0 },
+};
+
+uint8_t gMenuCategory  = CAT_ALL;
+uint8_t gMenuLevel     = MENU_LEVEL_CAT;
+uint8_t gCatOrder[CAT_COUNT];
+uint8_t gMenuCatCursor = 0;
+uint8_t gCatLastPos[CAT_COUNT];   // last item cursor position, per category
+
+// Index of 'id' in MenuList, or 0xFF when the item is not compiled in.
+static uint8_t menu_find_idx(uint8_t id)
+{
+    for (uint8_t i = 0; MenuList[i].name[0] != '\0'; i++)
+        if (MenuList[i].menu_id == id)
+            return i;
+    return 0xFF;
+}
+
+// Number of compiled items in a category.
+uint8_t UI_MENU_CategoryItemCount(uint8_t cat)
+{
+    uint8_t n = 0;
+
+    if (cat == CAT_ALL)
+    {
+        for (uint8_t i = 0; MenuList[i].name[0] != '\0'; i++)
+        {
+            if (!gF_LOCK && MenuList[i].menu_id == FIRST_HIDDEN_MENU_ITEM)
+                break;
+            n++;
+        }
+        return n;
+    }
+
+    const cat_list_t *cl = &CategoryLists[cat];
+    for (uint8_t k = 0; k < cl->len; k++)
+        if (menu_find_idx(cl->ids[k]) != 0xFF)
+            n++;
+    return n;
+}
+
+// Category screen: gCatOrder = visible categories, gMenuListCount = their
+// number. Service only shows up with F-LOCK (hidden menu) enabled.
+void UI_MENU_BuildCategoryScreen(void)
+{
+    gMenuListCount = 0;
+    for (uint8_t c = 0; c < CAT_COUNT; c++)
+    {
+        if (c == CAT_SERVICE && !gF_LOCK)
+            continue;
+        gCatOrder[gMenuListCount++] = c;
+    }
+}
+
+static void UI_MENU_DrawCategories(void)
+{
+    char str[16];
+    const unsigned int sep = 64;          // separator moved right for long names ("Channels")
+    const unsigned int x1  = sep + 2;
+    const unsigned int x2  = LCD_WIDTH - 1;
+
+    UI_DisplayClear();
+
+    UI_DrawLineBuffer(gFrameBuffer, sep, 0, sep, 55, 1);
+    for (uint8_t i = 0; i < sep; i += 2)
+        gFrameBuffer[5][i] = 0x40;
+
+    const int count = gMenuListCount;
+    const int cur   = gMenuCursor;
+
+    int prev = cur - 1; if (prev < 0)      prev = count - 1;
+    int next = cur + 1; if (next >= count) next = 0;
+
+    if (count > 1)
+        UI_PrintStringSmallNormal(CategoryNames[gCatOrder[prev]], 0, 0, 1);
+    UI_PrintString(CategoryNames[gCatOrder[cur]], 0, 0, 2, 8);
+    if (count > 1)
+        UI_PrintStringSmallNormal(CategoryNames[gCatOrder[next]], 0, 0, 4);
+
+    sprintf(str, "%02u/%02u", 1 + cur, count);
+    UI_PrintStringSmallNormal(str, 6, 0, 6);
+
+    sprintf(str, "%02u", UI_MENU_CategoryItemCount(gCatOrder[cur]));
+    UI_PrintString(str, x1, x2, 1, 8);
+    UI_PrintStringSmallNormal("items", x1, x2, 5);
+
+    ST7565_BlitFullScreen();
+}
+#endif
+
+// Build the current view (shown position -> MenuList index). The only place
+// that sets gMenuListCount + gMenuIndices for the item level.
+void UI_MENU_BuildView(void)
+{
+    gMenuListCount = 0;
+
+#ifdef ENABLE_FEAT_F4HWN_MENU_CAT
+    if (gMenuCategory != CAT_ALL)
+    {
+        const cat_list_t *cl = &CategoryLists[gMenuCategory];
+        for (uint8_t k = 0; k < cl->len; k++)
+        {
+            uint8_t idx = menu_find_idx(cl->ids[k]);
+            if (idx != 0xFF)
+                gMenuIndices[gMenuListCount++] = idx;
+        }
+        return;
+    }
+#endif
+
+    for (uint8_t i = 0; MenuList[i].name[0] != '\0'; i++)
+    {
+        if (!gF_LOCK && MenuList[i].menu_id == FIRST_HIDDEN_MENU_ITEM)
+            break;
+
+        gMenuIndices[gMenuListCount++] = i;
+    }
 }
 
 int32_t gSubMenuSelection;
@@ -627,7 +826,7 @@ static void UI_MENU_DrawUnifiedTextEditor(const int m)
 #ifdef ENABLE_MESSENGER
                         m == MENU_MSG_CSG ? "CLLSGN" :
 #endif
-                        MenuList[gMenuCursor].name;
+                        MenuList[gMenuIndices[gMenuCursor]].name;
     UI_GOGU_TextEditorCursor = edit_index < 0 ? 0xFFu : gMenuTextEditorCursor;
     UI_GOGU_DrawTextEditor(title, edit, max_len, "SAVE",
                            UI_MENU_TextEditModeLabel(), false, "F:DEL");
@@ -699,6 +898,17 @@ void UI_DisplayMenu(void)
     char               String[64];  // bigger cuz we can now do multi-line in one string (use '\n' char)
     char               top_right_badge[16];
 
+#ifdef ENABLE_FEAT_F4HWN_MENU_CAT
+    // The status bar shows the menu level / category capsule: refresh it.
+    gUpdateStatus = true;
+
+    if (gMenuLevel == MENU_LEVEL_CAT)
+    {
+        UI_MENU_DrawCategories();
+        return;
+    }
+#endif
+
     const int m = UI_MENU_GetCurrentMenuId();
 
     if (gIsInSubMenu && edit_index >= 0 &&
@@ -734,7 +944,7 @@ void UI_DisplayMenu(void)
     for (i = 0; i < 3; i++)
         if (gMenuCursor > 0 || i > 0)
             if ((gMenuListCount - 1) != gMenuCursor || i != 2)
-                UI_PrintString(MenuList[gMenuCursor + i - 1].name, 0, 0, i * 2, 8);
+                UI_PrintString(MenuList[gMenuIndices[gMenuCursor + i - 1]].name, 0, 0, i * 2, 8);
 
     // invert the current menu list item pixels
     for (i = 0; i < (8 * menu_list_width); i++)
@@ -766,24 +976,24 @@ void UI_DisplayMenu(void)
             {   // leading menu items - small text
                 const int k = menu_index + i - 2;
                 if (k < 0)
-                    UI_PrintStringSmallNormal(MenuList[gMenuListCount + k].name, 0, 0, i);  // wrap-a-round
+                    UI_PrintStringSmallNormal(MenuList[gMenuIndices[gMenuListCount + k]].name, 0, 0, i);  // wrap-a-round
                 else if (k >= 0 && k < (int)gMenuListCount)
-                    UI_PrintStringSmallNormal(MenuList[k].name, 0, 0, i);
+                    UI_PrintStringSmallNormal(MenuList[gMenuIndices[k]].name, 0, 0, i);
                 i++;
             }
 
             // current menu item - keep big n fat
             if (menu_index >= 0 && menu_index < (int)gMenuListCount)
-                UI_PrintString(MenuList[menu_index].name, 0, 0, 2, 8);
+                UI_PrintString(MenuList[gMenuIndices[menu_index]].name, 0, 0, 2, 8);
             i++;
 
             while (i < 4)
             {   // trailing menu item - small text
                 const int k = menu_index + i - 2;
                 if (k >= 0 && k < (int)gMenuListCount)
-                    UI_PrintStringSmallNormal(MenuList[k].name, 0, 0, 1 + i);
+                    UI_PrintStringSmallNormal(MenuList[gMenuIndices[k]].name, 0, 0, 1 + i);
                 else if (k >= (int)gMenuListCount)
-                    UI_PrintStringSmallNormal(MenuList[gMenuListCount - k].name, 0, 0, 1 + i);  // wrap-a-round
+                    UI_PrintStringSmallNormal(MenuList[gMenuIndices[k - gMenuListCount]].name, 0, 0, 1 + i);  // wrap-a-round
                 i++;
             }
 
@@ -796,12 +1006,12 @@ void UI_DisplayMenu(void)
         else if (menu_index >= 0 && menu_index < (int)gMenuListCount)
         {   // current menu item
 //          strcat(String, ":");
-            UI_PrintString(MenuList[menu_index].name, 0, 0, 0, 8);
+            UI_PrintString(MenuList[gMenuIndices[menu_index]].name, 0, 0, 0, 8);
 //          UI_PrintStringSmallNormal(String, 0, 0, 0);
         }
 
 #ifdef ENABLE_FEAT_F4HWN
-        sprintf(String, "%02u/%u", 1 + gMenuCursor, gMenuListCount);
+        sprintf(String, "%02u/%02u", 1 + gMenuCursor, gMenuListCount);
         UI_PrintStringSmallNormal(String, 6, 0, 6);
 #endif
     }
@@ -1338,10 +1548,6 @@ void UI_DisplayMenu(void)
                 memcpy(String, Contact, 8);
             break;
 #endif
-
-        case MENU_PONMSG:
-            strcpy(String, gSubMenu_PONMSG[gSubMenuSelection]);
-            break;
 
         case MENU_ROGER:
             strcpy(String, gSubMenu_ROGER[gSubMenuSelection]);

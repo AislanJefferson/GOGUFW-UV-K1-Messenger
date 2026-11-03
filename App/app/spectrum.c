@@ -600,16 +600,60 @@ static uint16_t GetStepsCountDisplay()
 
 uint32_t GetBW() { return GetStepsCount() * GetScanStep(); }
 
+// Last resolved (ordinal, channel) pair. Sweeps ask for neighbouring ordinals,
+// so walking from the previous answer keeps a full sweep linear instead of
+// rescanning the bitmap from channel 1 on every step.
+static uint16_t spectrumCacheOrdinal = 0xFFFF;
+static uint16_t spectrumCacheChannel;
+
+static bool SpectrumChannelIsValid(uint16_t channel)
+{
+    const uint16_t index = channel - MR_CHANNEL_FIRST;
+    return (spectrumValidChannels[index >> 3] & (1u << (index & 7))) != 0;
+}
+
 static uint16_t SpectrumChannelAt(uint16_t ordinal)
 {
-    for (uint16_t channel = MR_CHANNEL_FIRST; IS_MR_CHANNEL(channel); channel++)
+    uint16_t channel = MR_CHANNEL_FIRST;
+    uint16_t remaining = ordinal;
+
+    if (spectrumCacheOrdinal != 0xFFFF)
     {
-        const uint16_t index = channel - MR_CHANNEL_FIRST;
-        if (spectrumValidChannels[index >> 3] & (1u << (index & 7)))
+        if (ordinal >= spectrumCacheOrdinal)
         {
-            if (ordinal == 0)
+            channel = spectrumCacheChannel;
+            remaining = ordinal - spectrumCacheOrdinal;
+        }
+        else
+        {
+            // Walk back from the cached channel (reverse sweeps).
+            channel = spectrumCacheChannel;
+            remaining = spectrumCacheOrdinal - ordinal;
+            while (channel > MR_CHANNEL_FIRST)
+            {
+                channel--;
+                if (SpectrumChannelIsValid(channel) && --remaining == 0)
+                {
+                    spectrumCacheOrdinal = ordinal;
+                    spectrumCacheChannel = channel;
+                    return channel;
+                }
+            }
+            return 0xFFFF;
+        }
+    }
+
+    for (; IS_MR_CHANNEL(channel); channel++)
+    {
+        if (SpectrumChannelIsValid(channel))
+        {
+            if (remaining == 0)
+            {
+                spectrumCacheOrdinal = ordinal;
+                spectrumCacheChannel = channel;
                 return channel;
-            ordinal--;
+            }
+            remaining--;
         }
     }
     return 0xFFFF;
@@ -1516,10 +1560,19 @@ static void UpdateFreqInput(KEY_Code_t key)
 static void Blacklist()
 {
 #ifdef ENABLE_SCAN_RANGES
-    blacklistFreqs[blacklistFreqsIdx++ % ARRAY_SIZE(blacklistFreqs)] = peak.i;
+    // Ring buffer: blacklistFreqsIdx counts the entries written, kept in
+    // [N, 2N) once the buffer is full so it never wraps back to "empty".
+    blacklistFreqs[blacklistFreqsIdx % ARRAY_SIZE(blacklistFreqs)] = peak.i;
+    if (++blacklistFreqsIdx >= 2 * ARRAY_SIZE(blacklistFreqs))
+        blacklistFreqsIdx -= ARRAY_SIZE(blacklistFreqs);
 #endif
 
-    SetRssiHistory(peak.i, RSSI_MAX_VALUE);
+#ifdef ENABLE_SCAN_RANGES
+    // Above 128 steps a history slot is shared with neighbouring steps; the
+    // per-index list already skips this one, so keep the slot drawable.
+    if (scanInfo.measurementsCount <= ARRAY_SIZE(rssiHistory))
+#endif
+        SetRssiHistory(peak.i, RSSI_MAX_VALUE);
     ResetPeak();
     ToggleRX(false);
     RestoreSpectrumScanRf(true);
@@ -1529,10 +1582,11 @@ static void Blacklist()
 #ifdef ENABLE_SCAN_RANGES
 static bool IsBlacklisted(uint16_t idx)
 {
-    if (blacklistFreqsIdx)
-        for (uint8_t i = 0; i < ARRAY_SIZE(blacklistFreqs); i++)
-            if (blacklistFreqs[i] == idx)
-                return true;
+    // Only the filled entries: unused slots are 0 and must not exclude index 0.
+    const uint8_t count = MIN(blacklistFreqsIdx, ARRAY_SIZE(blacklistFreqs));
+    for (uint8_t i = 0; i < count; i++)
+        if (blacklistFreqs[i] == idx)
+            return true;
     return false;
 }
 #endif
@@ -2014,17 +2068,24 @@ static uint8_t GetScanStepTextWidth()
     return (sprintf(NULL, "%u", GetScanStep() / 100) + 4) * 4; // "%u.%02uk", 4 px advance per char
 }
 
+static uint8_t GetBwTextWidth()
+{
+    return (strlen(bwOptions[settings.listenBw]) * 4) + 4; // 4 px advance per char
+}
+
 static void DrawRssiTriggerLevel(const uint8_t *topY)
 {
     if (settings.rssiTriggerLevel == RSSI_MAX_VALUE || monitorMode)
         return;
     uint8_t scanStepTextWidth = GetScanStepTextWidth();
+    // MR mode draws no BW text, only the modulation at x=116.
+    const uint8_t rightTextX = spectrumChannelMode ? 114 : 128 - GetBwTextWidth() - 2;
     uint8_t y = Rssi2Y(settings.rssiTriggerLevel);
     for (uint8_t x = 0; x < 128; x += 2)
     {
         if (SpectrumColumnAtOrAboveY(topY, x, y))
             continue;
-        if (y <= 12 && (x < scanStepTextWidth + 2 || x >= 114))
+        if (y <= 12 && (x < scanStepTextWidth + 2 || x >= rightTextX))
             continue;
         if (gFrameBuffer[y / 8][x] & (1 << (y % 8)))
             continue;
@@ -2110,7 +2171,10 @@ static bool OnKeyDownCommon(uint8_t key) {
             ToggleModulation();
         return true;
     case KEY_6:
-        ToggleListeningBW();
+        // While sweeping MR channels, TuneToPeak() applies each channel's own
+        // bandwidth, so 6 would be overwritten. While listening it still works.
+        if (!(spectrumChannelMode && currentState == SPECTRUM))
+            ToggleListeningBW();
         return true;
     case KEY_SIDE2:
         ToggleBacklight();
@@ -2182,8 +2246,7 @@ static void OnKeyDown(uint8_t key) {
         TuneToPeak();
         break;
     case KEY_MENU:
-        if (spectrumChannelMode)
-            break;
+        // Short MENU has no action (AUTO mode was removed); long MENU resets.
         break;
     case KEY_EXIT:
         if (menuState)
@@ -2512,13 +2575,18 @@ static bool HandleUserInput()
 
 static void Scan()
 {
-    uint8_t slot = GetHistorySlot(scanInfo.i);
-
-    if (rssiHistory[slot] != RSSI_MAX_VALUE
 #ifdef ENABLE_SCAN_RANGES
-        && !IsBlacklisted(scanInfo.i)
+    // With more steps than history slots, one slot covers several indices:
+    // a blacklisted slot must not stop its neighbours from being measured, so
+    // only the per-index blacklist decides there.
+    const bool skip = IsBlacklisted(scanInfo.i) ||
+        (scanInfo.measurementsCount <= ARRAY_SIZE(rssiHistory) &&
+         rssiHistory[GetHistorySlot(scanInfo.i)] == RSSI_MAX_VALUE);
+#else
+    const bool skip = rssiHistory[GetHistorySlot(scanInfo.i)] == RSSI_MAX_VALUE;
 #endif
-    )
+
+    if (!skip)
     {
         SetFScan(scanInfo.f);
         // Stored memories may jump hundreds of MHz between adjacent entries.
@@ -2961,6 +3029,7 @@ void APP_RunSpectrum()
 #endif
 
     spectrumChannelCount = 0;
+    spectrumCacheOrdinal = 0xFFFF;
     memset(spectrumValidChannels, 0, sizeof(spectrumValidChannels));
     if (spectrumChannelMode)
     {

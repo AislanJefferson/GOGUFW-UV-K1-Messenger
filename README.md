@@ -3,7 +3,8 @@
 GOGUFW is a custom firmware for the Quansheng UV-K1 / UV-K5 V3 based on
 **F4HWN 6.3.0**. It keeps the F4HWN radio feature set and adds an integrated
 radio-to-radio Messenger, HEARD list, multi-radio Range Check, CALLTX melodies,
-RF Log Lite, named FM memories and a multiboot environment.
+named FM memories, the F4HWN scan progress bar and menu categories, and a
+multiboot environment.
 
 ## Firmware at a glance
 
@@ -18,9 +19,9 @@ RF Log Lite, named FM memories and a multiboot environment.
 | 📻 **Supported radios** | Quansheng UV-K1 / UV-K5 V3 |
 | ⚙️ **Hardware** | PY32F071 MCU · BK4829 RF IC |
 | 🛠️ **Build preset** | Fusion · Release · ARM GNU Embedded |
-| 💾 **Firmware image** | 118,992 / 120,832 bytes · **98.48%** · 1,840 bytes free, including the 920-byte multiboot load image |
+| 💾 **Firmware image** | 118,932 / 120,832 bytes · **98.43%** · 1,900 bytes free, including the 920-byte multiboot load image |
 | 🧠 **Runtime stack** | 4,096-byte linker reservation · live/current and high-water values reported by `SystemInfo.app` |
-| ✉️ **GOGUFW tools** | Messenger · HEARD · Auto Check · Range Check · CALLTX · RF Log Lite · Full Watch · FM names/RSSI |
+| ✉️ **GOGUFW tools** | Messenger · HEARD · Auto Check · Range Check · CALLTX · Full Watch · FM names/RSSI |
 | 🔌 **CHIRP support** | Matching 3.3.5 module with 1024 memories, Messenger settings, FM names and all channel policies |
 
 ## Compatibility and downloads
@@ -133,13 +134,29 @@ The assigned HEARD action also behaves as a toggle.
 | --- | --- |
 | ![SEND PING and AUTO CHECK menu](docs/screenshots/heard_menu.png) | ![AUTO CHECK interval menu](docs/screenshots/heard_auto_menu.png) |
 
-### RF Log Lite
+### Scanning
 
-RF Log Lite is GOGUFW's compact, low-memory activity history. It keeps the latest 20 completed analog RX/TX events and shows the channel name or VFO frequency, direction, `MM:SS` duration and age. The list is stored only in RAM and is cleared when the radio restarts, avoiding external-flash writes.
+GOGUFW uses the F4HWN scan interface:
 
-Assign **RF LOG** directly to a programmable side-key action. Use **UP/DOWN** to browse one entry at a time, **MENU / SELECT** to load the selected memory channel or frequency into the active VFO, and **EXIT** to return without changing it.
+- During a memory scan, the middle line shows the position in the active scan list as `nn/total` with a progress bar. With priority channels, `P1`/`P2` appear next to the counter. Excluded channels show as empty columns in the bar.
+- During a frequency-range scan, the bar follows the position inside the range.
+- An RSSI sparkline of the last scanned steps is drawn on the scanning VFO line in normal and fast scan.
+- **F + UP/DOWN** or two number keys (`00` = ALL, `01`–`24`) change the scan list while scanning. The list name (`SCAN LIST <name>`) is shown for about one second, and the status bar keeps showing the active list (`ALL`, the list name or number, `+` when priority scanning is on).
+- Hold **MENU** on a stopped channel or frequency to exclude it from the scan. Scanning continues immediately. Memory-channel exclusions last until the radio is switched off.
 
-![Recent radio activity](docs/screenshots/rf_log.png)
+### Menu categories
+
+**MENU** opens a category screen (Channels, Scan, Keys, Power, Display, Timers, Audio, Radio, DTMF, Msg and All). **UP/DOWN** selects a category, **MENU** opens it and **EXIT** goes back to the categories. Each category remembers its last position. **All** is the complete flat list with the original order and numbers; typing a number on the category screen jumps straight to that item in All. The status bar shows `MENU` or the open category. Service (hidden menu) appears only after an F-LOCK boot.
+
+### TX frequency lock (F Lock)
+
+`F Lock`, in the hidden menu (Service category), has three options:
+
+- **BRASIL**: TX only on the Brazilian license-free general-use radio channels of Anatel Ato 14448 (Tabela XII): 462.5625–462.7125 MHz and 467.5625–467.7125 MHz. This is the default.
+- **DISABLE ALL**: no TX on any frequency.
+- **UNLOCK ALL**: TX on every supported band (confirm three times). Licensed amateurs (COER) need this option for 2 m and 70 cm.
+
+The firmware does not limit TX power; Anatel's rule is written for certified general-use radios.
 
 ### CALLTX
 
@@ -257,7 +274,8 @@ Hold **MENU while powering on** to open the firmware-slot selector.
 | Spectrum | **F + 5** |
 | Backlight override cycle | **F + 8**: always on → always off → saved strategy |
 | Keypad lock | Hold **F** |
-| RF Log Lite | Assign **RF LOG** to a side key |
+| Change scan list while scanning | **F + UP/DOWN** or two number keys |
+| Exclude channel/frequency while scanning | Hold **MENU** |
 | Multiboot | Hold **MENU** while powering on |
 
 ## CHIRP

@@ -87,7 +87,9 @@ add_subdirectory(App)
 if(ENABLE_FEAT_F4HWN_MULTIBOOT_OVERLAY)
     set_source_files_properties(
         "${CMAKE_SOURCE_DIR}/App/driver/mb_flash.c"
-        PROPERTIES COMPILE_OPTIONS "-fno-lto"
+        # Restore the default passes disabled in the Release flags so the
+        # audited RAM stub code stays unchanged.
+        PROPERTIES COMPILE_OPTIONS "-fno-lto;-ftree-ch;-fssa-phiopt"
     )
 endif()
 

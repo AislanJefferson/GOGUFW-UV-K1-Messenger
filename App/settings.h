@@ -27,6 +27,8 @@
 
 #define SETTINGS_BOOT_MESSAGE_LINE1_ADDR 0x00A0C8u
 
+/* POnMsg values as stored in the settings byte. The menu item was removed and
+ * the firmware always writes NONE; the enum only keeps the stored value. */
 enum POWER_OnDisplayMode_t {
 #ifdef ENABLE_FEAT_F4HWN
     POWER_ON_DISPLAY_MODE_ALL,
@@ -44,25 +46,18 @@ enum POWER_OnDisplayMode_t {
 typedef enum POWER_OnDisplayMode_t POWER_OnDisplayMode_t;
 
 enum TxLockModes_t {
-    F_LOCK_DEF, //all default frequencies + configurable
-    F_LOCK_FCC,
-#ifdef ENABLE_FEAT_F4HWN_CA
-    F_LOCK_CA,
-#endif
-    F_LOCK_CE,
-    F_LOCK_GB,
-    F_LOCK_430,
-    F_LOCK_438,
-#ifdef ENABLE_FEAT_F4HWN_PMR
-    F_LOCK_PMR,
-#endif
-#ifdef ENABLE_FEAT_F4HWN_GMRS_FRS_MURS
-    F_LOCK_GMRS_FRS_MURS,
-#endif
-    F_LOCK_ALL, // disable TX on all frequencies
+    F_LOCK_BR,   // Brazil, license-free general-use radio (Anatel Ato 14448, Tabela XII)
+    F_LOCK_ALL,  // disable TX on all frequencies
     F_LOCK_NONE, // enable TX on all frequencies
     F_LOCK_LEN
 };
+
+/* Stored F-LOCK byte. It keeps the legacy Fusion/CHIRP codes (9 = DISABLE ALL,
+ * 10 = UNLOCK ALL) so existing radios keep those two choices; every other
+ * stored value, including the removed regional plans, loads as F_LOCK_BR. */
+#define F_LOCK_STORED_BR    0u
+#define F_LOCK_STORED_ALL   9u
+#define F_LOCK_STORED_NONE  10u
 
 /*
 enum {
@@ -248,7 +243,6 @@ typedef struct {
 #if defined(ENABLE_ALARM) || defined(ENABLE_TX1750)
     ALARM_Mode_t      ALARM_MODE;
 #endif
-    POWER_OnDisplayMode_t POWER_ON_DISPLAY_MODE;
     ROGER_Mode_t          ROGER;
     uint8_t               REPEATER_TAIL_TONE_ELIMINATION;
     uint8_t               KEY_1_SHORT_PRESS_ACTION;
