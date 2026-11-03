@@ -232,7 +232,7 @@ void FUNCTION_Transmit()
     /* HOP: send the seed burst (NO_FSK_TX does not apply: HOP needs it). */
     if (gCurrentVfo->SCRAMBLING_TYPE == SCRAMBLE_TYPE_HOP && gSetting_ScrambleEnable &&
         !gCallToneTxActive)
-        SCR_HOP_TxBurst();
+        SCR_HOP_TxBurst(0);
 #endif
 
     if (gSetting_backlight_on_tx_rx & BACKLIGHT_ON_TR_TX) {

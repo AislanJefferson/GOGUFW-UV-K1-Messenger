@@ -50,7 +50,6 @@
 #endif
 #include "frequencies.h"
 #include "helper/battery.h"
-#include "helper/crypto.h"
 #include "misc.h"
 #include "settings.h"
 #include "../driver/st7565.h"
@@ -430,9 +429,6 @@ int MENU_GetLimits(uint8_t menu_id, int32_t *pMin, int32_t *pMax)
 
         #ifdef ENABLE_MESSENGER
         case MENU_MSG_CSG:
-#ifdef ENABLE_GOGUFW_CRYPTO
-        case MENU_CRY_KEY:
-#endif
             *pMax = 0;
             break;
         case MENU_MSG_RX:
@@ -518,19 +514,6 @@ void MENU_AcceptSetting(void)
                 MSG_STORE_SaveConfig();
             }
             break;
-#ifdef ENABLE_GOGUFW_CRYPTO
-        case MENU_CRY_KEY:
-            if (edit_index >= 0)
-            {
-                char key[CRYPTO_KEY_TEXT_LEN + 1];
-                memcpy(key, edit, CRYPTO_KEY_TEXT_LEN);
-                key[CRYPTO_KEY_TEXT_LEN] = 0;
-                for (int i = CRYPTO_KEY_TEXT_LEN - 1; i >= 0 && (key[i] == ' ' || key[i] == 0); --i)
-                    key[i] = 0;
-                CRYPTO_SaveText(key);
-            }
-            break;
-#endif
         case MENU_MSG_ACK:
             gMessengerConfig.msg_ack = gSubMenuSelection; MSG_STORE_SaveConfig(); break;
         case MENU_MSG_BEEP:
@@ -1015,9 +998,6 @@ void MENU_ShowCurrentSetting(void)
         case MENU_MSG_RX:
             MSG_STORE_Init(); gSubMenuSelection = gMessengerConfig.msg_rx; break;
         case MENU_MSG_CSG:
-#ifdef ENABLE_GOGUFW_CRYPTO
-        case MENU_CRY_KEY:
-#endif
             MSG_STORE_Init(); gSubMenuSelection = 0; break;
         case MENU_MSG_ACK:
             MSG_STORE_Init(); gSubMenuSelection = gMessengerConfig.msg_ack; break;
@@ -1401,10 +1381,6 @@ static bool MENU_IsTextEditMenuItemId(const int m)
         return true;
 #ifdef ENABLE_MESSENGER
     if (m == MENU_MSG_CSG)
-        return true;
-#endif
-#ifdef ENABLE_GOGUFW_CRYPTO
-    if (m == MENU_CRY_KEY)
         return true;
 #endif
     return false;
@@ -1835,13 +1811,6 @@ static void MENU_Key_MENU(const bool bKeyPressed, const bool bKeyHeld)
                 MSG_STORE_Init();
                 memset(edit, 0, sizeof(edit));
                 strncpy(edit, gMessengerConfig.callsign, MSG_CALLSIGN_EDIT_LEN);
-            }
-#endif
-#ifdef ENABLE_GOGUFW_CRYPTO
-            else if (UI_MENU_GetCurrentMenuId() == MENU_CRY_KEY)
-            {
-                memset(edit, 0, sizeof(edit));
-                CRYPTO_ReadText(edit);
             }
 #endif
 

@@ -232,6 +232,7 @@ void RADIO_InitInfo(VFO_Info_t *pInfo, const uint16_t ChannelSave, const uint32_
     pInfo->NO_FSK_TX                = false;
     pInfo->NO_ROGER                 = false;
     pInfo->OUTPUT_POWER             = OUTPUT_POWER_LOW1;
+    pInfo->CHANNEL_BANDWIDTH        = BANDWIDTH_NARROW;   // N+ when SetNFM is on
     pInfo->freq_config_RX.Frequency = Frequency;
     pInfo->freq_config_TX.Frequency = Frequency;
     pInfo->pRX                      = &pInfo->freq_config_RX;
@@ -400,7 +401,7 @@ void RADIO_ConfigureChannel(const unsigned int VFO, const unsigned int configure
         if (data[4] == 0xFF)
         {
             pVfo->FrequencyReverse  = false;
-            pVfo->CHANNEL_BANDWIDTH = BK4819_FILTER_BW_WIDE;
+            pVfo->CHANNEL_BANDWIDTH = BANDWIDTH_NARROW;   // N+ when SetNFM is on
             pVfo->OUTPUT_POWER      = OUTPUT_POWER_LOW1;
             pVfo->BUSY_CHANNEL_LOCK = false;
             pVfo->TX_LOCK = true;

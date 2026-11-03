@@ -12,9 +12,16 @@
 #include "radio.h"
 #include "scheduler.h"
 
-#define HOP_MAGIC      0x4847u   /* "GH" */
+#define HOP_MAGIC      0x47u     /* word0 = 'G' << 8 | resync index */
 #define HOP_CHECK_N    0x48505351u
 #define HOP_SLOT_MS    500u
+/* A burst (initial idx 0, then one every HOP_RESYNC_MS) ends its 8th byte at
+ * t0 + idx * HOP_RESYNC_MS + HOP_POS_MS: mid-slot, away from hop boundaries.
+ * The TX never moves t0, so a receiver that misses a resync stays aligned. */
+#define HOP_RESYNC_MS  8000u
+#define HOP_POS_MS     290u
+/* RX keeps hopping through fades: stop only after this long without RX. */
+#define HOP_HANG_MS    2000u
 /* RX guard mute around each slot boundary. Covers the chips' internal
  * latencies and one byte of REG_59 preamble uncertainty (6.7 ms). */
 #define HOP_GUARD_MS   8u
@@ -34,8 +41,16 @@ void SCR_HOP_Reset(void)
 
 static uint16_t carrier(uint32_t seed, uint32_t slot)
 {
-    /* 16 inversion carriers, 2600..3500 Hz (EnableScramble steps 1032/100 Hz). */
-    return (uint16_t)(0x68DCu + (CRYPTO_Word(seed, slot) & 15u) * 619u);
+    /* 16 carriers in a 500 Hz window (REG_71: 1032 units = 100 Hz), chosen so
+     * the inverted voice fits the TX audio band: N/N+ (LPF 2.5 kHz)
+     * 2600..3100 Hz, Wide (LPF 3 kHz) 2900..3400 Hz. Seed bit 0 = Wide. */
+    return (uint16_t)(0x68DCu + ((seed & 1u) ? 3096u : 0u) +
+                      (CRYPTO_Word(seed, slot) & 15u) * 344u);
+}
+
+static uint32_t tx_wide(void)
+{
+    return gCurrentVfo->CHANNEL_BANDWIDTH == BANDWIDTH_WIDE;
 }
 
 static uint32_t elapsed(void)
@@ -51,30 +66,41 @@ void SCR_HOP_Apply(bool tx)
     }
     BK4819_EnableScramble(0);
     BK4819_WriteRegister(BK4819_REG_71, gScrHop.active ? carrier(gScrHop.seed, gScrHop.slot)
-                                                       : carrier(0, 0xFFFFFFFFu));
+                                                       : carrier(tx_wide(), 0xFFFFFFFFu));
 }
 
 static void start(uint32_t seed, uint32_t t0, bool rx)
 {
-    gScrHop.seed   = seed;
-    gScrHop.t0     = t0;
-    gScrHop.slot   = 0;
-    gScrHop.rx     = rx;
-    gScrHop.active = 1;
+    gScrHop.seed    = seed;
+    gScrHop.t0      = t0;
+    gScrHop.last_rx = SCHEDULER_GetMs();
+    gScrHop.slot    = (uint16_t)(elapsed() / HOP_SLOT_MS);
+    gScrHop.idx     = 0;
+    gScrHop.rx      = rx;
+    gScrHop.active  = 1;
     SCR_HOP_Apply(!rx);
 }
 
-void SCR_HOP_TxBurst(void)
+static void wait_until(uint32_t ms)
 {
-    const uint32_t seed = CRYPTO_Word(((uint32_t)BK4819_ReadRegister(BK4819_REG_67) << 16) ^
-                                      SysTick->VAL, SCHEDULER_GetMs());
+    while ((int32_t)(elapsed() - ms) < 0) {}
+}
+
+void SCR_HOP_TxBurst(uint16_t idx)
+{
+    /* idx 0 starts a new over with a fresh seed; later ones resend it. */
+    const uint32_t seed = idx ? gScrHop.seed
+                              : (CRYPTO_Word(((uint32_t)BK4819_ReadRegister(BK4819_REG_67) << 16) ^
+                                             SysTick->VAL, SCHEDULER_GetMs()) & ~1u) | tx_wide();
+    const uint16_t word0 = (HOP_MAGIC << 8) | (idx & 0xFFu);
     const uint16_t words[4] = {
-        HOP_MAGIC, (uint16_t)seed, (uint16_t)(seed >> 16),
-        (uint16_t)CRYPTO_Word(seed, HOP_CHECK_N),
+        word0, (uint16_t)seed, (uint16_t)(seed >> 16),
+        (uint16_t)CRYPTO_Word(seed, HOP_CHECK_N ^ word0),
     };
     const uint16_t irq_mask = BK4819_ReadRegister(BK4819_REG_3F);
 
-    gScrHop.active = 0;
+    if (!idx)
+        gScrHop.active = 0;
     BK4819_EnterTxMute();
     BK4819_DisableScramble();
     /* Same narrow-lock as Messenger FSK TX: a Wide channel sends the burst
@@ -100,6 +126,9 @@ void SCR_HOP_TxBurst(void)
         BK4819_WriteRegister(BK4819_REG_5F, words[i]);
     SYSTEM_DelayMs(20);
 
+    /* Resync: start on the exact ms so the 8th byte ends at its anchor. */
+    if (idx)
+        wait_until(idx * HOP_RESYNC_MS + HOP_POS_MS - HOP_ANCHOR_MS);
     BK4819_WriteRegister(BK4819_REG_59, 0x28F8);   // start FSK TX
     const uint32_t t_start = SCHEDULER_GetMs();
 
@@ -118,7 +147,10 @@ void SCR_HOP_TxBurst(void)
     if (wide)
         BK4819_SetFilterBandwidth(BK4819_FILTER_BW_WIDE, false);
 
-    start(seed, t_start + HOP_ANCHOR_MS, false);
+    if (idx)
+        SCR_HOP_Apply(true);
+    else
+        start(seed, t_start + HOP_ANCHOR_MS - HOP_POS_MS, false);
     BK4819_ExitTxMute();
 }
 
@@ -126,9 +158,10 @@ bool SCR_HOP_RxStart(const uint16_t *words, uint32_t stamp_ms)
 {
     const uint32_t seed = (uint32_t)words[1] | ((uint32_t)words[2] << 16);
 
-    if (words[0] != HOP_MAGIC || words[3] != (uint16_t)CRYPTO_Word(seed, HOP_CHECK_N))
+    if ((words[0] >> 8) != HOP_MAGIC ||
+        words[3] != (uint16_t)CRYPTO_Word(seed, HOP_CHECK_N ^ words[0]))
         return false;
-    start(seed, stamp_ms, true);
+    start(seed, stamp_ms - (words[0] & 0xFFu) * HOP_RESYNC_MS - HOP_POS_MS, true);
     return true;
 }
 
@@ -140,11 +173,6 @@ static void guard_mute(bool mute)
     } else {
         BK4819_WriteRegister(BK4819_REG_48, gScrHop.reg48);
     }
-}
-
-static void wait_until(uint32_t ms)
-{
-    while ((int32_t)(elapsed() - ms) < 0) {}
 }
 
 void SCR_HOP_Stop(void)
@@ -160,11 +188,20 @@ void SCR_HOP_Tick(void)
     if (!gScrHop.active)
         return;
 
-    /* RX: the burst can arrive before the squelch state machine reports RX. */
-    if (gScrHop.rx ? ((!FUNCTION_IsRx() && elapsed() > 200u) ||
-                      gRxVfo->SCRAMBLING_TYPE != SCRAMBLE_TYPE_HOP)   // DW moved on
-                   : gCurrentFunction != FUNCTION_TRANSMIT) {
+    if (gScrHop.rx) {
+        /* Keep the slot clock through squelch fades; DW moving off ends it. */
+        if (FUNCTION_IsRx())
+            gScrHop.last_rx = SCHEDULER_GetMs();
+        if (SCHEDULER_GetMs() - gScrHop.last_rx > HOP_HANG_MS ||
+            gRxVfo->SCRAMBLING_TYPE != SCRAMBLE_TYPE_HOP) {
+            SCR_HOP_Stop();
+            return;
+        }
+    } else if (gCurrentFunction != FUNCTION_TRANSMIT) {
         SCR_HOP_Stop();
+        return;
+    } else if (elapsed() >= (gScrHop.idx + 1u) * HOP_RESYNC_MS) {
+        SCR_HOP_TxBurst(++gScrHop.idx);   // resync for late/faded receivers
         return;
     }
 

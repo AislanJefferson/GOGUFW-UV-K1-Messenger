@@ -33,6 +33,7 @@
 #include "driver/keyboard.h"
 #include "driver/mb_flash.h"
 #include "driver/py25q16.h"
+#include "helper/crypto.h"
 #include "driver/st7565.h"
 #include "driver/system.h"
 #include "driver/backlight.h"
@@ -2008,7 +2009,26 @@ uint8_t APP_LaunchOverlay(uint8_t slot)
                                   ? APP_LAUNCH_FROM_APRS_TX : 0u;
     }
     app_state.launch_shortcut = saved_context;
+#ifdef ENABLE_GOGUFW_CRYPTO
+    CRYPTO_Reload();   // Crypto.app may have committed a new CryKey
+#endif
     return rc;
+}
+
+bool APP_ReadNamedConfig(const char *name, uint8_t name_len, void *buf, uint8_t len)
+{
+    uint8_t slot;
+    char owner[APP_NAME_LEN];
+
+    if (!app_find_named_slot(name, name_len, &slot))
+        return false;
+    const uint32_t base = APP_SLOT_BASE(slot);
+    PY25Q16_ReadBuffer(base + APP_CFG_OWNER, owner, sizeof(owner));
+    /* Same ownership rule as cfg_load: untagged or tagged with this name. */
+    if ((uint8_t)owner[0] != 0xFFu && (memcmp(owner, name, name_len) || owner[name_len]))
+        return false;
+    PY25Q16_ReadBuffer(base + APP_CFG_OFFSET, buf, len);
+    return true;
 }
 
 uint8_t APP_SlotErase(uint8_t slot)

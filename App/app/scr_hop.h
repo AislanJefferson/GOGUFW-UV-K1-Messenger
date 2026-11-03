@@ -22,7 +22,9 @@ typedef struct {
     uint32_t seed;
     uint32_t t0;        /* ms: end of the 8th burst byte          */
     uint32_t stamp;     /* ms: RX time of the pending FSK IRQ     */
+    uint32_t last_rx;   /* ms: last tick seen in RX (fade hang)   */
     uint16_t slot;
+    uint16_t idx;       /* TX: last resync burst sent             */
     uint16_t reg48;     /* saved AF gain during the RX guard mute */
     uint8_t  active;
     uint8_t  rx;        /* session started by a received burst    */
@@ -35,7 +37,7 @@ void SCR_HOP_Reset(void);
 /* Program the scrambler for a HOP channel. TX without a session keeps a
  * fixed key-derived carrier, so a HOP TX is never sent in clear. */
 void SCR_HOP_Apply(bool tx);
-void SCR_HOP_TxBurst(void);
+void SCR_HOP_TxBurst(uint16_t idx);
 /* Validate the first 4 FIFO words of a received burst and start hopping. */
 bool SCR_HOP_RxStart(const uint16_t *words, uint32_t stamp_ms);
 void SCR_HOP_Stop(void);

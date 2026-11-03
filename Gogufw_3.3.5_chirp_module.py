@@ -274,7 +274,6 @@ struct {
 u8 ggfw_call_tone;
 u8 ggfw_call_vol;
 u8 ggfw_rng_rsp;
-char ggfw_crypto_key[16];
 
 // --------------------
 
@@ -2171,13 +2170,6 @@ class UVK5RadioEgzumer(chirp_common.CloneModeRadio):
                     _mem.ggfw_call_vol = int(element.value)
                 elif elname == "ggfw_rng_rsp":
                     _mem.ggfw_rng_rsp = int(element.value)
-                elif elname == "ggfw_crypto_key":
-                    # Rewrite only when edited: the key must stay byte-exact
-                    # with what the radio's own editor stored.
-                    if element.changed():
-                        key = "".join(c for c in str(element.value)
-                                      if c in GGFW_DRAFT_CHARS)[:10].rstrip(" ")
-                        _mem.ggfw_crypto_key = (key + "\x00" * 16)[:16]
                 elif elname == "ggfw_msg_callsign":
                     _mem.ggfw_msg_callsign = _ggfw_char_to_slot(element.value, 9, GGFW_CALLSIGN_CHARS)
                 elif elname.startswith("ggfw_msg_draft_"):
@@ -3177,13 +3169,6 @@ class UVK5RadioEgzumer(chirp_common.CloneModeRadio):
 
         val = RadioSettingValueList(GGFW_MSG_OFF_ON_LIST, GGFW_MSG_OFF_ON_LIST[int(_mem.ggfw_rng_rsp)])
         ggfw.append(RadioSetting("ggfw_rng_rsp", "RngRsp", val))
-
-        current_key = str(_mem.ggfw_crypto_key).split("\x00")[0].split("\xff")[0][:10]
-        val = RadioSettingValueString(0, 10, current_key, autopad=False)
-        val.set_charset(GGFW_DRAFT_CHARS)
-        rs = RadioSetting("ggfw_crypto_key", "CryKey", val)
-        rs.set_doc('Shared passphrase (up to 10 characters) for encrypted Messenger text and the HOP voice scrambler. Leave empty to disable.')
-        ggfw.append(rs)
 
         current_callsign = _ggfw_char_from_slot(_mem.ggfw_msg_callsign)
         val = RadioSettingValueString(0, 6, current_callsign)

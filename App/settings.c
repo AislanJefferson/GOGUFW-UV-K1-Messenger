@@ -848,6 +848,12 @@ void SETTINGS_FactoryReset(bool bIsAll)
         #endif
     #endif
 
+    #ifdef ENABLE_FEAT_F4HWN_NARROWER
+        // Narrow channels default to N+ (Narrower): best range.
+        Data8[14] |= 0x02;
+        gSetting_set_nfm = 1;
+    #endif
+
     PY25Q16_WriteBuffer(0x00A000, Data8, sizeof(Data8), false);
 
     // Keep RAM consistent with the persisted defaults.

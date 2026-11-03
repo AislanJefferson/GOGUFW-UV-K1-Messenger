@@ -930,7 +930,12 @@ static void MSG_RF_ArmSidecarIfIdle(void)
         return;
     }
     if (gCurrentFunction == FUNCTION_TRANSMIT) return;
+#ifdef ENABLE_GOGUFW_CRYPTO
+    /* HOP must hear mid-over resync bursts, e.g. after a fade. */
+    if (MSG_RF_ChannelBusy() && gRxVfo->SCRAMBLING_TYPE != SCRAMBLE_TYPE_HOP) return;
+#else
     if (MSG_RF_ChannelBusy()) return;
+#endif
 
     MSG_RF_CaptureFskCleanupSnapshot();
     memset(g_FSK_Buffer, 0, sizeof(g_FSK_Buffer));

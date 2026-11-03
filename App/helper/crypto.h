@@ -11,9 +11,9 @@
 #define ENABLE_GOGUFW_CRYPTO 1
 
 #define CRYPTO_KEY_TEXT_LEN   10u
-/* Free bytes right after the 320-byte Messenger config in its flash sector
- * (CHIRP alias 0xE140). 0x00/0xFF in the first byte means "no key". */
-#define CRYPTO_KEY_FLASH_ADDR (0x012000u + 320u)
+/* The passphrase is set with the "Crypto" overlay app (its 16-byte config).
+ * Without the app, or with an empty passphrase, every radio derives the same
+ * default key: HOP still interoperates and Messenger text stays in clear. */
 
 void     CRYPTO_Reload(void);
 bool     CRYPTO_HasKey(void);
@@ -21,8 +21,6 @@ bool     CRYPTO_HasKey(void);
 uint32_t CRYPTO_Word(uint32_t a, uint32_t b);
 /* XOR buf with the CTR keystream XTEA(key, n0 || n1 + block). */
 void     CRYPTO_Ctr(uint32_t n0, uint32_t n1, uint8_t *buf, uint8_t len);
-void     CRYPTO_ReadText(char out[CRYPTO_KEY_TEXT_LEN + 1]);
-void     CRYPTO_SaveText(const char *text);
 #endif
 
 #endif

@@ -889,7 +889,7 @@ void ACTION_Wn(void)
     uint8_t bw = pVfo->CHANNEL_BANDWIDTH;
 
     #ifdef ENABLE_FEAT_F4HWN_NARROWER
-        if (isRx && bw == BANDWIDTH_NARROW && gSetting_set_nfm == 1)
+        if (bw == BANDWIDTH_NARROW && gSetting_set_nfm == 1)   // RX and TX alike
         {
             bw++; 
         }

@@ -192,9 +192,6 @@ enum
     /* Keep existing F4HWN/Messenger menu IDs stable. */
     MENU_SCR,
 #endif
-#if defined(ENABLE_FEAT_F4HWN) && defined(ENABLE_GOGUFW_SCRAMBLER) && defined(ENABLE_MESSENGER)
-    MENU_CRY_KEY,   // shared passphrase: encrypted Messenger + HOP scrambler
-#endif
 };
 
 #ifdef ENABLE_FEAT_F4HWN_MENU_CAT
