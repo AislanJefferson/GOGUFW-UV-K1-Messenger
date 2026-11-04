@@ -183,7 +183,9 @@ void SETTINGS_InitEEPROM(void)
     gEeprom.BACKLIGHT_TIME        = (Data[5] < 62) ? Data[5] : 12;
     #ifdef ENABLE_FEAT_F4HWN_NARROWER
         gEeprom.TAIL_TONE_ELIMINATION = Data[6] & 0x01;
-        gSetting_set_nfm = (Data[6] >> 1) & 0x01;
+        /* Saved values only use bits 0..2, so 0xFF is erased flash:
+         * default to plain Narrow (12.5 kHz), not N+. */
+        gSetting_set_nfm = (Data[6] != 0xFF) && ((Data[6] >> 1) & 0x01);
         #ifdef ENABLE_FEAT_F4HWN_RESUME_STATE
             gEeprom.VFO_OPEN = ((Data[6] >> 2) & 0x01) != 0 ? true : true;
         #endif
@@ -849,9 +851,9 @@ void SETTINGS_FactoryReset(bool bIsAll)
     #endif
 
     #ifdef ENABLE_FEAT_F4HWN_NARROWER
-        // Narrow channels default to N+ (Narrower): best range.
-        Data8[14] |= 0x02;
-        gSetting_set_nfm = 1;
+        // Narrow channels default to plain Narrow (12.5 kHz), not N+.
+        Data8[14] &= (uint8_t)~0x02;
+        gSetting_set_nfm = 0;
     #endif
 
     PY25Q16_WriteBuffer(0x00A000, Data8, sizeof(Data8), false);
