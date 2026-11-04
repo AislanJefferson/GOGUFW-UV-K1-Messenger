@@ -40,6 +40,7 @@
 #include "audio.h"
 #include "board.h"
 #include "driver/backlight.h"
+#include "driver/py25q16.h"
 #include "driver/bk4819.h"
 #include "driver/eeprom.h"
 #include "driver/gpio.h"
@@ -1897,6 +1898,7 @@ static void MENU_Key_MENU(const bool bKeyPressed, const bool bKeyHeld)
                         #if defined(ENABLE_OVERLAY)
                             overlay_FLASH_RebootToBootloader();
                         #else
+                            PY25Q16_Flush();
                             NVIC_SystemReset();
                         #endif
                     }
@@ -1929,6 +1931,7 @@ static void MENU_Key_MENU(const bool bKeyPressed, const bool bKeyHeld)
                         #if defined(ENABLE_OVERLAY)
                             overlay_FLASH_RebootToBootloader();
                         #else
+                            PY25Q16_Flush();
                             NVIC_SystemReset();
                         #endif
                     }

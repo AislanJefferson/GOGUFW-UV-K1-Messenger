@@ -62,6 +62,7 @@
     // #include "bsp/dp32g030/pwmplus.h"
 #endif
 #include "driver/backlight.h"
+#include "driver/py25q16.h"
 #if defined(ENABLE_FMRADIO_EMBEDDED) || \
     (defined(ENABLE_FEAT_F4HWN_OVERLAY_APPS) && defined(ENABLE_FMRADIO))
     #include "driver/bk1080.h"
@@ -2100,6 +2101,17 @@ void APP_TimeSlice10ms(void)
     gNextTimeslice = false;
 
     SETTINGS_SaveVfoIndicesFlush();
+    /* Idle write-back commit (~300 ms erase): only while the radio is idle,
+     * never inside an RX/TX, a Messenger ACK/PONG window or a HOP session. */
+    if ((gCurrentFunction == FUNCTION_FOREGROUND || gCurrentFunction == FUNCTION_POWER_SAVE)
+#ifdef ENABLE_MESSENGER
+        && !MSG_RF_TransactionActive()
+#endif
+#ifdef ENABLE_GOGUFW_CRYPTO
+        && !gScrHop.active
+#endif
+       )
+        PY25Q16_Tick10ms();
 
     BACKLIGHT_Update();
 
@@ -2555,6 +2567,7 @@ void APP_TimeSlice500ms(void)
             #ifdef ENABLE_OVERLAY
                 overlay_FLASH_RebootToBootloader();
             #else
+                PY25Q16_Flush();
                 NVIC_SystemReset();
             #endif
         }

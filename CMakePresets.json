@@ -117,6 +117,7 @@
                 "ENABLE_FEAT_F4HWN_LOGO": true,
                 "ENABLE_FEAT_F4HWN_MENU_CAT": true,
                 "ENABLE_FEAT_F4HWN_LOGO_SAV": false,
+                "ENABLE_FEAT_F4HWN_RESUME_STATE": false,
                 "ENABLE_GOGUFW_CALLTX": true,
                 "ENABLE_GOGUFW_RF_LOG": false,
                 "ENABLE_GOGUFW_SCRAMBLER": true,

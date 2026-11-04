@@ -362,6 +362,8 @@ void ACTION_Scan(bool bRestart)
 
         #ifdef ENABLE_FEAT_F4HWN_RESUME_STATE
             SETTINGS_WriteCurrentState();
+        #else
+            gRequestSaveSettings = true;   // keep the chosen list across reboots
         #endif
 
         // jump to the next channel

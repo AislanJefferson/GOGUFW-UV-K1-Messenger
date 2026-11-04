@@ -28,6 +28,10 @@ void PY25Q16_ReadBufferPhysical(uint32_t Address, void *pBuffer, uint32_t Size);
 void PY25Q16_WriteBuffer(uint32_t Address, const void *pBuffer, uint32_t Size, bool Append);
 void PY25Q16_SectorErase(uint32_t Address);
 void PY25Q16_InvalidateCache(void);
+/* Write-back cache: commit the pending sector now / idle commit from the
+ * main-loop 10 ms tick. Flush uses DMA, so IRQs must be enabled. */
+void PY25Q16_Flush(void);
+void PY25Q16_Tick10ms(void);
 
 #ifdef ENABLE_FEAT_F4HWN_OVERLAY_APPS
 /* The 4 KiB sector cache, reused as the overlay-app execution workspace. */

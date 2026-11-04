@@ -27,6 +27,7 @@
 #include "board.h"
 #include "py32f071_ll_dma.h"
 #include "driver/backlight.h"
+#include "driver/py25q16.h"
 #include "driver/bk4819.h"
 #include "driver/crc.h"
 #include "driver/eeprom.h"
@@ -877,6 +878,7 @@ void UART_HandleCommand(uint32_t Port)
             #if defined(ENABLE_OVERLAY)
                 overlay_FLASH_RebootToBootloader();
             #else
+                PY25Q16_Flush();
                 NVIC_SystemReset();
             #endif
             break;

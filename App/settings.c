@@ -1470,7 +1470,11 @@ State[1] = 0
         uint8_t State[8];
         // 0x1F88
         PY25Q16_ReadBuffer(0x010000 + 0x188, State, sizeof(State));
-        State[6] = gEeprom.VOLUME_GAIN;
+        /* Never persist the muted 0: it would survive a reboot and the next
+         * unmuted save would erase the shared calibration sector. */
+        if (!gMute)
+            gEeprom.VOLUME_GAIN_BACKUP = gEeprom.VOLUME_GAIN;
+        State[6] = gEeprom.VOLUME_GAIN_BACKUP;
         PY25Q16_WriteBuffer(0x010000 + 0x188, State, sizeof(State), false);
     }
 #endif

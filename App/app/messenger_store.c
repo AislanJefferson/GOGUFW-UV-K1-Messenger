@@ -242,11 +242,27 @@ void MSG_STORE_Init(void)
     }
 }
 
+/* next_msg_id (RAM and flash) holds a reserved ceiling; IDs are handed out
+ * from a RAM counter and the ceiling is persisted once per MSG_ID_BLOCK IDs,
+ * not once per TEXT/PING (an incrementing value always forces a sector erase).
+ * After a reboot the counter restarts at the ceiling, above every ID used. */
+#define MSG_ID_BLOCK 64u
+static uint16_t s_liveMsgId;
+
 uint16_t MSG_STORE_NextMsgId(void)
 {
-    uint16_t id = gMessengerConfig.next_msg_id++;
-    if (gMessengerConfig.next_msg_id == 0) gMessengerConfig.next_msg_id = 1;
-    MSG_STORE_SaveConfig();
+    if (!s_liveMsgId)
+        s_liveMsgId = gMessengerConfig.next_msg_id;
+    /* gap 0: block used up; gap > block: ceiling reloaded behind us. */
+    const uint16_t gap = (uint16_t)(gMessengerConfig.next_msg_id - s_liveMsgId);
+    if (gap == 0u || gap > MSG_ID_BLOCK) {
+        uint16_t ceil = (uint16_t)(s_liveMsgId + MSG_ID_BLOCK);
+        gMessengerConfig.next_msg_id = ceil ? ceil : 1u;
+        MSG_STORE_SaveConfig();
+        PY25Q16_Flush();    // erase now, before the TX and its ACK/PONG window
+    }
+    const uint16_t id = s_liveMsgId++;
+    if (!s_liveMsgId) s_liveMsgId = 1;
     return id;
 }
 

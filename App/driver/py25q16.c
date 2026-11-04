@@ -50,6 +50,15 @@ static uint8_t SectorCache[SECTOR_SIZE];
 static uint8_t BlackHole[4] __attribute__((aligned(4)));
 static volatile bool TC_Flag;
 
+/* Write-back: a change that needs an erase stays in SectorCache and is
+ * committed by one erase+program when another sector is touched, before a
+ * reset/bank switch, or after FLUSH_IDLE_10MS without further writes. A burst
+ * of saves (SaveSettings' five blocks, UP/DOWN tuning, a CHIRP upload) then
+ * costs a single erase per sector instead of one per write. */
+#define FLUSH_IDLE_10MS 200u
+static bool CacheDirty;
+static uint8_t FlushIdle10ms;
+
 #ifdef ENABLE_FEAT_F4HWN_MULTIBOOT
 static uint32_t BankBase;
 
@@ -68,6 +77,7 @@ _Static_assert(GOGU_BANK_OFFSET + (GOGU_PRIVATE_TO - GOGU_PRIVATE_FROM) <=
 
 void PY25Q16_SetBankBase(uint32_t Base)
 {
+    PY25Q16_Flush();
     BankBase = Base;
     SectorCacheAddr = 0x1000000;
 }
@@ -297,17 +307,50 @@ static void ReadBufferRaw(uint32_t Address, void *pBuffer, uint32_t Size)
     CS_Release();
 }
 
+/* Reads see pending write-back data: served from the cache when the range
+ * lies inside the dirty sector, committed first on a partial overlap. */
+static void ReadBufferCached(uint32_t Address, void *pBuffer, uint32_t Size)
+{
+    if (CacheDirty && Address < SectorCacheAddr + SECTOR_SIZE &&
+        Address + Size > SectorCacheAddr)
+    {
+        if (Address >= SectorCacheAddr && Address + Size <= SectorCacheAddr + SECTOR_SIZE)
+        {
+            memcpy(pBuffer, SectorCache + (Address - SectorCacheAddr), Size);
+            return;
+        }
+        PY25Q16_Flush();
+    }
+    ReadBufferRaw(Address, pBuffer, Size);
+}
+
 void PY25Q16_ReadBuffer(uint32_t Address, void *pBuffer, uint32_t Size)
 {
-    ReadBufferRaw(BankMap(Address), pBuffer, Size);
+    ReadBufferCached(BankMap(Address), pBuffer, Size);
 }
 
 #if defined(ENABLE_FEAT_F4HWN_EXT_FLASH_RW) || defined(ENABLE_FEAT_F4HWN_MULTIBOOT)
 void PY25Q16_ReadBufferPhysical(uint32_t Address, void *pBuffer, uint32_t Size)
 {
-    ReadBufferRaw(Address, pBuffer, Size);
+    ReadBufferCached(Address, pBuffer, Size);
 }
 #endif
+
+/* Commit the pending sector. Uses DMA (IRQ-driven): never call with IRQs off. */
+void PY25Q16_Flush(void)
+{
+    if (!CacheDirty)
+        return;
+    CacheDirty = false;
+    SectorErase(SectorCacheAddr);
+    SectorProgram(SectorCacheAddr, SectorCache, SECTOR_SIZE);
+}
+
+void PY25Q16_Tick10ms(void)
+{
+    if (FlushIdle10ms && --FlushIdle10ms == 0)
+        PY25Q16_Flush();
+}
 
 void PY25Q16_WriteBuffer(uint32_t Address, const void *pBuffer, uint32_t Size, bool Append)
 {
@@ -338,6 +381,7 @@ void PY25Q16_WriteBuffer(uint32_t Address, const void *pBuffer, uint32_t Size, b
 
         if (SecAddr != SectorCacheAddr)
         {
+            PY25Q16_Flush();
             /* Address is already mapped; avoid applying the bank twice. */
             ReadBufferRaw(SecAddr, SectorCache, SECTOR_SIZE);
             SectorCacheAddr = SecAddr;
@@ -361,22 +405,12 @@ void PY25Q16_WriteBuffer(uint32_t Address, const void *pBuffer, uint32_t Size, b
 
             memcpy(SectorCache + SecOffset, pBuffer, SecSize);
 
-            if (Erase)
-            {
-                SectorErase(SecAddr);
-
-                // CRITICAL FIX #2: Erase takes ~300ms, must complete before program starts
-                WaitWIP();
-
-                if (Append)
-                {
-                    SectorProgram(SecAddr, SectorCache, SecOffset + SecSize);
+            if (Erase || CacheDirty)
+            {   // defer the erase: commit the whole sector once (PY25Q16_Flush)
+                if (Erase && Append)
                     memset(SectorCache + SecOffset + SecSize, 0xff, SECTOR_SIZE - SecOffset - SecSize);
-                }
-                else
-                {
-                    SectorProgram(SecAddr, SectorCache, SECTOR_SIZE);
-                }
+                CacheDirty = true;
+                FlushIdle10ms = FLUSH_IDLE_10MS;
             }
             else
             {
@@ -401,6 +435,10 @@ void PY25Q16_SectorErase(uint32_t Address)
 {
     Address = BankMap(Address);
     Address -= (Address % SECTOR_SIZE);
+    if (SectorCacheAddr == Address)
+        CacheDirty = false;     // pending data is being erased anyway
+    else
+        PY25Q16_Flush();
     SectorErase(Address);
     if (SectorCacheAddr == Address)
     {
@@ -410,12 +448,18 @@ void PY25Q16_SectorErase(uint32_t Address)
 
 void PY25Q16_InvalidateCache(void)
 {
+    /* Commit pending data before the cache is dropped or reused as overlay
+     * workspace. The flush uses DMA; the only IRQs-masked caller
+     * (MB_RestoreSlot) already flushed through mb_spi_polled_mode(), so this
+     * is a no-op there. */
+    PY25Q16_Flush();
     SectorCacheAddr = 0x1000000;
 }
 
 #ifdef ENABLE_FEAT_F4HWN_OVERLAY_APPS
 uint8_t *PY25Q16_OverlayBuffer(void)
 {
+    PY25Q16_Flush();
     return SectorCache;
 }
 

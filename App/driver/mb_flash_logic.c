@@ -175,6 +175,10 @@ static uint8_t mb_spi_byte(uint8_t v)
  */
 static void mb_spi_polled_mode(void)
 {
+    /* Every MB operation enters here before raw SPI access: commit the
+     * driver's write-back sector while DMA/IRQs still work. MB_RestoreSlot
+     * masks IRQs before calling this, but its mb_validate() already did. */
+    PY25Q16_Flush();
     SPI2->CR2 &= ~(SPI_CR2_RXDMAEN | SPI_CR2_TXDMAEN);
     DMA1_Channel4->CCR &= ~DMA_CCR_EN;
     DMA1_Channel5->CCR &= ~DMA_CCR_EN;

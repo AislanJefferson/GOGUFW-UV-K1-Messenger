@@ -2,6 +2,25 @@
 
 ## Unreleased
 
+- Flash wear: the SPI flash driver now defers sector erases (write-back). A
+  change that needs an erase stays in the 4 KiB sector cache and is committed
+  once, 2 s after the last write while the radio is idle (foreground or power
+  save, no Messenger transaction, no HOP session), when another sector is
+  touched, or before a reset, bank switch, overlay app, Spectrum or multiboot
+  operation; reads of the pending sector are served from the cache. `SaveSettings` (5 blocks),
+  `SaveFM`, `WriteCurrentState`, Messenger config, `ResetTxLock`, UP/DOWN
+  tuning, typed frequencies and CHIRP uploads (8-byte chunks) now cost about
+  one erase per sector instead of one per write. A power-off within 2 s of a
+  change loses that change but no longer risks a half-erased sector.
+- Messenger IDs are reserved in blocks of 64: the flash keeps a ceiling and
+  is written once per 64 TEXT/PING packets instead of on every one (an AUTO
+  CHECK every 30 s used to erase the Messenger sector 120 times an hour). The
+  repeated `MSG_STORE_Init` reloads can no longer move the ID backwards. The
+  block reservation is committed immediately, before the TX and its ACK/PONG
+  window.
+- Mute no longer saves volume 0 into the shared calibration sector: the saved
+  volume is always the unmuted level, so mute does not survive a reboot and
+  unmuting cannot erase the calibration sector.
 - Typing a frequency in VFO starts a clean simplex setting: RX/TX CTCSS/DCS,
   offset direction/value and reverse are cleared (power, bandwidth, step,
   modulation and scrambler are kept). EXIT restores and re-saves the previous
@@ -14,6 +33,16 @@
   Wide), and tones/offset/reverse are cleared. Fixes the 6.25k listen filter
   writing bandwidth 2 into the VFO, which flipped a TX power bit, and 8.33k
   peaks being applied unrounded.
+- Fusion: `ENABLE_FEAT_F4HWN_RESUME_STATE` off to make room (-372 B). The
+  radio no longer resumes scan/Spectrum/FM after a power cycle, and starting
+  a scan or Spectrum no longer writes the state byte to flash. A scan list
+  chosen during a scan (two digits or the SCAN action) is still kept across
+  reboots through a normal settings save. Byte 0xA00F now holds `VFO_OPEN`
+  as in upstream builds without RESUME_STATE; existing values (state | list
+  << 3, always >= 8) still load as VFO open.
+- Image: 120,648 / 120,832 bytes (184 bytes free), including the 920-byte
+  multiboot load image; RAM 16,240 / 16,384 bytes; multiboot RAM-stub
+  isolation checks pass.
 - Scan interface aligned with F4HWN: the Fusion build now enables the scan
   progress bar (`nn/total`, `P1`/`P2`, excluded columns), the scan-list name
   and the RSSI sparkline (`ENABLE_FEAT_F4HWN_SCAN_PROGRESS` and

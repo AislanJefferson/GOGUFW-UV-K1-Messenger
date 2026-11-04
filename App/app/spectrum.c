@@ -3093,6 +3093,8 @@ void APP_RunSpectrum()
     #ifdef ENABLE_FEAT_F4HWN_RESUME_STATE
         SETTINGS_WriteCurrentState();
     #endif
+    // The Spectrum loop bypasses the 10 ms tick: commit pending writes now.
+    PY25Q16_Flush();
 
     BackupRegisters();
 
