@@ -227,6 +227,11 @@ void FUNCTION_Transmit()
     }
 #endif
 
+#ifdef ENABLE_GOGUFW_CRYPTO
+    /* Our own TX ends any RX HOP session (its tick would rewrite REG_71). */
+    if (gScrHop.rx)
+        gScrHop.active = 0;
+#endif
     RADIO_ApplyScramble(gCurrentVfo, true);
 #ifdef ENABLE_GOGUFW_CRYPTO
     /* HOP: send the seed burst (NO_FSK_TX does not apply: HOP needs it). */

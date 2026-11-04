@@ -232,7 +232,6 @@ void RADIO_InitInfo(VFO_Info_t *pInfo, const uint16_t ChannelSave, const uint32_
     pInfo->NO_FSK_TX                = false;
     pInfo->NO_ROGER                 = false;
     pInfo->OUTPUT_POWER             = OUTPUT_POWER_LOW1;
-    pInfo->CHANNEL_BANDWIDTH        = BANDWIDTH_NARROW;   // N+ when SetNFM is on
     pInfo->freq_config_RX.Frequency = Frequency;
     pInfo->freq_config_TX.Frequency = Frequency;
     pInfo->pRX                      = &pInfo->freq_config_RX;
@@ -319,6 +318,8 @@ void RADIO_ConfigureChannel(const unsigned int VFO, const unsigned int configure
 
         uint16_t bandIdx = channel - FREQ_CHANNEL_FIRST;
         RADIO_InitInfo(pVfo, channel, frequencyBandTable[bandIdx].lower);
+        if (pVfo->Modulation != MODULATION_AM)
+            pVfo->CHANNEL_BANDWIDTH = BANDWIDTH_NARROW;   // fresh VFO: N+ with SetNFM
         return;
     }
 
@@ -401,7 +402,9 @@ void RADIO_ConfigureChannel(const unsigned int VFO, const unsigned int configure
         if (data[4] == 0xFF)
         {
             pVfo->FrequencyReverse  = false;
-            pVfo->CHANNEL_BANDWIDTH = BANDWIDTH_NARROW;   // N+ when SetNFM is on
+            /* Unwritten record: FM defaults to Narrow (N+ with SetNFM). */
+            pVfo->CHANNEL_BANDWIDTH = pVfo->Modulation == MODULATION_AM ? BANDWIDTH_WIDE
+                                                                         : BANDWIDTH_NARROW;
             pVfo->OUTPUT_POWER      = OUTPUT_POWER_LOW1;
             pVfo->BUSY_CHANNEL_LOCK = false;
             pVfo->TX_LOCK = true;

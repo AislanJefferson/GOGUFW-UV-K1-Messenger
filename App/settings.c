@@ -867,6 +867,8 @@ void SETTINGS_FactoryReset(bool bIsAll)
     #ifdef ENABLE_FEAT_F4HWN_RESET_VFO
         RADIO_InitInfo(&gEeprom.VfoInfo[0], FREQ_CHANNEL_FIRST + BAND3_137MHz, 14550000);
         RADIO_InitInfo(&gEeprom.VfoInfo[1], FREQ_CHANNEL_FIRST + BAND6_400MHz, 43350000);
+        gEeprom.VfoInfo[0].CHANNEL_BANDWIDTH = BANDWIDTH_NARROW;   // N+ with SetNFM
+        gEeprom.VfoInfo[1].CHANNEL_BANDWIDTH = BANDWIDTH_NARROW;
 
         gEeprom.ScreenChannel[0] = FREQ_CHANNEL_FIRST + BAND3_137MHz;
         gEeprom.ScreenChannel[1] = FREQ_CHANNEL_FIRST + BAND6_400MHz;

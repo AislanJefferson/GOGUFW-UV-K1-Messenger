@@ -52,9 +52,10 @@ void UI_DisplayAudioBar(void);
 #endif
 #ifdef ENABLE_FEAT_F4HWN_AUDIO_SCOPE
 void UI_DisplayAudioScope(void);
-#ifdef ENABLE_FEAT_F4HWN_OVERLAY_APPS
-void UI_DisplayAudioScopeOverlay(uint8_t line, bool active);
 #endif
+#ifdef ENABLE_FEAT_F4HWN_OVERLAY_APPS
+/* Defined with or without AUDIO_SCOPE (a no-op without it). */
+void UI_DisplayAudioScopeOverlay(uint8_t line, bool active);
 #endif
 void UI_MAIN_TimeSlice500ms(void);
 void UI_DisplayMain(void);

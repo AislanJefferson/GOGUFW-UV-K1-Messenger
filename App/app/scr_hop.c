@@ -126,16 +126,22 @@ void SCR_HOP_TxBurst(uint16_t idx)
         BK4819_WriteRegister(BK4819_REG_5F, words[i]);
     SYSTEM_DelayMs(20);
 
-    /* Resync: start on the exact ms so the 8th byte ends at its anchor. */
-    if (idx)
-        wait_until(idx * HOP_RESYNC_MS + HOP_POS_MS - HOP_ANCHOR_MS);
-    BK4819_WriteRegister(BK4819_REG_59, 0x28F8);   // start FSK TX
+    /* Resync: start on the exact ms so the 8th byte ends at its anchor. A late
+     * one is skipped: it would re-anchor every receiver to the wrong time. */
+    bool send = true;
+    if (idx) {
+        const uint32_t target = idx * HOP_RESYNC_MS + HOP_POS_MS - HOP_ANCHOR_MS;
+        wait_until(target);
+        send = elapsed() - target <= 2u;
+    }
     const uint32_t t_start = SCHEDULER_GetMs();
-
-    /* Never stop before the whole burst is on air, whatever REG_0C says. */
-    while (SCHEDULER_GetMs() - t_start < HOP_BURST_MS) {}
-    for (uint8_t n = 0; n < 20u && !(BK4819_ReadRegister(BK4819_REG_0C) & 1u); n++)
-        SYSTEM_DelayMs(5);
+    if (send) {
+        BK4819_WriteRegister(BK4819_REG_59, 0x28F8);   // start FSK TX
+        /* Never stop before the whole burst is on air, whatever REG_0C says. */
+        while (SCHEDULER_GetMs() - t_start < HOP_BURST_MS) {}
+        for (uint8_t n = 0; n < 20u && !(BK4819_ReadRegister(BK4819_REG_0C) & 1u); n++)
+            SYSTEM_DelayMs(5);
+    }
 
     /* Back to voice without BK4819_ResetFSK(): it would idle REG_30 (TX off). */
     BK4819_WriteRegister(BK4819_REG_02, 0);

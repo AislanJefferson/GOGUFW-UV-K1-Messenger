@@ -104,7 +104,7 @@
                 "ENABLE_FEAT_F4HWN_FULL_WATCH": true,
                 "ENABLE_FEAT_F4HWN_VOL": true,
                 "ENABLE_FEAT_F4HWN_AUDIO": true,
-                "ENABLE_FEAT_F4HWN_AUDIO_SCOPE": true,
+                "ENABLE_FEAT_F4HWN_AUDIO_SCOPE": false,
                 "ENABLE_FEAT_F4HWN_SCAN_PROGRESS": true,
                 "ENABLE_FEAT_F4HWN_SCAN_FASTER": true,
                 "ENABLE_FEAT_F4HWN_SCAN_RSSI": true,
