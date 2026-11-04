@@ -160,6 +160,7 @@ void     RADIO_ConfigureChannel(const unsigned int VFO, const unsigned int confi
 void     RADIO_ConfigureSquelchAndOutputPower(VFO_Info_t *pInfo);
 void     RADIO_ValidateAndSetCode(FREQ_Config_t *pFreq_Config, uint8_t tmp);
 void     RADIO_ApplyOffset(VFO_Info_t *pInfo);
+void     RADIO_SetSimplexFrequency(VFO_Info_t *pInfo, uint32_t Frequency);
 void     RADIO_SelectVfos(void);
 void     RADIO_SetupRegisters(bool switchToForeground);
 void     RADIO_ApplyScramble(const VFO_Info_t *pVfo, bool tx);

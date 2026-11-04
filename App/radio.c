@@ -738,6 +738,18 @@ void RADIO_ApplyOffset(VFO_Info_t *pInfo)
     pInfo->freq_config_TX.Frequency = Frequency;
 }
 
+/* Same as typing a frequency on the keypad: plain simplex, so tones,
+ * offset and reverse left over from the VFO's previous use are dropped. */
+void RADIO_SetSimplexFrequency(VFO_Info_t *pInfo, uint32_t Frequency)
+{
+    pInfo->freq_config_RX.CodeType       = CODE_TYPE_OFF;
+    pInfo->freq_config_TX.CodeType       = CODE_TYPE_OFF;
+    pInfo->TX_OFFSET_FREQUENCY_DIRECTION = TX_OFFSET_FREQUENCY_DIRECTION_OFF;
+    pInfo->TX_OFFSET_FREQUENCY           = 0;
+    pInfo->FrequencyReverse              = false;
+    pInfo->freq_config_RX.Frequency      = Frequency;
+}
+
 static void RADIO_SelectCurrentVfo(void)
 {
     // if crossband is active and DW not the gCurrentVfo is gTxVfo (gTxVfo/TX_VFO is only ever changed by the user)

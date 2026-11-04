@@ -77,8 +77,9 @@ static void VFO_RestoreBackup(void) {
         gEeprom.ScreenChannel[Vfo] = gScreenChannelBackup;
         gEeprom.FreqChannel[Vfo] = gFreqChannelBackup;
 
-        // Restore full VFO
+        // Restore full VFO, and persist it: each typed digit was already saved
         memcpy(gTxVfo, &gVfoBackup, sizeof(VFO_Info_t));
+        gRequestSaveChannel = 1;
 
         // Save and apply
         SETTINGS_SaveVfoIndices();
@@ -1034,7 +1035,9 @@ static void MAIN_Key_DIGITS(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
                 Frequency = (Frequency < center) ? BX4819_band1.upper - gTxVfo->StepFrequency : BX4819_band2.lower;
             }
 
-            gTxVfo->freq_config_RX.Frequency = Frequency;
+            /* A typed frequency starts as plain simplex (e.g. after a
+             * repeater copied with F+1). EXIT restores the old values. */
+            RADIO_SetSimplexFrequency(gTxVfo, Frequency);
 
             gRequestSaveChannel = 1;
             return;

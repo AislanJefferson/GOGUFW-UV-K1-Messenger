@@ -850,18 +850,25 @@ static void ToggleRX(bool on)
     }
 }
 
-static STEP_Setting_t SpectrumNearestStep(uint16_t step)
+// Closest valid MR channel stored within half a scan step (capped at
+// 6.25 kHz) of f, or 0xFFFF when the peak is not a saved channel.
+static uint16_t FindMrChannelNear(uint32_t f)
 {
-    STEP_Setting_t best = 0;
-    uint16_t bestDiff = 0xFFFF;
-    for (STEP_Setting_t i = 0; i < STEP_N_ELEM; i++)
+    uint32_t tol = GetScanStep() / 2;
+    if (tol > 625)
+        tol = 625;
+
+    uint16_t best = 0xFFFF;
+    for (uint16_t channel = MR_CHANNEL_FIRST; IS_MR_CHANNEL(channel); channel++)
     {
-        const uint16_t candidate = gStepFrequencyTable[i];
-        const uint16_t diff = candidate > step ? candidate - step : step - candidate;
-        if (diff < bestDiff)
+        if (!RADIO_CheckValidChannel(channel, false, 0))
+            continue;
+        const uint32_t chF = SETTINGS_FetchChannelFrequency(channel);
+        const uint32_t diff = chF > f ? chF - f : f - chF;
+        if (diff <= tol)
         {
-            best = i;
-            bestDiff = diff;
+            tol = diff;
+            best = channel;
         }
     }
     return best;
@@ -869,41 +876,43 @@ static STEP_Setting_t SpectrumNearestStep(uint16_t step)
 
 // Called only after the second PTT has physically been released, preventing
 // the main radio screen from interpreting the held key as a transmit request.
+// A peak that matches a saved MR channel opens that channel; any other
+// frequency lands in the VFO exactly as if it had been typed on the keypad.
 static void ExitToSpectrumPeak()
 {
     if (selectedPeakFrequency == 0)
         return;
 
     const uint8_t targetVfo = gEeprom.TX_VFO;
+    const uint32_t f = NormalizeScanFrequency(selectedPeakFrequency);
+    const uint16_t channel = spectrumChannelMode ? SpectrumChannelAt(selectedPeakIndex)
+                                                 : FindMrChannelNear(f);
     ToggleRX(false);
     RestoreRegisters();
 
-    if (spectrumChannelMode)
+    if (IS_MR_CHANNEL(channel))
     {
-        const uint16_t channel = SpectrumChannelAt(selectedPeakIndex);
-        if (!IS_MR_CHANNEL(channel))
-            return;
         gEeprom.MrChannel[targetVfo] = channel;
         gEeprom.ScreenChannel[targetVfo] = channel;
         gRequestSaveVFO = true;
         gVfoConfigureMode = VFO_CONFIGURE_RELOAD;
     }
+    else if (spectrumChannelMode)
+    {
+        return;
+    }
     else
     {
-        const uint16_t channel = FREQ_CHANNEL_FIRST + FREQUENCY_GetBand(selectedPeakFrequency);
-        gEeprom.FreqChannel[targetVfo] = channel;
-        gEeprom.ScreenChannel[targetVfo] = channel;
+        // Bandwidth, modulation, step and power come from the band's VFO
+        // record, as with keypad entry; only tones/offset/reverse are reset.
+        const uint16_t vfoChannel = FREQ_CHANNEL_FIRST + FREQUENCY_GetBand(f);
+        gEeprom.FreqChannel[targetVfo] = vfoChannel;
+        gEeprom.ScreenChannel[targetVfo] = vfoChannel;
         RADIO_ConfigureChannel(targetVfo, VFO_CONFIGURE_RELOAD);
-
         VFO_Info_t *target = &gEeprom.VfoInfo[targetVfo];
-        target->FrequencyReverse = false;
+        RADIO_SetSimplexFrequency(target, f);
         target->pRX = &target->freq_config_RX;
         target->pTX = &target->freq_config_TX;
-        target->freq_config_RX.Frequency = selectedPeakFrequency;
-        target->Modulation = settings.modulationType;
-        target->CHANNEL_BANDWIDTH = settings.listenBw;
-        target->STEP_SETTING = SpectrumNearestStep(GetScanStep());
-        target->StepFrequency = gStepFrequencyTable[target->STEP_SETTING];
         RADIO_ApplyOffset(target);
 
         gRequestSaveVFO = true;

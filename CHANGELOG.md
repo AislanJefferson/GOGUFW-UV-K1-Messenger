@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+- Typing a frequency in VFO starts a clean simplex setting: RX/TX CTCSS/DCS,
+  offset direction/value and reverse are cleared (power, bandwidth, step,
+  modulation and scrambler are kept). EXIT restores and re-saves the previous
+  VFO, so the flash no longer keeps the partial frequency after a cancel.
+- Spectrum (F+5) PTT×2: a peak that matches a saved MR channel (closest
+  within half a scan step, max 6.25 kHz) now opens that channel in MR mode
+  with its own settings. Any other peak lands in the VFO like a typed
+  frequency: bandwidth, modulation, step and power come from the band's VFO
+  (Narrow by default) instead of the Spectrum listen filter (which made it
+  Wide), and tones/offset/reverse are cleared. Fixes the 6.25k listen filter
+  writing bandwidth 2 into the VFO, which flipped a TX power bit, and 8.33k
+  peaks being applied unrounded.
 - Scan interface aligned with F4HWN: the Fusion build now enables the scan
   progress bar (`nn/total`, `P1`/`P2`, excluded columns), the scan-list name
   and the RSSI sparkline (`ENABLE_FEAT_F4HWN_SCAN_PROGRESS` and
