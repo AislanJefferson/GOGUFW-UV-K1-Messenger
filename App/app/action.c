@@ -125,10 +125,16 @@ static void ACTION_OpenRfLog(void)
 #endif
 
 #ifdef ENABLE_GOGUFW_SCRAMBLER
+#include "app/scr_hop.h"
 /* Toggle the scrambler of the current channel/VFO. Turning it off remembers
- * the type so the next press restores it. Defaults to 3200 Hz: index 7 of
- * gSubMenu_SCRAMBLER (0 = OFF, 1 = 2600 Hz ... 7 = 3200 Hz). */
+ * the type so the next press restores it. Defaults to HOP, whose carriers
+ * follow the channel bandwidth (a fixed 3200 Hz loses the voice lows in
+ * N/N+); builds without HOP use 3200 Hz (index 7 of gSubMenu_SCRAMBLER). */
+#ifdef ENABLE_GOGUFW_CRYPTO
+#define SCRAMBLE_DEFAULT_TYPE SCRAMBLE_TYPE_HOP
+#else
 #define SCRAMBLE_DEFAULT_TYPE 7u
+#endif
 static uint8_t gScrambleLastType = SCRAMBLE_DEFAULT_TYPE;
 
 static void ACTION_Scramble(void)
