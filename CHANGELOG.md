@@ -13,6 +13,9 @@
   scan-list label code in the status bar and the scan-list banner now share
   one formatter. The status-bar highlight box fits 1-2 letter list names.
   In MR mode the trigger line leaves a fixed gap for the list label.
+  The bottom labels show the first and last position inside the list
+  (`M:1` … `M:<n>`) instead of MR channel numbers; the right one is
+  right-aligned so `M:1024` fits.
 - Flash wear: the SPI flash driver now defers sector erases (write-back). A
   change that needs an erase stays in the 4 KiB sector cache and is committed
   once, 2 s after the last write while the radio is idle (foreground or power

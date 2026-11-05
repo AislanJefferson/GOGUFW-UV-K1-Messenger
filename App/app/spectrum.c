@@ -2087,10 +2087,10 @@ static void DrawNums()
 
     if (spectrumChannelMode)
     {
-        sprintf(String, "M:%u", SpectrumChannelAt(0) + 1);
-        GUI_DisplaySmallest(String, 0, 49, false, true);
-        sprintf(String, "M:%u", SpectrumChannelAt(spectrumChannelCount - 1) + 1);
-        GUI_DisplaySmallest(String, 106, 49, false, true);
+        // First/last position inside the swept list, not the MR channel number.
+        GUI_DisplaySmallest("M:1", 0, 49, false, true);
+        const int len = sprintf(String, "M:%u", spectrumChannelCount);
+        GUI_DisplaySmallest(String, 128 - len * 4, 49, false, true);
         return;
     }
 

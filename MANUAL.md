@@ -790,6 +790,7 @@ Canais criados pela busca mantêm a potência que estava em uso, ficam em **NARR
   - Com a prioridade ligada (`+`), os 2 canais prioritários ficam de fora de uma lista 01–24, mas aparecem em ALL.
   - Se a lista não tiver nenhum canal válido, o Spectrum varre todos os canais válidos e mostra `ALL`.
   - No canto superior esquerdo aparecem a lista e o número de canais varridos, por exemplo `ALL 42`, `RPT 12` ou `03 7`.
+  - Embaixo, `M:1` e `M:<n>` são a primeira e a última posição dentro da lista, não o número do canal. Uma lista com os canais 150–154 mostra `M:1` e `M:5`.
 - **Em VFO**: varre uma faixa contínua.
 
 ### 17.1 Teclas no gráfico
