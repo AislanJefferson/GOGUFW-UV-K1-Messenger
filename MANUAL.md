@@ -784,7 +784,12 @@ Canais criados pela busca mantêm a potência que estava em uso, ficam em **NARR
 
 **F + 5** abre o analisador.
 
-- **Em MR**: varre os canais de memória válidos e mostra nome e frequência do canal selecionado.
+- **Em MR**: varre os canais da lista de scan ativa (**ScList** ou a última lista escolhida no scan) e mostra nome e frequência do canal selecionado.
+  - Canais excluídos (MENU segurado) ficam de fora, como no scan de memória.
+  - **ALL** pega os canais que estão em alguma lista. Canais com `ChList OFF` ficam de fora.
+  - Com a prioridade ligada (`+`), os 2 canais prioritários ficam de fora de uma lista 01–24, mas aparecem em ALL.
+  - Se a lista não tiver nenhum canal válido, o Spectrum varre todos os canais válidos e mostra `ALL`.
+  - No canto superior esquerdo aparecem a lista e o número de canais varridos, por exemplo `ALL 42`, `RPT 12` ou `03 7`.
 - **Em VFO**: varre uma faixa contínua.
 
 ### 17.1 Teclas no gráfico
@@ -795,7 +800,7 @@ Canais criados pela busca mantêm a potência que estava em uso, ficam em **NARR
 | **2 / 8** | Passo de deslocamento + / − |
 | **3 / 9** | Topo da escala +5 / −5 dB |
 | **\* / F** | Nível de disparo sobe / desce |
-| **4** | Número de pontos: 128 / 64 / 32 / 16 |
+| **4** | VFO: número de pontos 128 / 64 / 32 / 16 · MR: próxima lista de scan |
 | **5** | Digitar uma frequência (\* = ponto decimal, MENU confirma) |
 | **0** | Muda a modulação (só em VFO) |
 | **6** | Largura de banda de escuta 25k / 12,5k / 6,25k, aplicada na hora (em MR, só na escuta) |
@@ -806,7 +811,9 @@ Canais criados pela busca mantêm a potência que estava em uso, ficam em **NARR
 | **PTT** | Para no pico e escuta |
 | **EXIT** | Sai e salva |
 
-Em MR, as teclas 1, 7, 2, 8, 4, 5 e 0 ficam inativas.
+Em MR, as teclas 1, 7, 2, 8, 5 e 0 ficam inativas.
+
+A lista trocada com a tecla 4 vale também para o scan de memória depois de sair. Ela não é gravada na hora: fica na memória do rádio e só vai para a flash quando outra configuração for salva, como acontece ao trocar a lista durante o scan.
 
 ### 17.2 Teclas na escuta
 

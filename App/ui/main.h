@@ -58,6 +58,8 @@ void UI_DisplayAudioScope(void);
 void UI_DisplayAudioScopeOverlay(uint8_t line, bool active);
 #endif
 void UI_MAIN_TimeSlice500ms(void);
+uint8_t UI_MAIN_GetActiveScanList(void);
+char *UI_MAIN_FormatScanListName(char *p, uint8_t scan_list);
 void UI_DisplayMain(void);
 #ifdef ENABLE_FEAT_F4HWN_FULL_WATCH
 void UI_MAIN_UpdateFullWatchArrows(void);

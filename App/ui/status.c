@@ -35,6 +35,7 @@
 #include "settings.h"
 #include "ui/battery.h"
 #include "ui/helper.h"
+#include "ui/main.h"
 #ifdef ENABLE_FEAT_F4HWN_MENU_CAT
 #include "ui/menu.h"
 #endif
@@ -138,27 +139,13 @@ void UI_DisplayStatus()
         if (gScanStateDir != SCAN_OFF || SCANNER_IsScanning()) {
             if (IS_MR_CHANNEL(gNextMrChannel) && !SCANNER_IsScanning()) { // channel mode
 
-                uint8_t end = 0;
-
-                if(gEeprom.SCAN_LIST_DEFAULT == MR_CHANNELS_LIST + 1)
-                {
-                    sprintf(str, gEeprom.SCAN_LIST_ENABLED ? "%s+" : "%s", "ALL");
-                    end = gEeprom.SCAN_LIST_ENABLED ? 18 : 14;
+                char *p = UI_MAIN_FormatScanListName(str, UI_MAIN_GetActiveScanList());
+                if (gEeprom.SCAN_LIST_ENABLED) {
+                    *p++ = '+';
+                    *p = '\0';
                 }
-                else
-                {
-                    const char *name = gListName[gEeprom.SCAN_LIST_DEFAULT - 1];
-
-                    // Check if name is valid
-                    if (!IsEmptyName(name, sizeof(gListName[0]))) {
-                        sprintf(str, "%.3s%s", name, gEeprom.SCAN_LIST_ENABLED ? "+" : "");
-                        end = gEeprom.SCAN_LIST_ENABLED ? 18 : 14;
-                    } 
-                    else {
-                        sprintf(str, "%02d%s", gEeprom.SCAN_LIST_DEFAULT, gEeprom.SCAN_LIST_ENABLED ? "+" : "");
-                        end = gEeprom.SCAN_LIST_ENABLED ? 14 : 10;
-                    }
-                }
+                // Highlight box: 4 px per character plus a 2 px margin.
+                const uint8_t end = (uint8_t)((p - str) * 4 + 2);
 
                 GUI_DisplaySmallest(str, 2, 1, true, true);
 

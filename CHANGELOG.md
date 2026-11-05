@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+- Spectrum (F+5) in MR mode now sweeps only the active scan list (ScList, or
+  the last list chosen during a scan) instead of every valid channel, so the
+  channel count and the `M:` first/last labels match the list. Excluded
+  channels are skipped like in the memory scan; an empty list falls back to
+  every valid channel. The top-left label shows the list and the count
+  (`ALL 42`, `RPT 12`, `03 7`) instead of `MR:<n>`. Key 4 moves to the next
+  valid list and restarts the sweep; the choice stays in RAM (no flash write)
+  and is used by the memory scan afterwards. Net -20 B of program flash: the
+  scan-list label code in the status bar and the scan-list banner now share
+  one formatter. The status-bar highlight box fits 1-2 letter list names.
+  In MR mode the trigger line leaves a fixed gap for the list label.
 - Flash wear: the SPI flash driver now defers sector erases (write-back). A
   change that needs an erase stays in the 4 KiB sector cache and is committed
   once, 2 s after the last write while the radio is idle (foreground or power

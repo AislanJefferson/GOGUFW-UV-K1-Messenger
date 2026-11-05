@@ -100,6 +100,7 @@ static SpectrumScratch_t *spectrumScratch;
 
 static bool spectrumChannelMode = false;
 static uint16_t spectrumChannelCount = 0;
+static uint8_t spectrumList; // scan list swept in MR mode (25 = ALL)
 static uint16_t spectrumDisplayChannel;
 static uint16_t spectrumDisplayOrdinal = 0;
 static uint32_t spectrumDisplayFreq;
@@ -683,6 +684,34 @@ static uint16_t SpectrumChannelOrdinal(uint16_t wantedChannel)
         }
     }
     return 0;
+}
+
+// MR mode sweeps the active scan list (excluded channels skipped, like the
+// memory scan). An empty list falls back to every valid channel, shown as ALL.
+static void LoadSpectrumChannels(void)
+{
+    spectrumList = UI_MAIN_GetActiveScanList();
+    bool checkList = true;
+    for (;;)
+    {
+        spectrumChannelCount = 0;
+        spectrumCacheOrdinal = 0xFFFF;
+        memset(spectrumValidChannels, 0, sizeof(spectrumValidChannels));
+        for (uint16_t channel = MR_CHANNEL_FIRST; IS_MR_CHANNEL(channel); channel++)
+        {
+            if (!RADIO_CheckValidChannel(channel, checkList, spectrumList))
+                continue;
+
+            const uint16_t index = channel - MR_CHANNEL_FIRST;
+            spectrumValidChannels[index >> 3] |= 1u << (index & 7);
+
+            spectrumChannelCount++;
+        }
+        if (spectrumChannelCount || !checkList)
+            return;
+        checkList = false;
+        spectrumList = MR_CHANNELS_LIST + 1;
+    }
 }
 
 static void CacheSpectrumChannel(uint16_t ordinal)
@@ -2038,7 +2067,8 @@ static void DrawNums()
     {
         if (spectrumChannelMode)
         {
-            sprintf(String, "MR:%u", GetStepsCount());
+            char *p = UI_MAIN_FormatScanListName(String, spectrumList);
+            sprintf(p, " %u", GetStepsCount());
             GUI_DisplaySmallest(String, 0, 1, false, true);
         }
         else
@@ -2128,15 +2158,21 @@ static void DrawRssiTriggerLevel(const uint8_t *topY)
 {
     if (settings.rssiTriggerLevel == RSSI_MAX_VALUE || monitorMode)
         return;
-    uint8_t scanStepTextWidth = GetScanStepTextWidth();
-    // MR mode draws no BW text, only the modulation at x=116.
-    const uint8_t rightTextX = spectrumChannelMode ? 114 : 128 - GetBwTextWidth() - 2;
+    // MR mode: "<list> <count>" label on the left (up to 8 chars, 4 px each)
+    // and only the modulation at x=116 on the right.
+    uint8_t leftTextX = 34;
+    uint8_t rightTextX = 114;
+    if (!spectrumChannelMode)
+    {
+        leftTextX = GetScanStepTextWidth() + 2;
+        rightTextX = 128 - GetBwTextWidth() - 2;
+    }
     uint8_t y = Rssi2Y(settings.rssiTriggerLevel);
     for (uint8_t x = 0; x < 128; x += 2)
     {
         if (SpectrumColumnAtOrAboveY(topY, x, y))
             continue;
-        if (y <= 12 && (x < scanStepTextWidth + 2 || x >= rightTextX))
+        if (y <= 12 && (x < leftTextX || x >= rightTextX))
             continue;
         if (gFrameBuffer[y / 8][x] & (1 << (y % 8)))
             continue;
@@ -2283,7 +2319,17 @@ static void OnKeyDown(uint8_t key) {
         break;
     case KEY_4:
         if (spectrumChannelMode)
+        {
+            // Next scan list. RAM only: no flash write here, a later
+            // settings save keeps it like a list chosen during a scan.
+            RADIO_NextValidList(1);
+            LoadSpectrumChannels();
+            spectrumDisplayChannel = 0xFFFF;
+            CacheSpectrumChannel(0);
+            currentFreq = SpectrumChannelFrequencyAt(0);
+            RearmRuntimeState();
             break;
+        }
 #ifdef ENABLE_SCAN_RANGES
         if (!gScanRangeStart)
 #endif
@@ -3080,21 +3126,9 @@ void APP_RunSpectrum()
         spectrumChannelMode = false;
 #endif
 
-    spectrumChannelCount = 0;
-    spectrumCacheOrdinal = 0xFFFF;
-    memset(spectrumValidChannels, 0, sizeof(spectrumValidChannels));
     if (spectrumChannelMode)
     {
-        for (uint16_t channel = MR_CHANNEL_FIRST; IS_MR_CHANNEL(channel); channel++)
-        {
-            if (!RADIO_CheckValidChannel(channel, false, 0))
-                continue;
-
-            const uint16_t index = channel - MR_CHANNEL_FIRST;
-            spectrumValidChannels[index >> 3] |= 1u << (index & 7);
-
-            spectrumChannelCount++;
-        }
+        LoadSpectrumChannels();
         if (spectrumChannelCount == 0)
             spectrumChannelMode = false;
     }

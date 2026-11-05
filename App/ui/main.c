@@ -278,6 +278,41 @@ static void UI_MAIN_DrawScanRssiSparkline(uint8_t line)
 }
 #endif
 
+// Active memory scan list: 1..24, or ALL (25) when unset or out of range.
+uint8_t UI_MAIN_GetActiveScanList(void)
+{
+    const uint8_t max_scan_list = MR_CHANNELS_LIST + 1;
+    uint8_t scan_list = gEeprom.SCAN_LIST_DEFAULT;
+
+    if (scan_list == 0 || scan_list > max_scan_list)
+        scan_list = max_scan_list;
+
+    return scan_list;
+}
+
+// Writes "ALL", the list name (up to 3 chars) or its 2-digit number at p,
+// NUL-terminated. Returns a pointer to the terminator.
+char *UI_MAIN_FormatScanListName(char *p, uint8_t scan_list)
+{
+    if (scan_list > MR_CHANNELS_LIST) {
+        *p++ = 'A';
+        *p++ = 'L';
+        *p++ = 'L';
+    } else {
+        const char *name = gListName[scan_list - 1];
+
+        if (IsEmptyName(name, sizeof(gListName[0]))) {
+            *p++ = (char)('0' + scan_list / 10);
+            *p++ = (char)('0' + scan_list % 10);
+        } else {
+            for (uint8_t i = 0; i < 3 && name[i]; i++)
+                *p++ = name[i];
+        }
+    }
+    *p = '\0';
+    return p;
+}
+
 #ifdef ENABLE_FEAT_F4HWN_SCAN_PROGRESS
 static void ScanProgress_ResetSession(void)
 {
@@ -321,41 +356,12 @@ static inline bool ScanProgress_GetBit(const uint8_t *map, uint16_t ch)
     return ((map[ch >> 3] >> (ch & 7)) & 1u) != 0;
 }
 
-static uint8_t ScanProgress_GetActiveScanList(void)
-{
-    const uint8_t max_scan_list = MR_CHANNELS_LIST + 1;
-    uint8_t scan_list = gEeprom.SCAN_LIST_DEFAULT;
-
-    if (scan_list == 0 || scan_list > max_scan_list)
-        scan_list = max_scan_list;
-
-    return scan_list;
-}
-
 static void UI_MAIN_DrawScanListName(void)
 {
-    const uint8_t scan_list = ScanProgress_GetActiveScanList();
     char text[16];
 
     strcpy(text, "SCAN LIST ");
-    char *p = text + 10;
-
-    if (scan_list > MR_CHANNELS_LIST) {
-        *p++ = 'A';
-        *p++ = 'L';
-        *p++ = 'L';
-    } else {
-        const char *name = gListName[scan_list - 1];
-
-        if (IsEmptyName(name, sizeof(gListName[0]))) {
-            *p++ = (char)('0' + scan_list / 10);
-            *p++ = (char)('0' + scan_list % 10);
-        } else {
-            for (uint8_t i = 0; i < 3 && name[i]; i++)
-                *p++ = name[i];
-        }
-    }
-    *p = '\0';
+    UI_MAIN_FormatScanListName(text + 10, UI_MAIN_GetActiveScanList());
 
     UI_MAIN_DrawCenterBoldLine(text, 0);
 }
@@ -614,7 +620,7 @@ static bool UI_DrawScanProgress(void)
     }
 
     if (show_memory) {
-        const uint8_t scan_list = ScanProgress_GetActiveScanList();
+        const uint8_t scan_list = UI_MAIN_GetActiveScanList();
         const bool reset_vfos_edge = gFlagResetVfos && !gScanProgressPrevResetVfosFlag;
         const bool force_rebuild = !gScanProgressSessionActive ||
                                    !gScanProgressSessionIsMemory ||
