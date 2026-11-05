@@ -806,13 +806,18 @@ Canais criados pela busca mantêm a potência que estava em uso, ficam em **NARR
 | **0** | Muda a modulação (só em VFO) |
 | **6** | Largura de banda de escuta 25k / 12,5k / 6,25k, aplicada na hora (em MR, só na escuta) |
 | **UP/DOWN** | Desloca a faixa / retoma a varredura |
-| **SIDE1** | Exclui temporariamente o pico atual |
+| **SIDE1** | Ignora o pico atual (o canal ou passo que está tocando) até sair do Spectrum |
 | **SIDE2** | Luz no máximo / mínimo |
 | **Segurar MENU** | Volta tudo ao padrão |
 | **PTT** | Para no pico e escuta |
 | **EXIT** | Sai e salva |
 
 Em MR, as teclas 1, 7, 2, 8, 5 e 0 ficam inativas.
+
+**Ignorar um canal (SIDE1):** funciona como excluir no scan, mas só vale enquanto o Spectrum está aberto e não grava nada na flash. O canal ou passo some do gráfico (a coluna fica vazia), deixa de ser medido, e a varredura continua.
+- Sem pico ainda, por exemplo logo depois de outra exclusão, o SIDE1 não faz nada. Espere a varredura achar o próximo sinal.
+- Com mais de 128 canais ou passos, a coluna continua desenhada (ela é dividida com canais vizinhos), e só as 15 últimas exclusões ficam valendo.
+- As exclusões são apagadas ao sair, ao segurar MENU, ao digitar uma frequência (tecla 5) e, em MR, ao trocar de lista com a tecla 4.
 
 A lista trocada com a tecla 4 vale também para o scan de memória depois de sair. Ela não é gravada na hora: fica na memória do rádio e só vai para a flash quando outra configuração for salva, como acontece ao trocar a lista durante o scan.
 

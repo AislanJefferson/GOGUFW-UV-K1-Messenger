@@ -1639,6 +1639,10 @@ static void UpdateFreqInput(KEY_Code_t key)
 
 static void Blacklist()
 {
+    // No peak yet (right after an exclusion or a sweep restart): peak.i is 0
+    // and would silently exclude the first step/channel.
+    if (peak.f == 0)
+        return;
 #ifdef ENABLE_SCAN_RANGES
     // Ring buffer: blacklistFreqsIdx counts the entries written, kept in
     // [N, 2N) once the buffer is full so it never wraps back to "empty".
@@ -2328,6 +2332,8 @@ static void OnKeyDown(uint8_t key) {
             CacheSpectrumChannel(0);
             currentFreq = SpectrumChannelFrequencyAt(0);
             RearmRuntimeState();
+            // Exclusions are stored by list position: drop them with the list.
+            ResetBlacklist();
             break;
         }
 #ifdef ENABLE_SCAN_RANGES

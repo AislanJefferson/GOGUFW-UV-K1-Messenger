@@ -16,6 +16,11 @@
   The bottom labels show the first and last position inside the list
   (`M:1` … `M:<n>`) instead of MR channel numbers; the right one is
   right-aligned so `M:1024` fits.
+- Spectrum SIDE1 (ignore the current peak for this Spectrum session): a
+  press with no peak yet (right after another exclusion or a sweep restart)
+  no longer silently excludes the first step/channel, and the MR key-4 list
+  change clears the exclusions, which are stored by list position and would
+  otherwise hit other channels of the new list.
 - Flash wear: the SPI flash driver now defers sector erases (write-back). A
   change that needs an erase stays in the 4 KiB sector cache and is committed
   once, 2 s after the last write while the radio is idle (foreground or power
