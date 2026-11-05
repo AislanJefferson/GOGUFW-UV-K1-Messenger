@@ -99,17 +99,21 @@ const char gModulationStr[MODULATION_UKNOWN][4] = {
 
     static void AUDIO_ApplyAMProfile(uint8_t profile)
     {   //  | 0x2b || 0x2f || 0x54 || 0x55 |
+        //
+        // REG_2B RX bits: <10> HPF 300 Hz off, <9> LPF 3 kHz off, <8> de-emphasis off.
+        // All AM profiles turn de-emphasis off (it is an FM-only curve).
+        // The original UV-K1 firmware used REG_2B = 0x0400 (de-emphasis on),
+        // which none of these profiles reproduces.
+        // REG_54/55 meaning is undocumented; SHARP and STOCK share the stock
+        // values and differ only in REG_2B.
         static const uint16_t am_profiles[][4] = {
-            // SHARP (ALPHA test profile) - Narrow IF filter (REG54 bits[14:8]=0, bits[7:0]=9), low IF gain (REG55 bits[11:8]=1, ref=169)
-            // Selective and crisp, best adjacent channel rejection, may sound harsh on strong signals
+            // SHARP: HPF 300 Hz on, LPF 3 kHz off -> brighter, more hiss
             {0x0300, 0x9990, 0x9009, 0x31A9},
 
-            // STOCK - Narrow IF filter (REG54 bits[14:8]=0, bits[7:0]=9), moderate IF gain (REG55 bits[11:8]=4, ref=180)
-            // Selective filter with balanced gain, punchy and detailed, good compromise between rejection and sensitivity
+            // STOCK: HPF 300 Hz off, LPF 3 kHz on -> fuller low end, 3 kHz top cut
             {0x0500, 0x9990, 0x9009, 0x31A9},
 
-            // OPEN (BRAVO test profile) - Medium-wide IF filter (REG54 bits[14:8]=8, bits[7:0]=70), high IF gain (REG55 bits[11:8]=8, ref=192)
-            // Wide and pleasant, better sensitivity on weak signals, may struggle with adjacent channel interference
+            // OPEN: same REG_2B as SHARP, with the experimental REG_54/55 pair
             {0x0300, 0x9990, 0x8846, 0x38C0}
         };
 
@@ -1172,6 +1176,10 @@ void RADIO_SetModulation(ModulationMode_t modulation)
             #ifdef ENABLE_FEAT_F4HWN_AUDIO
                 AUDIO_ApplyAMProfile(gSetting_set_audio_am);
             #else
+                // Stock UV-K1 AM values (de-emphasis on, as in the original
+                // firmware); without them AM inherits the FM ones.
+                BK4819_WriteRegister(0x2b, 0x0400);
+                BK4819_WriteRegister(0x2f, 0x9990);
                 BK4819_WriteRegister(0x54, 0x9009);
                 BK4819_WriteRegister(0x55, 0x31a9);
             #endif

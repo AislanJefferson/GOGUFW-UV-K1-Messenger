@@ -33,6 +33,10 @@
   Wide), and tones/offset/reverse are cleared. Fixes the 6.25k listen filter
   writing bandwidth 2 into the VFO, which flipped a TX power bit, and 8.33k
   peaks being applied unrounded.
+- AM: builds without `ENABLE_FEAT_F4HWN_AUDIO` write the stock AM REG_2B/2F
+  values again (0x0400/0x9990) instead of keeping the FM ones. The AM audio
+  profile comments now describe what the values do: SHARP and STOCK differ
+  only in REG_2B (3 kHz LPF off vs. 300 Hz HPF off). No change for Fusion.
 - Fusion: `ENABLE_FEAT_F4HWN_RESUME_STATE` off to make room (-372 B). The
   radio no longer resumes scan/Spectrum/FM after a power cycle, and starting
   a scan or Spectrum no longer writes the state byte to flash. A scan list
