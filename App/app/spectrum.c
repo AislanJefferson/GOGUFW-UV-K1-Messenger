@@ -83,18 +83,20 @@ static uint16_t selectedPeakIndex;
 #define SPECTRUM_MR_MANUAL_TRIGGER_RSSI 100
 /* These arrays are needed only while APP_RunSpectrum() owns the foreground.
  * Keeping them in that function's stack gives overlay apps the same bytes back
- * as free runtime stack instead of permanently charging every app 576 bytes. */
+ * as free runtime stack instead of permanently charging every app 592 bytes. */
 typedef struct {
     uint8_t  validChannels[SPECTRUM_MR_BITMAP_SIZE];
     uint16_t rssi[128];
     uint8_t  peakY[128];
     uint8_t  peakAge[64];
+    uint8_t  slotSeen[128 / 8]; // >128 steps: history slot already hit this sweep
 } SpectrumScratch_t;
 static SpectrumScratch_t *spectrumScratch;
 #define spectrumValidChannels (spectrumScratch->validChannels)
 #define rssiHistory           (spectrumScratch->rssi)
 #define peakHoldY             (spectrumScratch->peakY)
 #define peakHoldAge           (spectrumScratch->peakAge)
+#define sweepSlotSeen         (spectrumScratch->slotSeen)
 
 static bool spectrumChannelMode = false;
 static uint16_t spectrumChannelCount = 0;
@@ -981,6 +983,7 @@ static void ResetScanStats()
 static void InitScanPosition()
 {
     ResetScanStats();
+    memset(sweepSlotSeen, 0, sizeof(sweepSlotSeen));
     scanInfo.scanStep = GetScanStep();
     scanInfo.measurementsCount = GetStepsCount();
     bool startFromLeft = scanStartFromLeft;
@@ -1188,11 +1191,20 @@ static void SetRssiHistory(uint16_t idx, uint16_t rssi)
     {
         if (prev == RSSI_MAX_VALUE)
             return;
-        // For large ranges: keep fast attack, soften decay to reduce flicker.
-        if (rssi >= prev)
+        // Several steps share one slot. The first hit of a sweep decays like
+        // the <=128 path; later hits in the same sweep only raise it, so
+        // narrow peaks are kept. (The old per-sample "gap >> 4" decay was 0
+        // for drops under 16 units = 8 dB, freezing the graph.)
+        const uint8_t bit = 1u << (slot & 7);
+        if (!(sweepSlotSeen[slot >> 3] & bit))
+        {
+            sweepSlotSeen[slot >> 3] |= bit;
+            rssiHistory[slot] = (rssi >= prev) ? rssi : (uint16_t)((prev + rssi) >> 1);
+        }
+        else if (rssi > prev)
+        {
             rssiHistory[slot] = rssi;
-        else
-            rssiHistory[slot] = prev - ((prev - rssi) >> 4);
+        }
         return;
     }
     // Attack/decay: instant rise, fast fall for stable display
