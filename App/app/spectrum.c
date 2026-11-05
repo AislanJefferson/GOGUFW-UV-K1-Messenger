@@ -266,9 +266,8 @@ static void LoadSettings()
     if (settings.stepsCount > 3)
         settings.stepsCount = STEPS_64;
 
-    settings.listenBw = Data[0] & 0x03;
-    if (settings.listenBw > 2)
-        settings.listenBw = BK4819_FILTER_BW_WIDE;
+    // Data[0] bits 1:0 (old listenBw) are unused: the listen filter is
+    // inherited from the VFO on entry.
 
     // Data[2]: dbMax encoded as (dbMax + 130) / 5
     if (Data[2] <= 28)
@@ -286,7 +285,9 @@ static void SaveSettings()
     PY25Q16_ReadBuffer(0x00A148, Data, sizeof(Data));
 
     // Data[0]: scanStepIndex (7:4), stepsCount (3:2), listenBw (1:0)
-    Data[0] = (settings.scanStepIndex << 4) | (settings.stepsCount << 2) | settings.listenBw;
+    // Bits 1:0 keep their stored value so the VFO-inherited listenBw never
+    // changes this block (no extra erase).
+    Data[0] = (settings.scanStepIndex << 4) | (settings.stepsCount << 2) | (Data[0] & 0x03);
 
     Data[1] = 1u;
 
@@ -430,6 +431,7 @@ static void ToggleAFBit(bool on)
 }
 
 static const BK4819_REGISTER_t registers_to_save[] = {
+    BK4819_REG_13,  // AGC max-gain entry; the Still LNA/PGA menu edits it
     BK4819_REG_30,
     BK4819_REG_37,
     BK4819_REG_3D,
@@ -725,6 +727,19 @@ uint32_t GetFEnd()
 
 uint8_t GetBWRegValueForScan(void);
 
+// Listen filter for a VFO/channel bandwidth bit: N becomes N+ with SetNFM,
+// as in RADIO_SetupRegisters().
+static uint8_t ListenBwFor(uint8_t channelBw)
+{
+    if (channelBw == BANDWIDTH_WIDE)
+        return BK4819_FILTER_BW_WIDE;
+#ifdef ENABLE_FEAT_F4HWN_NARROWER
+    if (gSetting_set_nfm)
+        return BK4819_FILTER_BW_NARROWER;
+#endif
+    return BK4819_FILTER_BW_NARROW;
+}
+
 static void TuneToPeak()
 {
     scanInfo.f = peak.f;
@@ -738,7 +753,7 @@ static void TuneToPeak()
             SETTINGS_FetchChannelScanDisplayInfo(channel, &info))
         {
             settings.modulationType = info.modulation;
-            settings.listenBw = info.channelBandwidth;
+            settings.listenBw = ListenBwFor(info.channelBandwidth);
             RADIO_SetModulation(settings.modulationType);
             BK4819_SetFilterBandwidth(settings.listenBw, false);
         }
@@ -903,14 +918,27 @@ static void ExitToSpectrumPeak()
     }
     else
     {
-        // Bandwidth, modulation, step and power come from the band's VFO
-        // record, as with keypad entry; only tones/offset/reverse are reset.
+        // Modulation, step and power come from the band's VFO record, as
+        // with keypad entry; tones/offset/reverse are reset.
         const uint16_t vfoChannel = FREQ_CHANNEL_FIRST + FREQUENCY_GetBand(f);
         gEeprom.FreqChannel[targetVfo] = vfoChannel;
         gEeprom.ScreenChannel[targetVfo] = vfoChannel;
         RADIO_ConfigureChannel(targetVfo, VFO_CONFIGURE_RELOAD);
         VFO_Info_t *target = &gEeprom.VfoInfo[targetVfo];
         RADIO_SetSimplexFrequency(target, f);
+        // The Spectrum listen filter (inherited, or changed with key 6)
+        // becomes the VFO mode. N+ is the global SetNFM: saved only if it
+        // actually changes.
+        const bool narrow = settings.listenBw != BK4819_FILTER_BW_WIDE;
+        target->CHANNEL_BANDWIDTH = narrow ? BANDWIDTH_NARROW : BANDWIDTH_WIDE;
+#ifdef ENABLE_FEAT_F4HWN_NARROWER
+        const bool nfm = settings.listenBw == BK4819_FILTER_BW_NARROWER;
+        if (narrow && gSetting_set_nfm != nfm)
+        {
+            gSetting_set_nfm = nfm;
+            gRequestSaveSettings = true;
+        }
+#endif
         target->pRX = &target->freq_config_RX;
         target->pTX = &target->freq_config_TX;
         RADIO_ApplyOffset(target);
@@ -1223,7 +1251,7 @@ static void ResetSpectrumToDefaults()
 
     settings.scanStepIndex = S_STEP_25_0kHz;
     settings.stepsCount = STEPS_64;
-    settings.listenBw = BK4819_FILTER_BW_WIDE;
+    settings.listenBw = ListenBwFor(gTxVfo->CHANNEL_BANDWIDTH);
     settings.modulationType = gTxVfo->Modulation;
     settings.rssiTriggerLevel = RSSI_MAX_VALUE;
     if (spectrumChannelMode)
@@ -1452,6 +1480,8 @@ static void ToggleListeningBW()
     {
         settings.listenBw++;
     }
+    if (isListening)
+        BK4819_WriteRegister(BK4819_REG_43, listenBWRegValues[settings.listenBw]);
     redrawScreen = true;
 }
 
@@ -3015,6 +3045,7 @@ void APP_RunSpectrum()
 #ifdef ENABLE_FEAT_F4HWN_SPECTRUM
     LoadSettings();
 #endif
+    settings.listenBw = ListenBwFor(gTxVfo->CHANNEL_BANDWIDTH);
     spectrumScanListenBw = settings.listenBw;
     spectrumScanModulation = gTxVfo->Modulation;
     spectrumDisplayModulation = gTxVfo->Modulation;
@@ -3105,11 +3136,7 @@ void APP_RunSpectrum()
     ToggleRX(true), ToggleRX(false); // hack to prevent noise when squelch off
     RADIO_SetModulation(settings.modulationType = gTxVfo->Modulation);
 
-#ifdef ENABLE_FEAT_F4HWN_SPECTRUM
     BK4819_SetFilterBandwidth(settings.listenBw, false);
-#else
-    BK4819_SetFilterBandwidth(settings.listenBw = BK4819_FILTER_BW_WIDE, false);
-#endif
 
     // Keep F4HWN runtime scaling; MR mode has already been forced to manual.
     initialCalibrationPending = true;

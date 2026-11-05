@@ -33,10 +33,22 @@
   Wide), and tones/offset/reverse are cleared. Fixes the 6.25k listen filter
   writing bandwidth 2 into the VFO, which flipped a TX power bit, and 8.33k
   peaks being applied unrounded.
+- Spectrum listen bandwidth follows the radio: on F+5 (and on the MENU-hold
+  reset) it starts from the VFO/channel mode (W = 25k, N = 12.5k, N with
+  SetNFM = 6.25k), MR channels in a channel sweep use N+ when SetNFM is on,
+  and key 6 now changes the filter at once while listening. The listen
+  filters are the same REG_43 values the VFO uses. PTT×2 to a VFO applies
+  the Spectrum mode: 25k = Wide, 12.5k = Narrow with SetNFM off, 6.25k =
+  Narrow with SetNFM on (SetNFM is global and is saved only when it
+  changes). The stored listen bandwidth bits are no longer used, so the
+  Spectrum settings block is not rewritten when the VFO mode differs.
 - AM: builds without `ENABLE_FEAT_F4HWN_AUDIO` write the stock AM REG_2B/2F
   values again (0x0400/0x9990) instead of keeping the FM ones. The AM audio
   profile comments now describe what the values do: SHARP and STOCK differ
   only in REG_2B (3 kHz LPF off vs. 300 Hz HPF off). No change for Fusion.
+- Spectrum: LNA/PGA gain changed in the Still register menu is restored on
+  exit (REG_13 was not saved), so it no longer leaks into normal RX until a
+  FM/AM change or reboot.
 - Fusion: `ENABLE_FEAT_F4HWN_RESUME_STATE` off to make room (-372 B). The
   radio no longer resumes scan/Spectrum/FM after a power cycle, and starting
   a scan or Spectrum no longer writes the state byte to flash. A scan list
@@ -44,7 +56,7 @@
   reboots through a normal settings save. Byte 0xA00F now holds `VFO_OPEN`
   as in upstream builds without RESUME_STATE; existing values (state | list
   << 3, always >= 8) still load as VFO open.
-- Image: 120,648 / 120,832 bytes (184 bytes free), including the 920-byte
+- Image: 120,784 / 120,832 bytes (48 bytes free), including the 920-byte
   multiboot load image; RAM 16,240 / 16,384 bytes; multiboot RAM-stub
   isolation checks pass.
 - Scan interface aligned with F4HWN: the Fusion build now enables the scan
