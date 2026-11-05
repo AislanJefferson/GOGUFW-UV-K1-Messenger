@@ -850,11 +850,11 @@ static void ToggleRX(bool on)
         listenPrevRssi = peak.rssi;
     #ifdef ENABLE_FEAT_F4HWN_SPECTRUM
         listenT = 25;
-        BK4819_WriteRegister(0x43, listenBWRegValues[settings.listenBw]);
+        BK4819_SetFilterBandwidth(settings.listenBw, false);
         setTailFoundInterrupt();
     #else
         listenT = 1000;
-        BK4819_WriteRegister(0x43, listenBWRegValues[settings.listenBw]);
+        BK4819_SetFilterBandwidth(settings.listenBw, false);
     #endif
     }
     else
@@ -1481,7 +1481,7 @@ static void ToggleListeningBW()
         settings.listenBw++;
     }
     if (isListening)
-        BK4819_WriteRegister(BK4819_REG_43, listenBWRegValues[settings.listenBw]);
+        BK4819_SetFilterBandwidth(settings.listenBw, false);
     redrawScreen = true;
 }
 
@@ -2874,7 +2874,7 @@ static void UpdateListening()
     {
         BK4819_WriteRegister(0x43, GetBWRegValueForScan());
         Measure();
-        BK4819_WriteRegister(0x43, listenBWRegValues[settings.listenBw]);
+        BK4819_SetFilterBandwidth(settings.listenBw, false);
     }
     else
     {
