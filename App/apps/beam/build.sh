@@ -13,7 +13,8 @@ OBJCOPY=/opt/toolchain/bin/arm-none-eabi-objcopy
 command -v arm-none-eabi-gcc >/dev/null 2>&1 && { CC=arm-none-eabi-gcc; OBJCOPY=arm-none-eabi-objcopy; }
 
 CFLAGS="-mcpu=cortex-m0plus -mthumb -Os -std=gnu11 -ffreestanding -fno-builtin -fno-common \
-  -fomit-frame-pointer -ffunction-sections -fdata-sections -Wall -Wextra"
+  -fomit-frame-pointer -ffunction-sections -fdata-sections -Wall -Wextra \
+  -fno-optimize-crc"   # GCC 15: keep the bitwise CRC loop, no 512-byte table
 LDFLAGS="-nostdlib -nostartfiles -T app.ld -Wl,--defsym,APP_VMA=${APP_VMA} \
   -Wl,--gc-sections -Wl,-Map=${APP}.map -Wl,--build-id=none -Wl,--no-warn-rwx-segments"
 

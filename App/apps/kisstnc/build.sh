@@ -19,7 +19,10 @@ command -v arm-none-eabi-gcc >/dev/null 2>&1 && { CC=arm-none-eabi-gcc; OBJCOPY=
 
 CFLAGS="-mcpu=cortex-m0plus -mthumb -Os -std=gnu11 -ffreestanding -fno-builtin -fno-common \
   -fomit-frame-pointer -ffunction-sections -fdata-sections -Wall -Wextra \
-  -fno-jump-tables -fno-move-loop-invariants"   # the two -fno flags: -40 B
+  -fno-jump-tables -fno-move-loop-invariants \
+  -fno-optimize-crc"   # the two -fno flags: -40 B
+# -fno-optimize-crc: GCC 15 turns the bitwise crcByte() loop into a 512-byte
+# lookup table, which overflows the 4 KiB overlay (4260 B -> 3620 B without it).
 LDFLAGS="-nostdlib -nostartfiles -T app.ld -Wl,--defsym,APP_VMA=${APP_VMA} \
   -Wl,--gc-sections -Wl,-Map=${APP}.map -Wl,--build-id=none -Wl,--no-warn-rwx-segments"
 
