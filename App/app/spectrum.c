@@ -3192,6 +3192,10 @@ void APP_RunSpectrum()
 
     // Keep F4HWN runtime scaling; MR mode has already been forced to manual.
     initialCalibrationPending = true;
+#ifdef ENABLE_SCAN_RANGES
+    // Exclusions (SIDE1) last only while Spectrum is open.
+    blacklistFreqsIdx = 0;
+#endif
     RearmRuntimeState();
 
     isInitialized = true;

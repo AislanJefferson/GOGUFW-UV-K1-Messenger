@@ -20,7 +20,9 @@
   press with no peak yet (right after another exclusion or a sweep restart)
   no longer silently excludes the first step/channel, and the MR key-4 list
   change clears the exclusions, which are stored by list position and would
-  otherwise hit other channels of the new list.
+  otherwise hit other channels of the new list. Exclusions are also cleared
+  each time Spectrum opens; before, they survived EXIT and came back on the
+  next F+5 (RAM only, never in flash). +8 B of program flash.
 - Flash wear: the SPI flash driver now defers sector erases (write-back). A
   change that needs an erase stays in the 4 KiB sector cache and is committed
   once, 2 s after the last write while the radio is idle (foreground or power
