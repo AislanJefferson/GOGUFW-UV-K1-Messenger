@@ -20,9 +20,24 @@
   press with no peak yet (right after another exclusion or a sweep restart)
   no longer silently excludes the first step/channel, and the MR key-4 list
   change clears the exclusions, which are stored by list position and would
-  otherwise hit other channels of the new list. Exclusions are also cleared
-  each time Spectrum opens; before, they survived EXIT and came back on the
-  next F+5 (RAM only, never in flash). +8 B of program flash.
+  otherwise hit other channels of the new list.
+- Spectrum MR fixed listen (PTT on a channel): when the squelch closed, the
+  radio went back to the sweep profile (the VFO's modulation and bandwidth at
+  F+5), so the next opening of an AM channel, or of an N channel with the VFO
+  on W, was heard with the wrong demodulation/filter, and a key-6 change was
+  lost. The fixed listen now keeps the channel's profile until EXIT.
+- Spectrum MR now looks like VFO: the frequency uses the same font, and the
+  listen bandwidth (`25k`/`12.5k`/`6.25k`) is shown next to the modulation.
+  While sweeping both are the peak channel's own; while listening they are the
+  live ones. Key 6 also works while a signal plays on the MR graph, until the
+  squelch closes; it does not change the channel. TuneToPeak() reuses the peak
+  channel profile already cached for the display instead of reading the
+  channel again. +28 B of program flash in total.
+- Spectrum VFO fixed listen: key 0 set the trigger to "none" (65535), so the
+  squelch never reopened and the audio stayed off until EXIT (or monitor).
+  The fixed listen now keeps the trigger level; the sweep after EXIT still
+  recalibrates scale and trigger for the new modulation. +4 B; the .bin is
+  120828 B (4 B free).
 - Flash wear: the SPI flash driver now defers sector erases (write-back). A
   change that needs an erase stays in the 4 KiB sector cache and is committed
   once, 2 s after the last write while the radio is idle (foreground or power

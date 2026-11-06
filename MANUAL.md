@@ -784,7 +784,7 @@ Canais criados pela busca mantêm a potência que estava em uso, ficam em **NARR
 
 **F + 5** abre o analisador.
 
-- **Em MR**: varre os canais da lista de scan ativa (**ScList** ou a última lista escolhida no scan) e mostra nome e frequência do canal selecionado.
+- **Em MR**: varre os canais da lista de scan ativa (**ScList** ou a última lista escolhida no scan) e mostra nome, frequência, modulação e banda de escuta do canal selecionado.
   - Canais excluídos (MENU segurado) ficam de fora, como no scan de memória.
   - **ALL** pega os canais que estão em alguma lista. Canais com `ChList OFF` ficam de fora.
   - Com a prioridade ligada (`+`), os 2 canais prioritários ficam de fora de uma lista 01–24, mas aparecem em ALL.
@@ -792,6 +792,10 @@ Canais criados pela busca mantêm a potência que estava em uso, ficam em **NARR
   - No canto superior esquerdo aparecem a lista e o número de canais varridos, por exemplo `ALL 42`, `RPT 12` ou `03 7`.
   - Embaixo, `M:1` e `M:<n>` são a primeira e a última posição dentro da lista, não o número do canal. Uma lista com os canais 150–154 mostra `M:1` e `M:5`.
 - **Em VFO**: varre uma faixa contínua.
+  - Durante a escuta, a barra de status mostra o nome do canal MR que tem exatamente a frequência do pico. Varrendo, ou sem canal nessa frequência, a barra fica sem nome.
+- **Nos dois modos**: a frequência, a modulação e a banda de escuta do pico ficam na linha de cima do gráfico, com a mesma fonte. Durante a escuta, a modulação e a banda mostradas são as que estão em uso.
+  - Em MR, a seta embaixo marca o canal mostrado e fica nele até a varredura achar outro pico.
+  - Em VFO, a seta marca o passo do pico atual e volta para a borda esquerda enquanto não há pico. A frequência mostrada continua a do último pico.
 
 ### 17.1 Teclas no gráfico
 
@@ -804,15 +808,15 @@ Canais criados pela busca mantêm a potência que estava em uso, ficam em **NARR
 | **4** | VFO: número de pontos 128 / 64 / 32 / 16 · MR: próxima lista de scan |
 | **5** | Digitar uma frequência (\* = ponto decimal, MENU confirma) |
 | **0** | Muda a modulação (só em VFO) |
-| **6** | Largura de banda de escuta 25k / 12,5k / 6,25k, aplicada na hora (em MR, só na escuta) |
+| **6** | Largura de banda de escuta 25k / 12,5k / 6,25k, aplicada na hora (em MR, só escutando: no gráfico vale até o sinal cair, após o PTT até o EXIT; o canal não muda) |
 | **UP/DOWN** | Desloca a faixa / retoma a varredura |
 | **SIDE1** | Ignora o pico atual (o canal ou passo que está tocando) até sair do Spectrum |
 | **SIDE2** | Luz no máximo / mínimo |
 | **Segurar MENU** | Volta tudo ao padrão |
 | **PTT** | Para no pico e escuta |
-| **EXIT** | Sai e salva |
+| **EXIT** | Sai. Em VFO salva o passo de varredura, o número de pontos, o topo da escala e o nível de disparo; em MR não grava nada |
 
-Em MR, as teclas 1, 7, 2, 8, 5 e 0 ficam inativas.
+Em MR, as teclas 1, 7, 2, 8, 5 e 0 ficam inativas: o gráfico mostra a lista inteira, sem uma faixa para deslocar ou digitar, e cada canal usa a própria modulação.
 
 **Ignorar um canal (SIDE1):** funciona como excluir no scan, mas só vale enquanto o Spectrum está aberto e não grava nada na flash. O canal ou passo some do gráfico (a coluna fica vazia), deixa de ser medido, e a varredura continua.
 - Sem pico ainda, por exemplo logo depois de outra exclusão, o SIDE1 não faz nada. Espere a varredura achar o próximo sinal.
@@ -828,8 +832,12 @@ A lista trocada com a tecla 4 vale também para o scan de memória depois de sai
 | **UP/DOWN** | Ajuste fino (ou ajuste do ganho, com o menu de ganho aberto) |
 | **MENU** | Percorre os ganhos LNAs → LNA → PGA |
 | **SIDE1** | Monitor |
+| **0** | Muda a modulação da escuta (só em VFO; a escuta continua abrindo com o mesmo nível de disparo) |
+| **6** | Largura de banda de escuta (em MR vale até o EXIT; o canal não muda) |
 | **EXIT** | Fecha o menu de ganho / volta ao gráfico |
 | **PTT** de novo | Leva o pico para o canal MR ou para o VFO ativo e sai, **sem transmitir** |
+
+Em MR, a escuta usa a modulação e a banda do canal, e continua com elas quando o sinal cai e volta.
 
 Ao sair com o segundo PTT:
 

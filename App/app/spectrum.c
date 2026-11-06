@@ -106,6 +106,7 @@ static uint16_t spectrumDisplayOrdinal = 0;
 static uint32_t spectrumDisplayFreq;
 static char spectrumDisplayName[12];
 static uint8_t spectrumDisplayModulation;
+static uint8_t spectrumDisplayListenBw;
 static uint8_t spectrumScanModulation;
 static uint8_t spectrumScanListenBw;
 
@@ -714,6 +715,19 @@ static void LoadSpectrumChannels(void)
     }
 }
 
+// Listen filter for a VFO/channel bandwidth bit: N becomes N+ with SetNFM,
+// as in RADIO_SetupRegisters().
+static uint8_t ListenBwFor(uint8_t channelBw)
+{
+    if (channelBw == BANDWIDTH_WIDE)
+        return BK4819_FILTER_BW_WIDE;
+#ifdef ENABLE_FEAT_F4HWN_NARROWER
+    if (gSetting_set_nfm)
+        return BK4819_FILTER_BW_NARROWER;
+#endif
+    return BK4819_FILTER_BW_NARROW;
+}
+
 static void CacheSpectrumChannel(uint16_t ordinal)
 {
     if (!spectrumChannelMode)
@@ -732,8 +746,18 @@ static void CacheSpectrumChannel(uint16_t ordinal)
 
     ChannelScanDisplayInfo_t info;
     if (SETTINGS_FetchChannelScanDisplayInfo(channel, &info))
+    {
         spectrumDisplayModulation = info.modulation;
+        spectrumDisplayListenBw = ListenBwFor(info.channelBandwidth);
+    }
     redrawStatus = true;
+}
+
+// MR sweep shows the peak channel's own modulation/bandwidth. While listening
+// the live settings are shown: the channel's, plus any key-6 change.
+static bool ShowPeakChannelRf(void)
+{
+    return spectrumChannelMode && currentState == SPECTRUM && !isListening;
 }
 
 uint32_t GetFStart()
@@ -758,19 +782,6 @@ uint32_t GetFEnd()
 
 uint8_t GetBWRegValueForScan(void);
 
-// Listen filter for a VFO/channel bandwidth bit: N becomes N+ with SetNFM,
-// as in RADIO_SetupRegisters().
-static uint8_t ListenBwFor(uint8_t channelBw)
-{
-    if (channelBw == BANDWIDTH_WIDE)
-        return BK4819_FILTER_BW_WIDE;
-#ifdef ENABLE_FEAT_F4HWN_NARROWER
-    if (gSetting_set_nfm)
-        return BK4819_FILTER_BW_NARROWER;
-#endif
-    return BK4819_FILTER_BW_NARROW;
-}
-
 static void TuneToPeak()
 {
     scanInfo.f = peak.f;
@@ -778,23 +789,20 @@ static void TuneToPeak()
     scanInfo.i = peak.i;
     if (spectrumChannelMode)
     {
-        ChannelScanDisplayInfo_t info;
-        const uint16_t channel = SpectrumChannelAt(peak.i);
-        if (IS_MR_CHANNEL(channel) &&
-            SETTINGS_FetchChannelScanDisplayInfo(channel, &info))
-        {
-            settings.modulationType = info.modulation;
-            settings.listenBw = ListenBwFor(info.channelBandwidth);
-            RADIO_SetModulation(settings.modulationType);
-            BK4819_SetFilterBandwidth(settings.listenBw, false);
-        }
+        // UpdatePeakInfoForce() cached the peak channel's profile.
+        settings.modulationType = spectrumDisplayModulation;
+        settings.listenBw = spectrumDisplayListenBw;
+        RADIO_SetModulation(settings.modulationType);
+        BK4819_SetFilterBandwidth(settings.listenBw, false);
     }
     SetF(scanInfo.f);
 }
 
 static void RestoreSpectrumScanRf(bool applyRadio)
 {
-    if (!spectrumChannelMode)
+    // The fixed listen (STILL) keeps the channel's modulation/bandwidth, and
+    // key-6 changes, when the squelch closes; leaving STILL restores them.
+    if (!spectrumChannelMode || currentState == STILL)
         return;
 
     settings.modulationType = spectrumScanModulation;
@@ -1505,7 +1513,10 @@ static void ToggleModulation()
     // clamps ordinary traces below the bottom axis (or draws a horizontal
     // wall) until the user adjusts it by hand.
     initialCalibrationPending = true;
-    settings.rssiTriggerLevel = RSSI_MAX_VALUE;
+    // The fixed listen (STILL) reopens on this level; RSSI_MAX_VALUE would
+    // keep it silent until EXIT. The next sweep recalibrates it anyway.
+    if (currentState != STILL)
+        settings.rssiTriggerLevel = RSSI_MAX_VALUE;
 
     RearmRuntimeState();
     ResetBlacklist();
@@ -2042,21 +2053,15 @@ static void DrawF(uint32_t f)
 {
     f = NormalizeScanFrequency(f);
     FormatFrequency(f, String);
-    if (spectrumChannelMode)
-        GUI_DisplaySmallest(String, 43, 1, false, true);
-    else
-        UI_PrintStringSmallNormal(String, 43, 43, 0);
+    UI_PrintStringSmallNormal(String, 43, 43, 0);
 
-    const uint8_t modulation = spectrumChannelMode
-                                   ? spectrumDisplayModulation
-                                   : settings.modulationType;
-    sprintf(String, "%3s", gModulationStr[modulation]);
+    const bool peakRf = ShowPeakChannelRf();
+    sprintf(String, "%3s", gModulationStr[peakRf ? spectrumDisplayModulation
+                                                 : settings.modulationType]);
     GUI_DisplaySmallest(String, 116, 1, false, true);
-    if (!spectrumChannelMode)
-    {
-        sprintf(String, "%4sk", bwOptions[settings.listenBw]);
-        GUI_DisplaySmallest(String, 108, 7, false, true);
-    }
+    sprintf(String, "%4sk", bwOptions[peakRf ? spectrumDisplayListenBw
+                                             : settings.listenBw]);
+    GUI_DisplaySmallest(String, 108, 7, false, true);
 
 #ifdef ENABLE_FEAT_F4HWN_SPECTRUM
     if (!spectrumChannelMode)
@@ -2162,10 +2167,11 @@ static void DrawRssiTriggerLevel(const uint8_t *topY)
 {
     if (settings.rssiTriggerLevel == RSSI_MAX_VALUE || monitorMode)
         return;
-    // MR mode: "<list> <count>" label on the left (up to 8 chars, 4 px each)
-    // and only the modulation at x=116 on the right.
+    // MR mode: one-row "<list> <count>" label on the left (up to 8 chars,
+    // 4 px each) and, on the right, room for the widest bandwidth label
+    // ("12.5k"), since it shows the peak channel's bandwidth while sweeping.
     uint8_t leftTextX = 34;
-    uint8_t rightTextX = 114;
+    uint8_t rightTextX = 106;
     if (!spectrumChannelMode)
     {
         leftTextX = GetScanStepTextWidth() + 2;
@@ -2263,8 +2269,9 @@ static bool OnKeyDownCommon(uint8_t key) {
         return true;
     case KEY_6:
         // While sweeping MR channels, TuneToPeak() applies each channel's own
-        // bandwidth, so 6 would be overwritten. While listening it still works.
-        if (!(spectrumChannelMode && currentState == SPECTRUM))
+        // bandwidth, so 6 would be overwritten. While listening it works until
+        // the squelch closes (graph) or until EXIT (fixed listen).
+        if (!(spectrumChannelMode && currentState == SPECTRUM && !isListening))
             ToggleListeningBW();
         return true;
     case KEY_SIDE2:
