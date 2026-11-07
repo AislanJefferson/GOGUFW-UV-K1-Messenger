@@ -151,6 +151,10 @@ void FUNCTION_Transmit()
     // if DTMF is enabled when TX'ing, it changes the TX audio filtering !! .. 1of11
     BK4819_DisableDTMF();
 
+    /* RX may have left voice inversion enabled.  Keep TX-up signalling and
+     * alarm/tone modes clear; normal voice TX reapplies it below. */
+    BK4819_DisableScramble();
+
 #ifdef ENABLE_DTMF_CALLING
     // clear the DTMF RX buffer
     DTMF_clear_RX();

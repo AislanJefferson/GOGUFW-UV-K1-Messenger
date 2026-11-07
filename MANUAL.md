@@ -1,7 +1,7 @@
-# Manual do Usuário — GOGUFW 3.3.5m
+# Manual do Usuário — GOGUFW 3.6.2m
 
 Firmware customizado para **Quansheng UV-K1 / UV-K5 V3** (MCU PY32F071 + RF BK4829), baseado no **F4HWN 6.3.0**.
-Este manual descreve o build **Fusion** (o preset oficial) do código atual, versão `v3.3.5m`.
+Este manual descreve o build **Fusion** (o preset oficial) do código atual, versão `v3.6.2m`.
 
 > [!CAUTION]
 > Instale somente em rádios **UV-K1 / UV-K5 V3** (PY32F071 + BK4829). **Não** instale em UV-K5 V1/V2 ou em outros rádios com BK4819.
@@ -456,14 +456,12 @@ Configure em **Keys → F1Shrt, F1Long, F2Shrt, F2Long, M Long** (ou pelo CHIRP)
 ### 8.2 Durante o scan
 
 - **UP/DOWN**: muda a direção e pula para o próximo.
-- **Trocar a lista**: digite dois números (`00` = todas, `01`–`24`) ou use **F+UP/DOWN**. O nome `SCAN LIST <nome>` aparece por cerca de 1 s.
+- **Trocar a lista**: digite dois números (`00` = todas, `01`–`24`) ou use **F+UP/DOWN**. A barra de status mostra a lista ativa.
 - **Excluir**: com o scan parado num sinal, **segure MENU**. O canal/frequência sai da varredura e o scan continua. Exclusões valem até desligar o rádio.
 - **F+1** com scan pausado copia o canal para o VFO.
 
 ### 8.3 Indicadores
 
-- **Scan de memória**: linha do meio mostra `nn/total` com barra de progresso; `P1`/`P2` indicam canais prioritários; canais excluídos aparecem como colunas vazias.
-- **Scan de faixa**: a barra mostra a posição dentro da faixa.
 - **Sparkline de RSSI**: gráfico dos últimos passos na linha do VFO.
 
 ### 8.4 Listas de canais
@@ -1023,7 +1021,7 @@ Se as setas parecerem invertidas, ajuste `SetNav`.
 ## 25. CHIRP
 
 1. Abra o CHIRP e escolha **File → Load Module**.
-2. Selecione o `Gogufw_3.3.5_chirp_module.py` (mesma versão do firmware).
+2. Selecione o `Gogufw_3.6.2_chirp_module.py` (mesma versão do firmware).
 3. Baixe do rádio com **Quansheng → UV-K1 / UV-K5 V3 GOGUFW Messenger**.
 4. Edite canais, ações de teclas, configurações do Messenger/CALLTX, nomes de FM, `No FSK TX`, `No Roger`, `Scrambler` (incluindo HOP) e `Compander`.
 5. Envie para o rádio e **espere cerca de 2 s** antes de desligá-lo (veja a seção 27.5).
@@ -1174,7 +1172,7 @@ cmake --preset Fusion --fresh
 cmake --build --preset Fusion
 ```
 
-Saída em `build/Fusion/`: `gogufw.bin` e a imagem multiboot `f4hwn.gogufw.v3.3.5m.bin`.
+Saída em `build/Fusion/`: `gogufw.bin` e a imagem multiboot `f4hwn.gogufw.v3.6.2m.bin`.
 
 Veja também `BUILD_WITH_VSCODE.md`, `BUILD_VSCODE_MAC.md` e `compile-with-docker.sh` (build em Docker).
 
@@ -1197,7 +1195,7 @@ Técnicas já usadas no projeto:
 - **LTO** com uma única partição.
 - Flags de release `-fno-tree-ch -fno-ssa-phiopt` (cerca de −276 bytes). O `mb_flash.c` restaura essas passagens para o stub do multiboot continuar idêntico byte a byte.
 - Recursos grandes movidos para **apps overlay** (FM, Search, CryKey).
-- Recursos desligados no Fusion para liberar Flash/RAM: K5Viewer, RF Log Lite, Audio Scope, AirCopy, NOAA, Voice, Alarm, TX1750, DTMF Calling e Resume State (retomar scan/Spectrum/FM ao ligar).
+- Recursos desligados no Fusion para liberar Flash/RAM: K5Viewer, RF Log Lite, Audio Scope, barra de progresso do scan (`SCAN_PROGRESS`), AirCopy, NOAA, Voice, Alarm, TX1750, DTMF Calling e Resume State (retomar scan/Spectrum/FM ao ligar).
 - Memória do Spectrum alocada só enquanto ele está aberto.
 - Gravação adiada na Flash SPI (seção 27.5): o driver `App/driver/py25q16.c` mantém o setor alterado no cache e chama `PY25Q16_Flush()` no tick ocioso de 2 s, ao trocar de setor e antes de reset, troca de banco, apps, Spectrum e multiboot. Código novo que reinicie o rádio ou reaproveite o cache deve chamar `PY25Q16_Flush()` antes.
 - Pilha mínima de **4 KiB** verificada no link. A RAM está praticamente cheia (cerca de 16.328 de 16.384 bytes), então evite novos buffers globais.

@@ -413,6 +413,10 @@ int MENU_GetLimits(uint8_t menu_id, int32_t *pMin, int32_t *pMax)
             else
                 *pMax = ARRAY_SIZE(gSubMenu_SET_AUD_FM) - 1;
             break;
+        case MENU_SET_RXG:
+            *pMax = RADIO_IsRxCompanderOn(gTxVfo)
+                  ? 0 : ARRAY_SIZE(gSubMenu_OFF_ON) - 1;
+            break;
         #endif
         #ifdef ENABLE_FEAT_F4HWN_NARROWER
             case MENU_SET_NFM:
@@ -620,7 +624,10 @@ void MENU_AcceptSetting(void)
                 else
                     BK4819_DisableScramble();
             #endif
-            gRequestSaveChannel     = 1;
+            /* Mode 1 only writes VFO/frequency slots.  Scrambler is a
+             * per-channel byte, so use mode 2 to persist it for MR channels
+             * as well; otherwise it returns to OFF after leaving the channel. */
+            gRequestSaveChannel     = 2;
             return;
 #endif
 
@@ -944,6 +951,11 @@ void MENU_AcceptSetting(void)
             else if (gTxVfo->Modulation == MODULATION_FM)
                 gSetting_set_audio_fm = gSubMenuSelection;
 
+            RADIO_SetModulation(gTxVfo->Modulation);
+            break;
+        case MENU_SET_RXG:
+            if (!RADIO_IsRxCompanderOn(gTxVfo))
+                gSetting_set_rxg = gSubMenuSelection;
             RADIO_SetModulation(gTxVfo->Modulation);
             break;
         #endif
@@ -1347,6 +1359,10 @@ void MENU_ShowCurrentSetting(void)
                 gSubMenuSelection = 0;
             else
                 gSubMenuSelection = gSetting_set_audio_fm;
+            break;
+        case MENU_SET_RXG:
+            gSubMenuSelection = RADIO_IsRxCompanderOn(gTxVfo)
+                              ? 0 : gSetting_set_rxg;
             break;
         #endif
         #ifdef ENABLE_FEAT_F4HWN_NARROWER

@@ -171,6 +171,9 @@ uint8_t APP_LaunchOverlay(uint8_t slot);
 /* Read the committed config of the installed app called `name`. */
 bool    APP_ReadNamedConfig(const char *name, uint8_t name_len, void *buf, uint8_t len);
 
+/* Set when an app stages a VFO or memory selection for the main radio. */
+extern bool gAppVfoExit;
+
 /* Launch the installed app advertising this shortcut ID. */
 uint8_t APP_LaunchOverlayShortcut(uint8_t shortcut);
 

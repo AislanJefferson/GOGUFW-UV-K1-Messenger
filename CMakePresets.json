@@ -83,7 +83,7 @@
                 "ENABLE_RDS_PROBE": false,
                 "ENABLE_SWD": false,
                 "VERSION_STRING_1": "v0.22",
-                "VERSION_STRING_2": "v3.3.5m"
+                "VERSION_STRING_2": "v3.6.2m"
             }
         },
         {
@@ -105,7 +105,7 @@
                 "ENABLE_FEAT_F4HWN_VOL": true,
                 "ENABLE_FEAT_F4HWN_AUDIO": true,
                 "ENABLE_FEAT_F4HWN_AUDIO_SCOPE": false,
-                "ENABLE_FEAT_F4HWN_SCAN_PROGRESS": true,
+                "ENABLE_FEAT_F4HWN_SCAN_PROGRESS": false,
                 "ENABLE_FEAT_F4HWN_SCAN_FASTER": true,
                 "ENABLE_FEAT_F4HWN_SCAN_RSSI": true,
                 "ENABLE_FEAT_F4HWN_SCAN_SUBAUDIBLE": true,

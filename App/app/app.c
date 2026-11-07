@@ -1679,6 +1679,7 @@ void APP_Update(void)
             {
                 BK4819_DisableScramble();
                 BK4819_PlaySingleTone(gTxTimeoutToneAlert, 30, 1, true);
+                RADIO_ApplyScramble(gCurrentVfo, true);
                 gTxTimeoutToneAlert += 100;
             }
         }
