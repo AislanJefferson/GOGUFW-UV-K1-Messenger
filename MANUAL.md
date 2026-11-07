@@ -438,7 +438,7 @@ Configure em **Keys → F1Shrt, F1Long, F2Shrt, F2Long, M Long** (ou pelo CHIRP)
 | **MESSENGER** | Abre o Messenger (de novo, na tela inicial do Messenger, volta ao rádio) |
 | **HEARD** | Abre o HEARD (de novo, volta ao rádio) |
 | **CALLTX** | Transmite a melodia de chamada (igual a F+9) |
-| **SCRAMBLE** | Liga/desliga o scrambler do canal atual. Ao religar, restaura o último tipo usado; após ligar o rádio, o tipo padrão é **HOP** |
+| **SCRAMBLE** | Liga/desliga o scrambler do canal atual (só em FM; em AM/USB dá bipe duplo, mudo com `Beep` OFF). Ao religar, restaura o último tipo usado; após ligar o rádio, o tipo padrão é **HOP** |
 
 ---
 
@@ -616,6 +616,8 @@ Lista as últimas 6 estações ouvidas pelo Messenger. Cada linha mostra:
 2. Na tela **CRYKEY**, digite a frase-senha (até **10 caracteres**, maiúsculas e minúsculas são diferentes) com o editor da seção 23.
 3. **MENU** salva. **EXIT** sai sem salvar. Apagar todo o texto e salvar volta à chave padrão.
 
+Também dá para editar a CryKey pelo CHIRP (seção 25).
+
 A chave vale assim que é salva. Ela fica no setor do Messenger, junto do `CllSgn`: no multiboot, cada banco de configuração (seção 20.1) tem a sua. Só grava na Flash quando o texto muda.
 
 > [!IMPORTANT]
@@ -654,6 +656,9 @@ Com uma CryKey definida, **todo** texto do Messenger sai cifrado (XTEA-CTR, salt
 - **Tecla lateral**: ação **SCRAMBLE** (liga/desliga e lembra o último tipo; padrão HOP).
 - **CHIRP**: coluna `Scrambler`.
 - Quando ligado, aparece um ícone de **onda dupla** na linha do VFO.
+
+> [!IMPORTANT]
+> O scrambler (fixo e HOP) só funciona em **FM**, no TX e no RX. Num canal AM/USB o ajuste fica guardado, mas não inverte o áudio, o ícone não aparece, a prévia do menu não toca e o atalho **SCRAMBLE** dá bipe duplo (mudo com `Beep` OFF) sem mudar nada.
 
 ### 12.2 Scrambler fixo (2600–3500 Hz)
 
@@ -1027,25 +1032,25 @@ Se as setas parecerem invertidas, ajuste `SetNav`.
 1. Abra o CHIRP e escolha **File → Load Module**.
 2. Selecione o `Gogufw_3.6.2_chirp_module.py` (mesma versão do firmware).
 3. Baixe do rádio com **Quansheng → UV-K1 / UV-K5 V3 GOGUFW Messenger**.
-4. Edite canais, ações de teclas, configurações do Messenger/CALLTX, nomes de FM, `No FSK TX`, `No Roger`, `Scrambler` (incluindo HOP) e `Compander`.
+4. Edite canais, ações de teclas, configurações do Messenger/CALLTX, CryKey, nomes de FM, F Lock, `No FSK TX`, `No Roger`, `Scrambler` (incluindo HOP) e `Compander`.
 5. Envie para o rádio e **espere cerca de 2 s** antes de desligá-lo (veja a seção 27.5).
 
 **O que o módulo expõe:**
 
 - 1024 canais de memória;
-- grupo GGFW: MsgRx, MsgAck, MsgBeep, MsgLed, CllTon, CllVol, RngRsp, indicativo e os 8 rascunhos;
+- grupo GGFW: MsgRx, MsgAck, MsgBeep, MsgLed, CllTon, CllVol, RngRsp, indicativo, **CryKey** e os 8 rascunhos;
 - por canal: TXLock, No FSK TX, No Roger, Scrambler, BusyCL, FreqRev, PTT ID, Compander e listas de scan;
 - 48 nomes de FM (15 caracteres);
-- SetNFM e todas as ações de teclas laterais.
+- **F Lock** com os três planos do firmware (BRASIL, DISABLE ALL, UNLOCK ALL; UNLOCK ALL só pode ser escolhido no menu do rádio);
+- SetNFM e as ações de teclas laterais deste build (inclusive **SCRAMBLE**).
 
 > [!WARNING]
-> Não use um módulo mais antigo: ele pode não reconhecer campos novos e sobrescrevê-los.
+> Use só o módulo desta versão: módulos de outras versões do GOGUFW não são compatíveis e podem sobrescrever campos.
 
-**Limitações conhecidas do módulo atual:**
+**Observações:**
 
-- A lista de **F Lock** ainda mostra os planos antigos: qualquer escolha diferente de DISABLE ALL ou UNLOCK ALL vira BRASIL no rádio.
-- A **CryKey** não é editada pelo CHIRP: use o menu `CryKey`. Uma gravação pelo CHIRP mantém a chave do rádio.
-- A ação **RF LOG** ainda aparece, mas não faz nada neste build.
+- A **CryKey** diferencia maiúsculas e minúsculas e aceita os mesmos caracteres do editor do rádio (letras, números, espaço e `.,?!`). O rádio passa a usar a chave nova quando reinicia, logo após o envio.
+- `POnMsg` não aparece: a opção foi removida do firmware. As linhas de mensagem continuam editáveis porque os apps APRS as usam como indicativo de reserva.
 
 ---
 
@@ -1132,13 +1137,13 @@ Se as setas parecerem invertidas, ajuste `SetNav`.
 
 A memória Flash do rádio suporta um número limitado de apagamentos por setor. O firmware reduz esse desgaste assim:
 
-- **Gravação adiada**: as alterações ficam num cache e são gravadas de uma vez **cerca de 2 s após a última mudança**, com o rádio parado (fora de RX/TX, troca de mensagens ou sessão HOP), ou antes, ao trocar de área da memória, reiniciar, abrir um app ou o Spectrum. Sintonizar com UP/DOWN, digitar uma frequência, trocar canais ou mudar vários itens do menu em sequência custa um único apagamento.
+- **Gravação adiada**: as alterações ficam num cache e são gravadas de uma vez **cerca de 2 s após a última mudança**, com o rádio parado (fora de RX/TX, troca de mensagens ou sessão HOP), ou antes: ao **sair do menu** (no próximo instante parado), ao trocar de área da memória, reiniciar, abrir um app ou o Spectrum. Sintonizar com UP/DOWN, digitar uma frequência, trocar canais ou mudar vários itens do menu em sequência custa um único apagamento.
 - **Upload do CHIRP**: cerca de um apagamento por setor, em vez de um a cada 8 bytes.
 - **Messenger e AUTO CHECK**: o número das mensagens é reservado em blocos de 64, então enviar mensagens ou PINGs (inclusive o AUTO CHECK de 30 s) quase não grava na Flash.
 - **Mute**: o volume salvo é sempre o volume real, nunca o 0 do mudo.
 
 > [!IMPORTANT]
-> Depois de mudar uma configuração, **espere cerca de 2 s antes de desligar o rádio**. Se desligar antes, essa última mudança se perde, mas o restante da memória continua íntegro.
+> Ao sair do menu, as mudanças são gravadas logo em seguida (se o rádio não estiver recebendo ou transmitindo). Nas demais mudanças (fora do menu, ou durante uma recepção), **espere cerca de 2 s com o rádio parado antes de desligá-lo**. Se desligar antes, essa última mudança se perde, mas o restante da memória continua íntegro.
 
 ## 28. Solução de problemas
 
@@ -1192,7 +1197,7 @@ Cada app tem no máximo 4 KiB de código.
 
 ### 29.3 Espaço e otimizações de build
 
-A Flash interna é de **120.832 bytes**, e o build atual usa **120.364 bytes** (incluindo os 920 bytes do stub do multiboot): restam **468 bytes**. Recursos novos precisam liberar espaço.
+A Flash interna é de **120.832 bytes**, e o build atual usa **120.516 bytes** (incluindo os 920 bytes do stub do multiboot): restam **316 bytes**. Recursos novos precisam liberar espaço.
 
 Técnicas já usadas no projeto:
 

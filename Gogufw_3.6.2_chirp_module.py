@@ -1,11 +1,15 @@
-# GOGUFW UV-K1 / UV-K5 V3 Messenger CHIRP module v3.6.2
-# Release build: 2026-11-03
+# GOGUFW UV-K1 / UV-K5 V3 Messenger CHIRP module v3.6.2m
+# Release build: 2026-11-07
+# Matches only the current firmware (v3.6.2m); older GOGUFW builds are not supported.
 # Based on F4HWN Fusion CHIRP 5.5.0 support.
 # Matches the GOGUFW external-flash EEPROM aliases:
 #   FM names: 0x00D000 alias -> firmware flash 0x013000
 #   Messenger/Call config: 0x00E000 alias -> firmware flash 0x012000
+#   CryKey passphrase:     0x00E140 alias -> firmware flash 0x012140
 # Includes GGFW settings: MsgRx, MsgAck, MsgBeep, MsgLed, CllTon, CllVol,
-# RngRsp, Callsign, Drafts, FM names, No FSK TX, No Roger, Scrambler and Compander.
+# RngRsp, Callsign, CryKey, Drafts, FM names, No FSK TX, No Roger,
+# Scrambler (fixed carriers and HOP), the SCRAMBLE key action and Compander.
+# F Lock offers the firmware's three plans: BRASIL, DISABLE ALL, UNLOCK ALL.
 
 # Quansheng UV-K5 driver (c) 2023 Jacek Lipkowski <sq5bpf@lipkowski.org>
 # Adapted For UV-K5 EGZUMER custom software By EGZUMER, JOC2
@@ -63,7 +67,7 @@ DEBUG_SHOW_OBFUSCATED_COMMANDS = False
 DEBUG_SHOW_MEMORY_ACTIONS = False
 
 # TODO: remove the driver version when it's in mainline chirp
-DRIVER_VERSION = "GOGUFW UV-K1 / UV-K5 V3 CHIRP driver v3.6.2 (2026-11-07)"
+DRIVER_VERSION = "GOGUFW UV-K1 / UV-K5 V3 CHIRP driver v3.6.2m (2026-11-07)"
 FIRMWARE_VERSION_UPDATE = "https://github.com/Gogu-Qs/GOGUFW-UV-K1-Messenger/releases"
 CHIRP_DRIVER_VERSION_UPDATE = "https://github.com/Gogu-Qs/GOGUFW-UV-K1-Messenger/releases"
 
@@ -274,6 +278,11 @@ struct {
 u8 ggfw_call_tone;
 u8 ggfw_call_vol;
 u8 ggfw_rng_rsp;
+
+// CryKey passphrase (HOP voice scrambler + encrypted Messenger text), right
+// after the 320-byte Messenger config. NUL padded; 0xFF = never set (empty).
+#seekto 0x00E140;
+char ggfw_crykey[10];
 
 // --------------------
 
@@ -540,8 +549,8 @@ SET_TOT_EOT_LIST = ["OFF", "SOUND", "VISUAL", "ALL"]
 # SET_OFF_ON f4hwn
 SET_OFF_ON_LIST = ["OFF", "ON"]
 
-# Per-channel BK4819 voice inversion frequency.  The firmware stores OFF as
-# zero and 2600..3500 Hz as values 1..10 in the final channel-record byte.
+# Per-channel BK4819 voice inversion.  The firmware stores OFF as zero,
+# 2600..3500 Hz as values 1..10 and HOP as 11 in the final channel-record byte.
 SCRAMBLER_LIST = ["OFF", "2600Hz", "2700Hz", "2800Hz", "2900Hz", "3000Hz",
                   "3100Hz", "3200Hz", "3300Hz", "3400Hz", "3500Hz", "HOP"]
 
@@ -682,18 +691,12 @@ DTCS_CODES = [  # TODO: add negative codes
     731, 732, 734, 743, 754
 ]
 
-# flock list extended
-FLOCK_LIST = ["DEFAULT+ (137-174, 400-470)",
-              "FCC HAM (144-148, 420-450)",
-              "CA HAM (144-148, 430-450)",
-              "CE HAM (144-146, 430-440)",
-              "GB HAM (144-148, 430-440)",
-              "137-174, 400-430",
-              "137-174, 400-438",
-              "PMR 446",
-              "GMRS FRS MURS",
+# F Lock: the firmware has three plans. The stored byte keeps the historical
+# codes 9 (DISABLE ALL) and 10 (UNLOCK ALL); any other value loads as BRASIL.
+FLOCK_LIST = ["BRASIL (462.5625-462.7125, 467.5625-467.7125 MHz)",
               "DISABLE ALL",
               "UNLOCK ALL"]
+FLOCK_STORED = [0, 9, 10]
 
 # Scan Resum List
 SCANRESUME_LIST = ["STOP : Stop scan when a signal is received"]
@@ -712,7 +715,6 @@ for m in range(5, 125, 5):  # From 5 to 120 secondes (2 minutes)
     SCANRESUME_LIST.append(f"TIMEOUT {minutes:02d}m:{seconds:02d}s : Listen for this time and resume")
 
 # Welcome and Voice list
-WELCOME_LIST = ["Message line 1, Voltage, Sound (ALL)", "Make 2 short sounds (SOUND)", "User message line 1 and line 2 (MESSAGE)", "Battery voltage (VOLTAGE)", "Picture (LOGO)", "NONE"]
 VOICE_LIST = ["OFF", "Chinese", "English"]
 
 # ACTIVE CHANNEL
@@ -742,9 +744,11 @@ GGFW_MSG_VERSION = 7
 GGFW_CALL_TONE_LIST = ["TONE1", "TONE2", "TONE3", "TONE4", "TONE5"]
 GGFW_CALL_VOL_LIST = ["LOW", "HIGH"]
 GGFW_MSG_OFF_ON_LIST = ["OFF", "ON"]
-GGFW_MSG_HOP_LIST = ["OFF", "1", "2", "3", "4", "5"]
 GGFW_MSG_LED_LIST = ["OFF", "GREEN", "YELLOW"]
 GGFW_CALLSIGN_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 -_"
+# CryKey: characters the radio's text editor can enter (case-sensitive).
+GGFW_CRYKEY_LEN = 10
+GGFW_CRYKEY_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 .,?!"
 GGFW_DRAFT_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 .,!?-_/+:;()[]\'\""
 CAL_END =        0x00B190    # original end of calibration area
 
@@ -831,9 +835,10 @@ KEYACTIONS_LIST = ["NONE",
                    "SCRAMBLE"
                   ]
 
-# Keep BEAM at its historical numeric slot so later GOGUFW actions retain
-# their EEPROM IDs, but do not offer the removed feature as a selectable key.
-REMOVED_KEY_ACTIONS = {"BEAM"}
+# Keep BEAM and RF LOG at their historical numeric slots so later GOGUFW
+# actions (SCRAMBLE = 28) retain their IDs, but do not offer them: neither
+# feature is built into this firmware.
+REMOVED_KEY_ACTIONS = {"BEAM", "RF LOG"}
 
 MIC_GAIN_LIST = ["+1.5dB", "+4.0dB", "+8.0dB", "+12.0dB", "+16.0dB", "+20.0dB", "+24.0dB", "+28.0dB", "+31.5dB"]
 
@@ -1292,7 +1297,7 @@ class UVK5RadioEgzumer(chirp_common.CloneModeRadio):
     """Quansheng UV-K1 / UV-K5 V3 running GOGUFW."""
     VENDOR = "Quansheng"
     MODEL = "UV-K1 / UV-K5 V3 GOGUFW Messenger"
-    VARIANT = "3.6.2"
+    VARIANT = "3.6.2m"
     BAUD_RATE = 38400
     NEEDS_COMPAT_SERIAL = False
     FIRMWARE_VERSION = ""
@@ -1976,10 +1981,6 @@ class UVK5RadioEgzumer(chirp_common.CloneModeRadio):
             elif elname == "auto_keypad_lock":
                 _mem.auto_keypad_lock = int(element.value)
 
-            # Power on display mode
-            elif elname == "welcome_mode":
-                _mem.power_on_dispmode = int(element.value)
-
             # Keypad Tone
             elif elname == "voice":
                 _mem.voice = int(element.value)
@@ -2021,7 +2022,7 @@ class UVK5RadioEgzumer(chirp_common.CloneModeRadio):
 
             # FLOCK
             elif elname == "int_flock":
-                _mem.int_flock = int(element.value)
+                _mem.int_flock = FLOCK_STORED[int(element.value)]
 
 #            # 350TX
 #            elif elname == "int_350tx":
@@ -2152,18 +2153,12 @@ class UVK5RadioEgzumer(chirp_common.CloneModeRadio):
                 _ggfw_msg_config_ensure(_mem)
                 if elname == "ggfw_msg_rx":
                     _mem.ggfw_msg_rx = int(element.value)
-                elif elname == "ggfw_msg_callsign_tx":
-                    _mem.ggfw_msg_callsign_tx = int(element.value)
                 elif elname == "ggfw_msg_ack":
                     _mem.ggfw_msg_ack = int(element.value)
-                elif elname == "ggfw_msg_hop":
-                    _mem.ggfw_msg_hop = int(element.value)
                 elif elname == "ggfw_msg_beep":
                     _mem.ggfw_msg_beep = int(element.value)
                 elif elname == "ggfw_msg_led":
                     _mem.ggfw_msg_led = int(element.value)
-                elif elname == "ggfw_msg_debug":
-                    _mem.ggfw_msg_debug = int(element.value)
                 elif elname == "ggfw_call_tone":
                     _mem.ggfw_call_tone = int(element.value)
                 elif elname == "ggfw_call_vol":
@@ -2172,6 +2167,9 @@ class UVK5RadioEgzumer(chirp_common.CloneModeRadio):
                     _mem.ggfw_rng_rsp = int(element.value)
                 elif elname == "ggfw_msg_callsign":
                     _mem.ggfw_msg_callsign = _ggfw_char_to_slot(element.value, 9, GGFW_CALLSIGN_CHARS)
+                elif elname == "ggfw_crykey":
+                    key = _ggfw_clean_text(element.value, GGFW_CRYKEY_LEN, GGFW_CRYKEY_CHARS)
+                    _mem.ggfw_crykey = (key + "\x00" * GGFW_CRYKEY_LEN)[:GGFW_CRYKEY_LEN]
                 elif elname.startswith("ggfw_msg_draft_"):
                     try:
                         idx = int(elname.split("_")[-1])
@@ -2298,7 +2296,7 @@ class UVK5RadioEgzumer(chirp_common.CloneModeRadio):
 
 # add menu firmware with version and option display if version 3.0 and up
         ValFirm = "Firmware : " + self.FIRMWARE_VERSION
-        Compair1 = "GOGUFW v3.6.2"
+        Compair1 = "GOGUFW v3.6.2m"
 
         if self.FIRMWARE_VERSION == "":
             ValFirm = "Firmware : Only when read from the radio "
@@ -2908,15 +2906,6 @@ class UVK5RadioEgzumer(chirp_common.CloneModeRadio):
                                 '* CHANNEL NUMBER\n' + \
                                 '* FREQ\n' + \
                                 '* NAME + FREQ')
-        tmpdispmode = list_def(_mem.power_on_dispmode, WELCOME_LIST, 0)
-        val = RadioSettingValueList(WELCOME_LIST, None, tmpdispmode)
-        p_on_msg_setting = RadioSetting("welcome_mode", "Power On Display Message (POnMsg)", val)
-        p_on_msg_setting.set_doc('POnMsg: When powering up the radio, what to display:\n' + \
-                                 '* ALL : message line 1 + voltage + sound\n' + \
-                                 '* SOUND : beep beep 2 only\n' + \
-                                 '* MESSAGE : message lines 1 and 2 only\n' + \
-                                 '* VOLTAGE : battery voltage only\n' + \
-                                 '* NONE : nothing')
 
 
 
@@ -2925,16 +2914,16 @@ class UVK5RadioEgzumer(chirp_common.CloneModeRadio):
         val = RadioSettingValueString(0, 12, logo1)
         logo1_setting = RadioSetting("logo1", "Message Line 1 (12 characters max)", val)
         logo1_setting.set_doc('Message line 1: The first message line,\n' + \
-                              'with a maximum of 12 characters\n' + \
-                              'See option (POnMsg) to display it')
+                              'with a maximum of 12 characters.\n' + \
+                              'Not shown at boot; APRS apps use it as a fallback callsign')
 
         logo2 = str(_mem.logo_line2).strip("\x20\x00\xff") + "\x00"
         logo2 = _getstring(logo2.encode('ascii', errors='ignore'), 0, 12)
         val = RadioSettingValueString(0, 12, logo2)
         logo2_setting = RadioSetting("logo2", "Message Line 2 (12 characters max)", val)
         logo2_setting.set_doc('Message line 2: the second message line,\n' + \
-                              'with a maximum of 12 characters\n' + \
-                              'See option (POnMsg) to display it')
+                              'with a maximum of 12 characters.\n' + \
+                              'Not shown at boot; APRS apps use it as a fallback callsign')
 
         tmpbattxt = list_def(_mem.battery_text, BAT_TXT_LIST, 2)
         val = RadioSettingValueList(BAT_TXT_LIST, None, tmpbattxt)
@@ -3175,6 +3164,16 @@ class UVK5RadioEgzumer(chirp_common.CloneModeRadio):
         val.set_charset(GGFW_CALLSIGN_CHARS)
         ggfw.append(RadioSetting("ggfw_msg_callsign", "Callsign", val))
 
+        current_key = _ggfw_char_from_slot(_mem.ggfw_crykey)
+        val = RadioSettingValueString(0, GGFW_CRYKEY_LEN, current_key, autopad=False)
+        val.set_charset(GGFW_CRYKEY_CHARS)
+        rs = RadioSetting("ggfw_crykey", "CryKey", val)
+        rs.set_doc('CryKey: shared passphrase (up to 10 characters, case-sensitive) for the HOP\n' + \
+                   'voice scrambler and encrypted Messenger text. Every radio must use the same one.\n' + \
+                   'Empty: HOP uses the common default key and messages are sent in clear.\n' + \
+                   'The radio reloads it when it restarts after the upload.')
+        ggfw.append(rs)
+
         for j in range(0, 8):
             current_draft = _ggfw_char_from_slot(_mem.ggfw_msg_draft[j].text)
             val = RadioSettingValueString(0, 36, current_draft)
@@ -3186,12 +3185,13 @@ class UVK5RadioEgzumer(chirp_common.CloneModeRadio):
         # F-LOCK
         def validate_int_flock(value):
             mem_val = self._memobj.int_flock
-            if mem_val != 10 and value == FLOCK_LIST[10]:
+            if mem_val != FLOCK_STORED[2] and value == FLOCK_LIST[2]:
                 msg = "\"" + value + "\" can only be enabled from radio menu"
                 raise InvalidValueError(msg)
             return value
 
-        tmpflock = list_def(_mem.int_flock, FLOCK_LIST, 0)
+        tmpflock = FLOCK_STORED.index(int(_mem.int_flock)) \
+            if int(_mem.int_flock) in FLOCK_STORED else 0
         val = RadioSettingValueList(FLOCK_LIST, None, tmpflock)
         val.set_validate_callback(validate_int_flock)
         f_lock_setting = RadioSetting("int_flock", "TX Frequency Lock (F Lock)", val)
@@ -3683,7 +3683,6 @@ class UVK5RadioEgzumer(chirp_common.CloneModeRadio):
         basic.append(bat_txt_setting)
         basic.append(mic_bar_setting)
         basic.append(ch_disp_setting)
-        basic.append(p_on_msg_setting)
         basic.append(logo1_setting)
         basic.append(logo2_setting)
 

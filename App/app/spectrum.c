@@ -28,7 +28,6 @@
 
 #include "driver/backlight.h"
 #include "frequencies.h"
-#include "ui/battery.h"
 #include "ui/helper.h"
 #include "ui/main.h"
 
@@ -137,9 +136,9 @@ uint32_t currentFreq, tempFreq;
 // Peak hold: tracks the highest Y per column with timed decay
 #define PEAK_HOLD_DELAY  15           // Sweeps before decay starts
 #define PEAK_HOLD_INIT   0xFF         // "no peak" sentinel (same as SPECTRUM_TOPY_SKIP)
-// DrawingEndY remains the original VFO bottom-axis row (y=40); Memory Spectrum
-// is aligned to that same row. Keep the live graph one pixel above it so weak
-// values do not disappear into the ruler.
+// DrawingEndY is also used by the bottom-axis ticks (frame-buffer page 5,
+// bit 0). Keep the live graph one pixel above that axis; otherwise values at
+// or below dbMin are drawn on the axis itself and appear to vanish under it.
 #define SPECTRUM_GRAPH_BOTTOM_Y (DrawingEndY - 1u)
 
 // Cached REG_30 value for scan steps: avoids re-reading it on every SetFScan()
@@ -1309,17 +1308,8 @@ static void SetRssiHistory(uint16_t idx, uint16_t rssi)
 
 static void Measure()
 {
-    const bool statusRssiWasInvalid =
-        scanInfo.rssi == 0 || scanInfo.rssi == RSSI_MAX_VALUE;
     uint16_t rssi = scanInfo.rssi = GetRssi();
     SetRssiHistory(scanInfo.i, rssi);
-
-    // ResetScanStats() deliberately marks the current RSSI as unavailable
-    // while RX hands control back to the sweep. Refresh the status line on
-    // the first new measurement; otherwise M--- can remain visible until the
-    // slow periodic refresh or a manual trigger adjustment.
-    if (statusRssiWasInvalid)
-        redrawStatus = true;
 }
 
 static void RequestAutoTriggerRecalibration()
@@ -2041,11 +2031,32 @@ static void DrawStatus()
     if (spectrumChannelMode && spectrumDisplayName[0])
         UI_PrintStringSmallBufferNormal(spectrumDisplayName, gStatusLine + 43);
 
-    // Use the exact same battery outline, level bars and low-battery blink as
-    // the normal radio status bar. Spectrum intentionally omits the optional
-    // voltage/percentage text and shows only the icon.
-    UI_DrawBattery(gStatusLine + LCD_WIDTH - sizeof(BITMAP_BatteryLevel1),
-                   gBatteryDisplayLevel, gLowBatteryBlink);
+    BOARD_ADC_GetBatteryInfo(&gBatteryVoltages[gBatteryCheckCounter++ % 4],
+                             &gBatteryCurrent);
+
+    uint16_t voltage = (gBatteryVoltages[0] + gBatteryVoltages[1] +
+                        gBatteryVoltages[2] + gBatteryVoltages[3]) /
+                       4 * 760 / gBatteryCalibration[3];
+
+    unsigned perc = BATTERY_VoltsToPercent(voltage);
+
+    // sprintf(String, "%d %d", voltage, perc);
+    // GUI_DisplaySmallest(String, 48, 1, true, true);
+
+    gStatusLine[116] = 0b00011100;
+    gStatusLine[117] = 0b00111110;
+    for (int i = 118; i <= 126; i++)
+    {
+        gStatusLine[i] = 0b00100010;
+    }
+
+    for (unsigned i = 127; i >= 118; i--)
+    {
+        if (127 - i <= (perc + 5) * 9 / 100)
+        {
+            gStatusLine[i] = 0b00111110;
+        }
+    }
 }
 
 #ifdef ENABLE_FEAT_F4HWN_SPECTRUM
@@ -2055,13 +2066,10 @@ static void ShowChannelName(uint32_t f)
     static char channelName[12]; 
     f = NormalizeScanFrequency(f);
 
-    // Channel name starts at x=43 (fixed), leaving room for the dBm string on
-    // the left and the normal-radio battery icon on the right. Clear only up
-    // to the battery's actual first column; clearing to the old x=116 custom
-    // icon position erased five columns of the 17-pixel standard battery and
-    // made its left edge blink whenever the VFO channel name was refreshed.
-    const uint8_t batteryX = LCD_WIDTH - sizeof(BITMAP_BatteryLevel1);
-    memset(&gStatusLine[43], 0, batteryX - 43u);
+    // Channel name starts at x=43 (fixed), leaving room for the dBm
+    // string on the left (max ~40 px) and battery indicator at x=116.
+    // Clear first so a shorter name doesn't leave stale pixels.
+    memset(&gStatusLine[43], 0, 116 - 43);
 
     if (isListening)
     {

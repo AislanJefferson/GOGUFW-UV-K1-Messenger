@@ -100,6 +100,8 @@ target_link_libraries(${EXE_NAME} ${TOOLCHAIN_LINK_LIBRARIES})
 
 if(ENABLE_LTO)
     target_compile_options(${EXE_NAME} PRIVATE -flto=auto)
+    # Same LTO mode at link time (the plugin already ran LTO without it).
+    target_link_options(${EXE_NAME} PRIVATE -flto=auto)
 endif()
 
 # Generate map file

@@ -139,6 +139,13 @@ static uint8_t gScrambleLastType = SCRAMBLE_DEFAULT_TYPE;
 
 static void ACTION_Scramble(void)
 {
+    /* The scrambler is FM-only: elsewhere refuse with the double beep, which
+     * the Beep menu can silence (an _OPTIONAL beep). */
+    if (gTxVfo->Modulation != MODULATION_FM) {
+        gBeepToPlay = BEEP_500HZ_60MS_DOUBLE_BEEP_OPTIONAL;
+        return;
+    }
+
     if (gTxVfo->SCRAMBLING_TYPE > 0) {
         gScrambleLastType       = gTxVfo->SCRAMBLING_TYPE;
         gTxVfo->SCRAMBLING_TYPE = 0;

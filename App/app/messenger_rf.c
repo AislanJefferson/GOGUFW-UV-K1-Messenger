@@ -932,7 +932,10 @@ static void MSG_RF_ArmSidecarIfIdle(void)
     if (gCurrentFunction == FUNCTION_TRANSMIT) return;
 #ifdef ENABLE_GOGUFW_CRYPTO
     /* HOP must hear mid-over resync bursts, e.g. after a fade. */
-    if (MSG_RF_ChannelBusy() && gRxVfo->SCRAMBLING_TYPE != SCRAMBLE_TYPE_HOP) return;
+    /* Same rule as RADIO_ApplyScramble(): HOP only on FM with ScraEn on. */
+    if (MSG_RF_ChannelBusy() &&
+        !(gRxVfo->SCRAMBLING_TYPE == SCRAMBLE_TYPE_HOP &&
+          gRxVfo->Modulation == MODULATION_FM && gSetting_ScrambleEnable)) return;
 #else
     if (MSG_RF_ChannelBusy()) return;
 #endif
@@ -1833,7 +1836,8 @@ void MSG_RF_OnRadioInterrupt(uint16_t status)
 #ifdef ENABLE_GOGUFW_CRYPTO
             /* HOP channel: the frame may be a seed burst. Defer the Messenger
              * VFO hold until the first FIFO words tell which one it is. */
-            if (gRxVfo->SCRAMBLING_TYPE == SCRAMBLE_TYPE_HOP) {
+            if (gRxVfo->SCRAMBLING_TYPE == SCRAMBLE_TYPE_HOP &&
+                gRxVfo->Modulation == MODULATION_FM && gSetting_ScrambleEnable) {
                 gScrHop.rx_wait = 1;
                 gScrHop.stamp   = SCHEDULER_GetMs();
             } else

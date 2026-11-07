@@ -2410,7 +2410,8 @@ void UI_DisplayMain(void)
 
 #ifndef ENABLE_FEAT_F4HWN
         // show the audio scramble symbol
-        if (vfoInfo->SCRAMBLING_TYPE > 0 && gSetting_ScrambleEnable)
+        if (vfoInfo->SCRAMBLING_TYPE > 0 && gSetting_ScrambleEnable &&
+            vfoInfo->Modulation == MODULATION_FM)
             UI_PrintStringSmallNormal("SCR", LCD_WIDTH + 106, 0, line + 1);
 #endif
 
@@ -2434,7 +2435,8 @@ void UI_DisplayMain(void)
                                    : VFO_CLASSIC_FSK_ICON_X;
 
 #ifdef ENABLE_GOGUFW_SCRAMBLER
-            if (vfoInfo->SCRAMBLING_TYPE > 0 && gSetting_ScrambleEnable)
+            if (vfoInfo->SCRAMBLING_TYPE > 0 && gSetting_ScrambleEnable &&
+                vfoInfo->Modulation == MODULATION_FM)   // shown only where it applies
                 memcpy(policyLine + (gSetting_set_gui ? VFO_TINY_SCR_ICON_X
                                                       : VFO_CLASSIC_SCR_ICON_X),
                        BITMAP_Scrambler, sizeof(BITMAP_Scrambler));

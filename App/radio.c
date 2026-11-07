@@ -1129,6 +1129,12 @@ bool RADIO_IsRxCompanderOn(const VFO_Info_t *pInfo)
 
 void RADIO_SetModulation(ModulationMode_t modulation)
 {
+    /* The voice scrambler is FM-only: leaving FM by any path (fast scan,
+     * Spectrum, RX mode switch) turns it off. Back on FM it is re-applied by
+     * RADIO_ApplyScramble() through RADIO_SetupRegisters(). */
+    if (modulation != MODULATION_FM)
+        BK4819_DisableScramble();
+
     #ifdef ENABLE_BYP_RAW_DEMODULATORS
     if (modulation == MODULATION_BYP || modulation == MODULATION_RAW) {
         uint16_t reg_3d_val = 0x0000;

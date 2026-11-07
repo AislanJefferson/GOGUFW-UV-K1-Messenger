@@ -346,6 +346,13 @@ void PY25Q16_Flush(void)
     SectorProgram(SectorCacheAddr, SectorCache, SECTOR_SIZE);
 }
 
+/* Commit on the next idle 10 ms tick instead of waiting FLUSH_IDLE_10MS. */
+void PY25Q16_FlushSoon(void)
+{
+    if (CacheDirty)
+        FlushIdle10ms = 1;
+}
+
 void PY25Q16_Tick10ms(void)
 {
     if (FlushIdle10ms && --FlushIdle10ms == 0)

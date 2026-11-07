@@ -2,6 +2,35 @@
 
 ## Unreleased
 
+- HOP follows the same FM-only rule as the fixed scrambler: an AM channel set
+  to Scramb = HOP no longer sends the FSK seed burst or inverts the TX voice,
+  and the HOP receiver only starts (and keeps) a session on FM with ScraEn on.
+- The voice scrambler is FM-only everywhere, TX and RX: `RADIO_SetModulation()`
+  turns it off when leaving FM (fast scan on an AM channel, Spectrum key 0, RX
+  mode switch), the Scramb menu preview and the scrambler icon only act on FM,
+  and the SCRAMBLE key on an AM/USB channel changes nothing and gives the
+  double beep (silent with Beep OFF).
+- Leaving the menu commits pending flash writes on the next idle 10 ms tick
+  (still never inside RX/TX, a Messenger ACK/PONG window or a HOP session), so
+  a power-off right after a menu change keeps it. No extra sector erases.
+- Spectrum is back to the HOP/crypto branch behaviour: its own battery icon
+  and no forced `M---` refresh. From upstream it keeps only 16..2048 samples
+  (sparse ruler), the band-edge clamp and the center-mode window, which
+  2048 samples need so the start frequency cannot wrap below 0.
+- CHIRP module (`Gogufw_3.6.2_chirp_module.py`, now v3.6.2m) matches the
+  current firmware only: F Lock lists BRASIL / DISABLE ALL / UNLOCK ALL
+  (stored 0 / 9 / 10), POnMsg is gone, RF LOG is no longer offered as a key
+  action, and the new **CryKey** field edits the passphrase at 0x012140.
+  The older modules (3.1.1, 3.2.0, 3.3.5, 3.6.0) are removed.
+- Build: `-Wl,--sort-section=alignment` in Release (-100 B, also -96 B of
+  RAM; the multiboot RAM stub is byte-identical). LTO is also requested at
+  link time and the toolchain no longer passes each C flag twice. Measured
+  and not used: `-fno-move-loop-invariants` (-348 B, but the bit-banged
+  BK4829 SPI gets ~1% slower per Spectrum scan step),
+  `-fno-optimize-crc` and `-fno-tree-loop-distribute-patterns` (no change),
+  `-fno-jump-tables` and `-fno-tree-loop-optimize` (larger).
+- 120,516 / 120,832 bytes (316 bytes free), RAM 15,544 B.
+
 - CryKey is now a firmware menu item (**Msg → CryKey**, up to 10
   characters, case-sensitive) using the shared text editor; `Crypto.app` is
   removed. The passphrase is stored right after the Messenger config in its

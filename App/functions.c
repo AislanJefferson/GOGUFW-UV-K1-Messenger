@@ -240,6 +240,7 @@ void FUNCTION_Transmit()
 #ifdef ENABLE_GOGUFW_CRYPTO
     /* HOP: send the seed burst (NO_FSK_TX does not apply: HOP needs it). */
     if (gCurrentVfo->SCRAMBLING_TYPE == SCRAMBLE_TYPE_HOP && gSetting_ScrambleEnable &&
+        gCurrentVfo->Modulation == MODULATION_FM &&
         !gCallToneTxActive)
         SCR_HOP_TxBurst(0);
 #endif

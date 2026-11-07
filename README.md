@@ -21,10 +21,10 @@ multiboot environment.
 | 📻 **Supported radios** | Quansheng UV-K1 / UV-K5 V3 |
 | ⚙️ **Hardware** | PY32F071 MCU · BK4829 RF IC |
 | 🛠️ **Build preset** | Fusion · Release · ARM GNU Embedded |
-| 💾 **Firmware image** | 120,364 / 120,832 bytes · **99.61%** · 468 bytes free, including the 920-byte multiboot load image |
+| 💾 **Firmware image** | 120,516 / 120,832 bytes · **99.74%** · 316 bytes free, including the 920-byte multiboot load image |
 | 🧠 **Runtime stack** | 4,096-byte linker reservation · live/current and high-water values reported by `SystemInfo.app` |
 | ✉️ **GOGUFW tools** | Messenger · HEARD · Auto Check · Range Check · CALLTX · Full Watch · FM names/RSSI |
-| 🔌 **CHIRP support** | Matching 3.6.2 module with 1024 memories, Messenger settings, FM names and all channel policies |
+| 🔌 **CHIRP support** | Matching 3.6.2m module with 1024 memories, Messenger settings, CryKey, F Lock, FM names and all channel policies |
 
 ## Compatibility and downloads
 
@@ -291,16 +291,17 @@ Hold **MENU while powering on** to open the firmware-slot selector.
 
 ## CHIRP
 
-Use the module that matches the firmware release. For GOGUFW 3.6.2:
+Use the module that matches the firmware release. For GOGUFW 3.6.2m:
 
 1. Start CHIRP and choose **File → Load Module**.
 2. Select `Gogufw_3.6.2_chirp_module.py`.
 3. Download the radio using **Quansheng → UV-K1 / UV-K5 V3 GOGUFW Messenger**.
-4. Edit channels, side-key actions, Messenger/Call settings, FM names,
-   `No FSK TX`, `No Roger`, `Scrambler` and `Compander` as required.
+4. Edit channels, side-key actions, Messenger/Call settings, CryKey, F Lock,
+   FM names, `No FSK TX`, `No Roger`, `Scrambler` (fixed carriers and HOP)
+   and `Compander` as required.
 5. Upload the completed image to the radio.
 
-The firmware and module support the radio's 1024 memory-channel layout. Do not use an older GOGUFW module with this release: an older module may not understand newer key-action or channel fields and can overwrite them.
+The firmware and module support the radio's 1024 memory-channel layout. Only the module for the current firmware is kept in this repository; modules of other GOGUFW releases are not compatible and can overwrite newer fields.
 
 ## Build from source
 

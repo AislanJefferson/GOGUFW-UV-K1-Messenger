@@ -28,14 +28,28 @@ set(CMAKE_TRY_COMPILE_TARGET_TYPE STATIC_LIBRARY)
 
 set(TARGET_FLAGS "-mcpu=cortex-m0plus ")
 
+# CMake reads this file more than once; drop repeated flags so each one is
+# passed a single time (the duplicates were harmless, only noisy).
+function(_ggfw_unique_flags var)
+    separate_arguments(_flags UNIX_COMMAND "${${var}}")
+    list(REMOVE_DUPLICATES _flags)
+    list(JOIN _flags " " _flags)
+    set(${var} "${_flags}" PARENT_SCOPE)
+endfunction()
+
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${TARGET_FLAGS}")
+_ggfw_unique_flags(CMAKE_C_FLAGS)
 set(CMAKE_ASM_FLAGS "${CMAKE_C_FLAGS} -x assembler-with-cpp -MMD -MP")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -fdata-sections -ffunction-sections")
+_ggfw_unique_flags(CMAKE_C_FLAGS)
 
 set(CMAKE_C_FLAGS_DEBUG "-O0 -g3")
 # Measured size win with ARM GCC; retain RF regression testing when changed.
 # -fno-tree-ch / -fno-ssa-phiopt only disable two optimization passes (loop
 # header copying, PHI optimization): measured -276 B on the Fusion image.
+# Not used: -fno-move-loop-invariants (-348 B) makes the bit-banged BK4829
+# SPI ~1% slower per Spectrum scan step. Every pass disabled here is
+# re-enabled for mb_flash.c (CMakeLists.txt).
 set(CMAKE_C_FLAGS_RELEASE "-Oz -g0 -fno-inline-small-functions -fno-tree-ch -fno-ssa-phiopt -flto-partition=one")
 set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g3")
 set(CMAKE_CXX_FLAGS_RELEASE "-Os -g0")
@@ -45,6 +59,8 @@ set(CMAKE_EXE_LINKER_FLAGS "${TARGET_FLAGS}")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --specs=nano.specs")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--gc-sections")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--print-memory-usage")
+# Order input sections by alignment: less padding, no code change (-100 B).
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--sort-section=alignment")
 set(TOOLCHAIN_LINK_LIBRARIES "m")
 
 set(CMAKE_EXE_LINKER_FLAGS_INIT

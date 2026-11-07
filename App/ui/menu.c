@@ -1145,7 +1145,8 @@ void UI_DisplayMenu(void)
             strcpy(String, gSubMenu_SCRAMBLER[gSubMenuSelection]);
             #if 1
                 /* Fixed carriers only (1..10); HOP has no preview carrier. */
-                if (gSubMenuSelection > 0 && gSubMenuSelection <= 10 && gSetting_ScrambleEnable)
+                if (gSubMenuSelection > 0 && gSubMenuSelection <= 10 && gSetting_ScrambleEnable &&
+                    gTxVfo->Modulation == MODULATION_FM)   // FM-only, like RADIO_ApplyScramble()
                     BK4819_EnableScramble(gSubMenuSelection - 1);
                 else
                     BK4819_DisableScramble();

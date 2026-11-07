@@ -32,6 +32,8 @@ void PY25Q16_InvalidateCache(void);
  * main-loop 10 ms tick. Flush uses DMA, so IRQs must be enabled. */
 void PY25Q16_Flush(void);
 void PY25Q16_Tick10ms(void);
+/* Commit pending data on the next idle tick (e.g. when leaving the menu). */
+void PY25Q16_FlushSoon(void);
 
 #ifdef ENABLE_FEAT_F4HWN_OVERLAY_APPS
 /* The 4 KiB sector cache, reused as the overlay-app execution workspace. */

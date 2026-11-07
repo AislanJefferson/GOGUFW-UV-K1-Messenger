@@ -23,6 +23,7 @@
     #include "app/fm.h"
 #endif
 #include "driver/keyboard.h"
+#include "driver/py25q16.h"
 #include "driver/st7565.h"
 #include "misc.h"
 #ifdef ENABLE_AIRCOPY
@@ -106,6 +107,11 @@ void GUI_SelectNextDisplay(GUI_DisplayType_t Display)
 
     if (gScreenToDisplay != Display)
     {
+        /* Leaving the menu: commit its changes on the next idle tick, so a
+         * power-off right after does not lose them. */
+        if (gScreenToDisplay == DISPLAY_MENU)
+            PY25Q16_FlushSoon();
+
         DTMF_clear_input_box();
 
         gInputBoxIndex       = 0;
