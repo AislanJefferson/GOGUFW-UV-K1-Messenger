@@ -2,6 +2,7 @@
 #include <string.h>
 #include "app/messenger_store.h"
 #include "app/messenger_packet.h"
+#include "helper/crypto.h"
 #include "driver/py25q16.h"
 #include "audio.h"
 #include "misc.h"
@@ -59,6 +60,12 @@ _Static_assert(offsetof(MSG_ConfigFlash_t, drafts) == 21u, "draft offset changed
 _Static_assert(offsetof(MSG_ConfigFlash_t, call_tone) == 317u, "call_tone offset changed");
 _Static_assert(offsetof(MSG_ConfigFlash_t, call_vol) == 318u, "call_vol offset changed");
 _Static_assert(offsetof(MSG_ConfigFlash_t, rng_rsp) == 319u, "rng_rsp offset changed");
+#ifdef ENABLE_GOGUFW_CRYPTO
+/* The CryKey passphrase lives right after this layout in the same sector. */
+_Static_assert(CRYPTO_KEY_FLASH_ADDR == MSG_CFG_FLASH_ADDR + sizeof(MSG_ConfigFlash_t) &&
+              sizeof(MSG_ConfigFlash_t) + CRYPTO_KEY_TEXT_LEN <= MSG_CFG_FLASH_SIZE,
+              "CryKey must follow the Messenger config");
+#endif
 
 static void MSG_STORE_DefaultConfig(void)
 {

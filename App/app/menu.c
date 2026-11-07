@@ -434,6 +434,9 @@ int MENU_GetLimits(uint8_t menu_id, int32_t *pMin, int32_t *pMax)
 
         #ifdef ENABLE_MESSENGER
         case MENU_MSG_CSG:
+#ifdef ENABLE_GOGUFW_CRYPTO
+        case MENU_CRY_KEY:
+#endif
             *pMax = 0;
             break;
         case MENU_MSG_RX:
@@ -501,6 +504,12 @@ void MENU_AcceptSetting(void)
         #ifdef ENABLE_MESSENGER
         case MENU_MSG_RX:
             gMessengerConfig.msg_rx = gSubMenuSelection; MSG_STORE_SaveConfig(); break;
+#ifdef ENABLE_GOGUFW_CRYPTO
+        case MENU_CRY_KEY:
+            if (edit_index >= 0)
+                CRYPTO_SaveText(edit);   // trailing spaces are dropped
+            break;
+#endif
         case MENU_MSG_CSG:
             if (edit_index >= 0)
             {
@@ -1012,6 +1021,10 @@ void MENU_ShowCurrentSetting(void)
             MSG_STORE_Init(); gSubMenuSelection = gMessengerConfig.msg_rx; break;
         case MENU_MSG_CSG:
             MSG_STORE_Init(); gSubMenuSelection = 0; break;
+#ifdef ENABLE_GOGUFW_CRYPTO
+        case MENU_CRY_KEY:
+            gSubMenuSelection = 0; break;
+#endif
         case MENU_MSG_ACK:
             MSG_STORE_Init(); gSubMenuSelection = gMessengerConfig.msg_ack; break;
         case MENU_MSG_BEEP:
@@ -1398,6 +1411,10 @@ static bool MENU_IsTextEditMenuItemId(const int m)
         return true;
 #ifdef ENABLE_MESSENGER
     if (m == MENU_MSG_CSG)
+        return true;
+#endif
+#ifdef ENABLE_GOGUFW_CRYPTO
+    if (m == MENU_CRY_KEY)
         return true;
 #endif
     return false;
@@ -1828,6 +1845,13 @@ static void MENU_Key_MENU(const bool bKeyPressed, const bool bKeyHeld)
                 MSG_STORE_Init();
                 memset(edit, 0, sizeof(edit));
                 strncpy(edit, gMessengerConfig.callsign, MSG_CALLSIGN_EDIT_LEN);
+            }
+#endif
+#ifdef ENABLE_GOGUFW_CRYPTO
+            else if (UI_MENU_GetCurrentMenuId() == MENU_CRY_KEY)
+            {
+                memset(edit, 0, sizeof(edit));
+                CRYPTO_ReadText(edit);
             }
 #endif
 

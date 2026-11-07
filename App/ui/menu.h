@@ -18,6 +18,7 @@
 #define UI_MENU_H
 
 #include <stdbool.h>
+#include "helper/crypto.h"
 #include <stdint.h>
 
 #include "audio.h"     // VOICE_ID_t
@@ -192,6 +193,9 @@ enum
 #if defined(ENABLE_FEAT_F4HWN) && defined(ENABLE_GOGUFW_SCRAMBLER)
     /* Keep existing F4HWN/Messenger menu IDs stable. */
     MENU_SCR,
+#endif
+#ifdef ENABLE_GOGUFW_CRYPTO
+    MENU_CRY_KEY,   // CryKey passphrase (HOP + encrypted Messenger)
 #endif
 };
 

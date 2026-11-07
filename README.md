@@ -21,7 +21,7 @@ multiboot environment.
 | 📻 **Supported radios** | Quansheng UV-K1 / UV-K5 V3 |
 | ⚙️ **Hardware** | PY32F071 MCU · BK4829 RF IC |
 | 🛠️ **Build preset** | Fusion · Release · ARM GNU Embedded |
-| 💾 **Firmware image** | 120,152 / 120,832 bytes · **99.44%** · 680 bytes free, including the 920-byte multiboot load image |
+| 💾 **Firmware image** | 120,364 / 120,832 bytes · **99.61%** · 468 bytes free, including the 920-byte multiboot load image |
 | 🧠 **Runtime stack** | 4,096-byte linker reservation · live/current and high-water values reported by `SystemInfo.app` |
 | ✉️ **GOGUFW tools** | Messenger · HEARD · Auto Check · Range Check · CALLTX · Full Watch · FM names/RSSI |
 | 🔌 **CHIRP support** | Matching 3.6.2 module with 1024 memories, Messenger settings, FM names and all channel policies |

@@ -4,9 +4,7 @@
 
 #ifdef ENABLE_GOGUFW_CRYPTO
 
-#ifdef ENABLE_FEAT_F4HWN_OVERLAY_APPS
-    #include "apps/app_overlay.h"
-#endif
+#include "driver/py25q16.h"
 
 /* .noncacheable is NOLOAD: initialised by CRYPTO_Reload() at boot. */
 static uint32_t sKey[4]   __attribute__((section(".noncacheable")));
@@ -25,15 +23,12 @@ static void xtea(uint32_t v[2], const uint32_t k[4])
     v[1] = v1;
 }
 
-static void read_text(char out[CRYPTO_KEY_TEXT_LEN + 1])
+void CRYPTO_ReadText(char out[CRYPTO_KEY_TEXT_LEN + 1])
 {
-    out[0] = 0;   // no Crypto.app: same as an empty passphrase
-#ifdef ENABLE_FEAT_F4HWN_OVERLAY_APPS
-    APP_ReadNamedConfig("Crypto", 6u, out, CRYPTO_KEY_TEXT_LEN);
-#endif
+    PY25Q16_ReadBuffer(CRYPTO_KEY_FLASH_ADDR, out, CRYPTO_KEY_TEXT_LEN);
     out[CRYPTO_KEY_TEXT_LEN] = 0;
-    /* Text ends at the first NUL or erased (0xFF) byte; zero the rest so the
-     * firmware editor and CHIRP derive the same key. */
+    /* Text ends at the first NUL or erased (0xFF) byte (never set = empty
+     * passphrase); zero the rest so the derived key is well defined. */
     bool end = false;
     for (uint8_t i = 0; i < CRYPTO_KEY_TEXT_LEN; i++) {
         if (out[i] == 0 || (uint8_t)out[i] == 0xFFu)
@@ -50,12 +45,27 @@ void CRYPTO_Reload(void)
     char text[16];
 
     memset(text, 0, sizeof(text));
-    read_text(text);
+    CRYPTO_ReadText(text);
     sKeyValid = text[0] != 0;
 
     memcpy(sKey, text, sizeof(sKey));
     xtea(&sKey[0], kdf);
     xtea(&sKey[2], kdf);
+}
+
+void CRYPTO_SaveText(const char *text)
+{
+    char buf[CRYPTO_KEY_TEXT_LEN];
+    uint8_t len = 0;
+
+    while (len < CRYPTO_KEY_TEXT_LEN && text[len])
+        len++;
+    while (len && text[len - 1u] == ' ')   // trailing spaces are editor padding
+        len--;
+    memset(buf, 0, sizeof(buf));
+    memcpy(buf, text, len);
+    PY25Q16_WriteBuffer(CRYPTO_KEY_FLASH_ADDR, buf, sizeof(buf), false);
+    CRYPTO_Reload();
 }
 
 bool CRYPTO_HasKey(void)

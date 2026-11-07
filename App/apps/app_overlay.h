@@ -168,8 +168,6 @@ uint8_t APP_ValidateSlot(uint8_t slot, app_header_t *out_header);
 /* Validate, load into the overlay, verify the code CRC, and run the app.
  * Returns when the app exits; the internal flash is never touched. */
 uint8_t APP_LaunchOverlay(uint8_t slot);
-/* Read the committed config of the installed app called `name`. */
-bool    APP_ReadNamedConfig(const char *name, uint8_t name_len, void *buf, uint8_t len);
 
 /* Set when an app stages a VFO or memory selection for the main radio. */
 extern bool gAppVfoExit;

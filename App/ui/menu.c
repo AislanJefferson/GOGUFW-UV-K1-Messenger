@@ -193,6 +193,9 @@ const t_menu_item MenuList[] =
     {"MsgBep",      MENU_MSG_BEEP     },
     {"MsgLed",      MENU_MSG_LED      },
     {"CllSgn",      MENU_MSG_CSG      },
+#ifdef ENABLE_GOGUFW_CRYPTO
+    {"CryKey",      MENU_CRY_KEY      },
+#endif
     {"RngRsp",      MENU_RNG_RSP      },
 #endif
     // hidden menu items from here on
@@ -646,7 +649,7 @@ static const uint8_t CatAudio[]   = {
     MENU_SET_VOL,
 #endif
 #ifdef ENABLE_FEAT_F4HWN_AUDIO
-    MENU_SET_AUD,
+    MENU_SET_AUD, MENU_SET_RXG,
 #endif
 #ifdef ENABLE_GOGUFW_CALLTX
     MENU_CALL_TONE, MENU_CALL_VOL,
@@ -655,7 +658,11 @@ static const uint8_t CatAudio[]   = {
 static const uint8_t CatRadio[]   = { MENU_SQL, MENU_STE, MENU_RP_STE, MENU_ROGER, MENU_VOX, MENU_TDR };
 static const uint8_t CatDtmf[]    = { MENU_UPCODE, MENU_DWCODE, MENU_D_ST, MENU_D_PRE, MENU_D_LIVE_DEC };
 #ifdef ENABLE_MESSENGER
-static const uint8_t CatMsg[]     = { MENU_MSG_RX, MENU_MSG_ACK, MENU_MSG_BEEP, MENU_MSG_LED, MENU_MSG_CSG, MENU_RNG_RSP };
+static const uint8_t CatMsg[]     = { MENU_MSG_RX, MENU_MSG_ACK, MENU_MSG_BEEP, MENU_MSG_LED, MENU_MSG_CSG,
+#ifdef ENABLE_GOGUFW_CRYPTO
+                                      MENU_CRY_KEY,
+#endif
+                                      MENU_RNG_RSP };
 #endif
 static const uint8_t CatService[] = { MENU_F_LOCK, MENU_350EN, MENU_BATCAL, MENU_BATTYP, MENU_SET_NAV, MENU_RESET };
 
@@ -830,6 +837,9 @@ static void UI_MENU_DrawUnifiedTextEditor(const int m)
 #ifdef ENABLE_MESSENGER
                         m == MENU_MSG_CSG ? "CLLSGN" :
 #endif
+#ifdef ENABLE_GOGUFW_CRYPTO
+                        m == MENU_CRY_KEY ? "CRYKEY" :
+#endif
                         MenuList[gMenuIndices[gMenuCursor]].name;
     UI_GOGU_TextEditorCursor = edit_index < 0 ? 0xFFu : gMenuTextEditorCursor;
     UI_GOGU_DrawTextEditor(title, edit, max_len, "SAVE",
@@ -919,6 +929,9 @@ void UI_DisplayMenu(void)
         (m == MENU_MEM_NAME
 #ifdef ENABLE_MESSENGER
          || m == MENU_MSG_CSG
+#endif
+#ifdef ENABLE_GOGUFW_CRYPTO
+         || m == MENU_CRY_KEY
 #endif
         ))
     {
@@ -1206,6 +1219,15 @@ void UI_DisplayMenu(void)
         case MENU_ABR_ON_TX_RX:
             strcpy(String, gSubMenu_RX_TX[gSubMenuSelection]);
             break;
+
+        #ifdef ENABLE_GOGUFW_CRYPTO
+        case MENU_CRY_KEY:
+            if (!gIsInSubMenu)
+                edit_index = -1;
+            CRYPTO_ReadText(String);
+            UI_PrintString(String[0] ? String : "--", menu_item_x1, menu_item_x2, 2, 8);
+            break;
+        #endif
 
         #ifdef ENABLE_MESSENGER
         case MENU_MSG_CSG:

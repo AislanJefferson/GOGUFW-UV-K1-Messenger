@@ -21,7 +21,7 @@ Este manual descreve o build **Fusion** (o preset oficial) do código atual, ver
 8. [Scan (varredura)](#8-scan-varredura)
 9. [Messenger](#9-messenger)
 10. [HEARD, Range Check e AUTO CHECK](#10-heard-range-check-e-auto-check)
-11. [Criptografia: CryKey e Crypto.app](#11-criptografia-crykey-e-cryptoapp)
+11. [Criptografia: CryKey](#11-criptografia-crykey)
 12. [Scrambler de voz (fixo e HOP)](#12-scrambler-de-voz-fixo-e-hop)
 13. [Largura de banda: W, N e N+](#13-largura-de-banda-w-n-e-n)
 14. [CALLTX (melodias de chamada)](#14-calltx-melodias-de-chamada)
@@ -76,7 +76,6 @@ O GOGUFW mantém o conjunto de recursos de rádio do F4HWN e adiciona:
 | `Gogufw_X.Y.Z_chirp_module.py` | Módulo CHIRP da mesma versão |
 | `FMVFO.app` + `FMMemory.app` | Rádio FM (os **dois** são obrigatórios) |
 | `Search.app` | Necessário para F+4 e F+\* |
-| `Crypto.app` | Editor da frase-senha CryKey (opcional; versão em desenvolvimento, ainda não publicado em release) |
 | `Apps.zip` | Pacote de apps compatíveis |
 
 ### 2.2 Passo a passo
@@ -239,47 +238,48 @@ Com `SetPTT = ONEPUSH`, o primeiro toque no PTT começa a transmitir e o segundo
 
 | # | Item | Categoria | | # | Item | Categoria |
 |---|---|---|---|---|---|---|
-| 1 | Step | Channels | | 42 | STE | Radio |
-| 2 | Power | Channels | | 43 | RP STE | Radio |
-| 3 | RxDCS | Channels | | 44 | 1 Call | Keys |
-| 4 | RxCTCS | Channels | | 45 | UPCode | DTMF |
-| 5 | TxDCS | Channels | | 46 | DWCode | DTMF |
-| 6 | TxCTCS | Channels | | 47 | PTT ID | Channels |
-| 7 | TxODir | Channels | | 48 | D ST | DTMF |
-| 8 | TxOffs | Channels | | 49 | D Prel | DTMF |
-| 9 | W/N | Channels | | 50 | VOX | Radio |
-| 10 | Scramb | Channels | | 51 | RxMode | Radio |
-| 11 | BusyCL | Channels | | 52 | Sql | Radio |
-| 12 | Compnd | Channels | | 53 | SetPwr | Channels |
-| 13 | Mode | Channels | | 54 | SetPTT | Keys |
-| 14 | TXLock | Channels | | 55 | SetTOT | Timers |
-| 15 | ChList | Channels | | 56 | SetEOT | Timers |
-| 16 | ChSave | Channels | | 57 | SetCtr | Display |
-| 17 | ChDele | Channels | | 58 | SetInv | Display |
-| 18 | ChName | Channels | | 59 | SetLck | Keys |
-| 19 | ScList | Scan | | 60 | SetMet | Display |
-| 20 | ScPri | Scan | | 61 | SetGUI | Display |
-| 21 | PriCh1 | Scan | | 62 | SetRxA | Audio |
-| 22 | PriCh2 | Scan | | 63 | SetTmr | Timers |
-| 23 | ScnRev | Scan | | 64 | SetOff | Power |
-| 24 | F1Shrt | Keys | | 65 | SetNFM | Channels |
-| 25 | F1Long | Keys | | 66 | SetVol | Audio |
-| 26 | F2Shrt | Keys | | 67 | SetScn | Scan |
-| 27 | F2Long | Keys | | 68 | SetCfg | Channels |
-| 28 | M Long | Keys | | 69 | CllTon | Audio |
-| 29 | KeyLck | Keys | | 70 | CllVol | Audio |
-| 30 | TxTOut | Timers | | 71 | MsgRx | Msg |
-| 31 | BatSav | Power | | 72 | MsgAck | Msg |
-| 32 | BatTxt | Power | | 73 | MsgBep | Msg |
-| 33 | Mic | Audio | | 74 | MsgLed | Msg |
-| 34 | MicBar | Audio | | 75 | CllSgn | Msg |
-| 35 | ChDisp | Display | | 76 | RngRsp | Msg |
-| 36 | BLTime | Display | | 77 | F Lock | Service |
-| 37 | BLMin | Display | | 78 | 350 En | Service |
-| 38 | BLMax | Display | | 79 | BatCal | Service |
-| 39 | BLTxRx | Display | | 80 | BatTyp | Service |
-| 40 | Beep | Audio | | 81 | SetNav | Service |
-| 41 | Roger | Radio | | 82 | Reset | Service |
+| 1 | Step | Channels | | 43 | RP STE | Radio |
+| 2 | Power | Channels | | 44 | 1 Call | Keys |
+| 3 | RxDCS | Channels | | 45 | UPCode | DTMF |
+| 4 | RxCTCS | Channels | | 46 | DWCode | DTMF |
+| 5 | TxDCS | Channels | | 47 | PTT ID | Channels |
+| 6 | TxCTCS | Channels | | 48 | D ST | DTMF |
+| 7 | TxODir | Channels | | 49 | D Prel | DTMF |
+| 8 | TxOffs | Channels | | 50 | VOX | Radio |
+| 9 | W/N | Channels | | 51 | RxMode | Radio |
+| 10 | Scramb | Channels | | 52 | Sql | Radio |
+| 11 | BusyCL | Channels | | 53 | SetPwr | Channels |
+| 12 | Compnd | Channels | | 54 | SetPTT | Keys |
+| 13 | Mode | Channels | | 55 | SetTOT | Timers |
+| 14 | TXLock | Channels | | 56 | SetEOT | Timers |
+| 15 | ChList | Channels | | 57 | SetCtr | Display |
+| 16 | ChSave | Channels | | 58 | SetInv | Display |
+| 17 | ChDele | Channels | | 59 | SetLck | Keys |
+| 18 | ChName | Channels | | 60 | SetMet | Display |
+| 19 | ScList | Scan | | 61 | SetGUI | Display |
+| 20 | ScPri | Scan | | 62 | SetRxA | Audio |
+| 21 | PriCh1 | Scan | | 63 | SetRxG | Audio |
+| 22 | PriCh2 | Scan | | 64 | SetTmr | Timers |
+| 23 | ScnRev | Scan | | 65 | SetOff | Power |
+| 24 | F1Shrt | Keys | | 66 | SetNFM | Channels |
+| 25 | F1Long | Keys | | 67 | SetVol | Audio |
+| 26 | F2Shrt | Keys | | 68 | SetScn | Scan |
+| 27 | F2Long | Keys | | 69 | SetCfg | Channels |
+| 28 | M Long | Keys | | 70 | CllTon | Audio |
+| 29 | KeyLck | Keys | | 71 | CllVol | Audio |
+| 30 | TxTOut | Timers | | 72 | MsgRx | Msg |
+| 31 | BatSav | Power | | 73 | MsgAck | Msg |
+| 32 | BatTxt | Power | | 74 | MsgBep | Msg |
+| 33 | Mic | Audio | | 75 | MsgLed | Msg |
+| 34 | MicBar | Audio | | 76 | CllSgn | Msg |
+| 35 | ChDisp | Display | | 77 | CryKey | Msg |
+| 36 | BLTime | Display | | 78 | RngRsp | Msg |
+| 37 | BLMin | Display | | 79 | F Lock | Service |
+| 38 | BLMax | Display | | 80 | 350 En | Service |
+| 39 | BLTxRx | Display | | 81 | BatCal | Service |
+| 40 | Beep | Audio | | 82 | BatTyp | Service |
+| 41 | Roger | Radio | | 83 | SetNav | Service |
+| 42 | STE | Radio | | 84 | Reset | Service |
 
 > [!NOTE]
 > A categoria **Power** trata de bateria e modo sono. A **potência de TX** (item `Power`) fica em **Channels**.
@@ -371,6 +371,7 @@ Com `SetPTT = ONEPUSH`, o primeiro toque no PTT começa a transmitir e o segundo
 | **Beep** | OFF, ON | ON | Bipe das teclas |
 | **SetVol** | OFF, 01–63 | 58 | Volume de RX |
 | **SetRxA** | FM: FLAT, CLEAN, MID, BOOST, MAX · AM: SHARP, STOCK, OPEN · USB | FLAT / SHARP | Perfil de áudio de RX |
+| **SetRxG** | OFF, ON | ON | Gate de áudio de RX do BK4829. OFF deixa passar modulação fraca, com mais chiado entre palavras. Com o compander de RX ligado fica sempre ON (`ON (COMPND)`) |
 | **CllTon** | TONE1–TONE5 | TONE1 | Melodia do CALLTX (prévia ao navegar) |
 | **CllVol** | LOW, HIGH | HIGH | Nível do gerador de tom do CALLTX |
 
@@ -402,6 +403,7 @@ Com `SetPTT = ONEPUSH`, o primeiro toque no PTT começa a transmitir e o segundo
 | **MsgBep** | OFF, ON | ON | Alerta de nova mensagem, de ACK e do Range Check |
 | **MsgLed** | OFF, GREEN, YELLOW | GREEN | LED de mensagem não lida |
 | **CllSgn** | Até 6 caracteres | UVK1 | Indicativo da estação (também usado pelos apps APRS) |
+| **CryKey** | Até 10 caracteres | vazio (`--`) | Frase-senha do HOP e do Messenger cifrado (seção 11) |
 | **RngRsp** | OFF, ON | ON | Responde automaticamente aos PINGs (PONG) |
 
 ### 6.13 Service (oculto)
@@ -606,15 +608,18 @@ Lista as últimas 6 estações ouvidas pelo Messenger. Cada linha mostra:
 
 ---
 
-## 11. Criptografia: CryKey e Crypto.app
+## 11. Criptografia: CryKey
 
 ### 11.1 Definir a frase-senha
 
-1. Instale o `Crypto.app` e abra-o pela lista de apps (**F+7**).
-2. Na tela **CRYKEY**, digite a frase-senha (até **10 caracteres**) com o editor da seção 23.
-3. **MENU** salva e sai. **EXIT** sai sem salvar.
+1. Abra **MENU → Msg → CryKey** e pressione **MENU**.
+2. Na tela **CRYKEY**, digite a frase-senha (até **10 caracteres**, maiúsculas e minúsculas são diferentes) com o editor da seção 23.
+3. **MENU** salva. **EXIT** sai sem salvar. Apagar todo o texto e salvar volta à chave padrão.
 
-A chave é recarregada no boot e sempre que qualquer app fecha. A CryKey vale para todos os slots do multiboot (os apps são compartilhados).
+A chave vale assim que é salva. Ela fica no setor do Messenger, junto do `CllSgn`: no multiboot, cada banco de configuração (seção 20.1) tem a sua. Só grava na Flash quando o texto muda.
+
+> [!IMPORTANT]
+> O `Crypto.app` não é mais usado. Ao atualizar de uma versão que usava o app, digite a CryKey de novo no menu.
 
 ### 11.2 O que é cifrado
 
@@ -637,7 +642,7 @@ Com uma CryKey definida, **todo** texto do Messenger sai cifrado (XTEA-CTR, salt
 | CryKey diferente ou ausente no receptor | Descartada em silêncio (sem Inbox e sem ACK); o remetente vê `x` |
 | Receptor com firmware antigo | Rejeita o pacote cifrado |
 | Rádio com CryKey recebendo texto em claro | Recebe normalmente |
-| Sem `Crypto.app` ou frase vazia | Chave padrão comum a todos: HOP funciona entre todos e o texto vai **em claro** |
+| Frase vazia | Chave padrão comum a todos: HOP funciona entre todos e o texto vai **em claro** |
 
 ---
 
@@ -882,7 +887,6 @@ O rádio tem **48 slots** na Flash externa. Instale os `.app` pela página **App
 |---|---|
 | **FMVFO / FMMemory** | Rádio FM (seção 15) |
 | **Search** | Busca de frequência e tom (seção 16) |
-| **Crypto** | Editor da CryKey (seção 11) |
 | **SystemInfo** | Informações do sistema, bateria, armazenamento e pilha |
 | **APRS RX** | Decodifica APRS (AX.25/AFSK 1200, Mic-E) |
 | **APRS TX** | Beacon de posição APRS |
@@ -914,9 +918,9 @@ Permite manter até 5 firmwares no rádio: o slot **M** (0, backup do principal)
 
 ### 20.1 Bancos de configuração
 
-- Cada slot usa o próprio banco de configurações (incluindo configurações e rascunhos do Messenger e nomes de FM).
+- Cada slot usa o próprio banco de configurações (incluindo configurações, rascunhos e CryKey do Messenger e nomes de FM).
 - **`SetCfg`** (Channels) associa o slot atual a outro banco (`CFG M`, `CFG 1`–`CFG 4`). Pede `SURE?` e reinicia.
-- **Compartilhados entre slots**: calibração, logo de boot e a área de apps (inclusive a CryKey).
+- **Compartilhados entre slots**: calibração, logo de boot e a área de apps.
 
 ---
 
@@ -983,7 +987,7 @@ Estas políticas valem para **canais de memória** e são configuradas **só pel
 
 ## 23. Editor de texto
 
-Usado em `ChName` (10 caracteres), `CllSgn` (6), Messenger Compose (36), nomes de FM e Crypto.app (10).
+Usado em `ChName` (10 caracteres), `CllSgn` (6), Messenger Compose (36), nomes de FM e `CryKey` (10).
 
 | Tecla | Função |
 |---|---|
@@ -1040,7 +1044,7 @@ Se as setas parecerem invertidas, ajuste `SetNav`.
 **Limitações conhecidas do módulo atual:**
 
 - A lista de **F Lock** ainda mostra os planos antigos: qualquer escolha diferente de DISABLE ALL ou UNLOCK ALL vira BRASIL no rádio.
-- A **CryKey** não é editada pelo CHIRP: use o `Crypto.app`.
+- A **CryKey** não é editada pelo CHIRP: use o menu `CryKey`. Uma gravação pelo CHIRP mantém a chave do rádio.
 - A ação **RF LOG** ainda aparece, mas não faz nada neste build.
 
 ---
@@ -1182,19 +1186,19 @@ Cada app em `App/apps/<nome>/` tem um `build.sh` que gera o `.app`. Exemplos:
 
 - `App/apps/fm` → `FMVFO.app`
 - `App/apps/fmmemory` → `FMMemory.app`
-- `App/apps/crypto` → `Crypto.app`
+- `App/apps/search` → `Search.app`
 
 Cada app tem no máximo 4 KiB de código.
 
 ### 29.3 Espaço e otimizações de build
 
-A Flash interna é de **120.832 bytes**, e o build atual usa **120.632 bytes** (incluindo os 920 bytes do stub do multiboot): restam cerca de **200 bytes**. Recursos novos precisam liberar espaço.
+A Flash interna é de **120.832 bytes**, e o build atual usa **120.364 bytes** (incluindo os 920 bytes do stub do multiboot): restam **468 bytes**. Recursos novos precisam liberar espaço.
 
 Técnicas já usadas no projeto:
 
 - **LTO** com uma única partição.
 - Flags de release `-fno-tree-ch -fno-ssa-phiopt` (cerca de −276 bytes). O `mb_flash.c` restaura essas passagens para o stub do multiboot continuar idêntico byte a byte.
-- Recursos grandes movidos para **apps overlay** (FM, Search, CryKey).
+- Recursos grandes movidos para **apps overlay** (FM, Search).
 - Recursos desligados no Fusion para liberar Flash/RAM: K5Viewer, RF Log Lite, Audio Scope, barra de progresso do scan (`SCAN_PROGRESS`), AirCopy, NOAA, Voice, Alarm, TX1750, DTMF Calling e Resume State (retomar scan/Spectrum/FM ao ligar).
 - Memória do Spectrum alocada só enquanto ele está aberto.
 - Gravação adiada na Flash SPI (seção 27.5): o driver `App/driver/py25q16.c` mantém o setor alterado no cache e chama `PY25Q16_Flush()` no tick ocioso de 2 s, ao trocar de setor e antes de reset, troca de banco, apps, Spectrum e multiboot. Código novo que reinicie o rádio ou reaproveite o cache deve chamar `PY25Q16_Flush()` antes.

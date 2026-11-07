@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- CryKey is now a firmware menu item (**Msg → CryKey**, up to 10
+  characters, case-sensitive) using the shared text editor; `Crypto.app` is
+  removed. The passphrase is stored right after the Messenger config in its
+  sector (0x012140), written only when it changes, kept by CHIRP uploads and,
+  like `CllSgn`, kept per multiboot config bank. **After updating, enter the
+  CryKey again in the menu**: the old Crypto.app value is not read. +212 B
+  (120,364 / 120,832 bytes, 468 bytes free).
+- Menu categories: SetRxG (from upstream 3.6.0) now appears under Audio, not
+  only in All.
+
 - Merged GOGUFW 3.6.0/3.6.2 (upstream main) into this branch: per-channel
   scrambler fixes (saved on MR channels, kept off DTMF/CSS tail/Roger/FSK/tone
   TX), overlay API 4 and GOGU API 4 (`key_state`/`voice_tx`, needed by the
