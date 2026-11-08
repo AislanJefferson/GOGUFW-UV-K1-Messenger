@@ -1116,6 +1116,7 @@ Se as setas parecerem invertidas, ajuste `SetNav`.
 - `SetRxA`: experimente **CLEAN** ou **MID** para inteligibilidade; **BOOST/MAX** em ambiente ruidoso.
 - `Mic`: ajuste com o `MicBar` ligado; o áudio não deve encostar no fim da barra.
 - `STE = ON` e `RP STE` removem o ruído de cauda.
+  Se o rádio detectar em falso o fim de uma transmissão, ele devolve o áudio depois de 300 ms com o sinal ainda no ar (o LED verde continua aceso). Se esse mudo curto se repetir num canal, use `STE` OFF.
 - Use o **Spectrum** para escolher um canal livre antes de uma atividade.
 
 ### 27.3 Confiabilidade do Messenger
@@ -1156,6 +1157,7 @@ A memória Flash do rádio suporta um número limitado de apagamentos por setor.
 | Sempre `x` em Sent | `MsgAck` OFF no receptor, CryKey diferente ou fora de alcance | Ligue `MsgAck` no receptor, confira a CryKey, faça um SEND PING |
 | Mensagens sumiram | Inbox/Sent ficam só na RAM | Comportamento normal após desligar |
 | Última configuração não ficou salva | Rádio desligado menos de 2 s após a mudança | Espere cerca de 2 s antes de desligar |
+| Mudo curto e ocasional num sinal forte (LED verde continua aceso) | `STE` ON detectando em falso um fim de transmissão | É o rádio descartando o falso aviso. Se incomodar, use `STE` OFF |
 | Tons/offset sumiram ao digitar uma frequência | Frequência digitada entra em simplex limpo | Configure tons e offset depois de digitar, ou use F+1 a partir de um canal |
 | HOP sai embaralhado | Receptor perdeu o burst, CryKey diferente, receptor fora de HOP, VOX ON ou MsgRx OFF | Confira os requisitos da seção 12.3 e espere o próximo resync (8 s) |
 | Início da fala cortado no HOP | Mic mudo durante o burst | Espere meio segundo após o PTT |

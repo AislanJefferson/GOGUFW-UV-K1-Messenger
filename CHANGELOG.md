@@ -2,6 +2,24 @@
 
 ## Unreleased
 
+- Squelch no longer chops strong signals in VFO/MR when STE is ON. A false
+  CTCSS/DCS tail (for example the 55 Hz detector on a channel with RX tone
+  OFF, seen on a UHF repeater at S9) muted the audio, and when the tail
+  window ran out the radio ended the reception although the carrier was
+  still up. That turned the green LED off and made the squelch reopen,
+  which was heard as random chopping. Spectrum was not affected (it decides
+  on RSSI only). A real tail is always followed by the carrier dropping,
+  which ends RX through the squelch first. So if the window runs out with
+  the squelch still open, the tail is now treated as false and the audio
+  comes back without rebuilding RX (the LED stays on). The window is
+  300 ms instead of 200 ms, to cover the 200 ms TX tail plus detector and
+  squelch-close delays. +24 B. The same behaviour existed before the 3.6.2
+  merge and upstream.
+- Messenger: the 30 ms squelch-close fallback now runs only while the FSK
+  sidecar is armed (the only case where it can hide `SQL_FOUND`). With
+  MsgRx OFF, only the stock receive logic ends a reception. +12 B.
+- 120,556 / 120,832 bytes (276 bytes free).
+
 - HOP follows the same FM-only rule as the fixed scrambler: an AM channel set
   to Scramb = HOP no longer sends the FSK seed burst or inverts the TX voice,
   and the HOP receiver only starts (and keeps) a session on FM with ScraEn on.
