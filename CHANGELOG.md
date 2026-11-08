@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Spectrum MR: key 6 (25k / 12.5k / 6.25k) now works as in VFO. The chosen
+  listen bandwidth stays for every channel, while sweeping and listening,
+  until EXIT or the long-MENU reset. Before the first press each channel
+  still uses its own bandwidth, and the first press starts from the one on
+  screen. Before, key 6 was ignored while sweeping and lasted only until the
+  squelch closed. Nothing is saved: a channel opened with the second PTT keeps
+  its own bandwidth. +92 B of program flash.
 - UI overlaps fixed:
   - The TX lock icon (x=24..30) could be drawn over the `CALLTX` label
     (x=10..33) while transmitting. This happened on split or cross-band
@@ -119,8 +126,7 @@
 - Spectrum MR now looks like VFO: the frequency uses the same font, and the
   listen bandwidth (`25k`/`12.5k`/`6.25k`) is shown next to the modulation.
   While sweeping both are the peak channel's own; while listening they are the
-  live ones. Key 6 also works while a signal plays on the MR graph, until the
-  squelch closes; it does not change the channel. TuneToPeak() reuses the peak
+  live ones (key 6 in MR: see the first entry). TuneToPeak() reuses the peak
   channel profile already cached for the display instead of reading the
   channel again. +28 B of program flash in total.
 - Spectrum VFO fixed listen: key 0 set the trigger to "none" (65535), so the
@@ -206,9 +212,7 @@
   step/memory, the exclusion list no longer empties itself after 256
   exclusions, and with more than 128 steps (large MR lists or long scan
   ranges) excluding a peak no longer stops its neighbouring steps from being
-  measured, and its column keeps showing their signal. Key 6 is ignored while
-  MR Spectrum is sweeping (each channel's own bandwidth is applied there) but
-  still changes the listening bandwidth while parked on a peak. MR sweeps no
+  measured, and its column keeps showing their signal. MR sweeps no
   longer rescan the channel list from the start on every step.
 - F Lock now offers only **BRASIL** (Anatel Ato 14448 general-use channels,
   462.5625–462.7125 and 467.5625–467.7125 MHz), **DISABLE ALL** and

@@ -109,6 +109,9 @@ static uint8_t spectrumDisplayModulation;
 static uint8_t spectrumDisplayListenBw;
 static uint8_t spectrumScanModulation;
 static uint8_t spectrumScanListenBw;
+// MR: set by key 6. The chosen listen bandwidth then replaces each channel's
+// own until EXIT or the long-MENU reset, as in VFO. Nothing is saved.
+static bool spectrumMrBwFixed;
 
 #ifdef ENABLE_SCAN_RANGES
 static uint16_t blacklistFreqs[15];
@@ -806,8 +809,8 @@ static void CacheSpectrumChannel(uint16_t ordinal)
     redrawStatus = true;
 }
 
-// MR sweep shows the peak channel's own modulation/bandwidth. While listening
-// the live settings are shown: the channel's, plus any key-6 change.
+// MR sweep shows the peak channel's own modulation, and its bandwidth until
+// key 6 fixes one. While listening the live settings are shown.
 static bool ShowPeakChannelRf(void)
 {
     return spectrumChannelMode && currentState == SPECTRUM && !isListening;
@@ -845,7 +848,8 @@ static void TuneToPeak()
     {
         // UpdatePeakInfoForce() cached the peak channel's profile.
         settings.modulationType = spectrumDisplayModulation;
-        settings.listenBw = spectrumDisplayListenBw;
+        if (!spectrumMrBwFixed)
+            settings.listenBw = spectrumDisplayListenBw;
         RADIO_SetModulation(settings.modulationType);
         BK4819_SetFilterBandwidth(settings.listenBw, false);
     }
@@ -854,13 +858,14 @@ static void TuneToPeak()
 
 static void RestoreSpectrumScanRf(bool applyRadio)
 {
-    // The fixed listen (STILL) keeps the channel's modulation/bandwidth, and
-    // key-6 changes, when the squelch closes; leaving STILL restores them.
+    // The fixed listen (STILL) keeps the channel's modulation/bandwidth when
+    // the squelch closes; leaving STILL restores them. A key-6 bandwidth stays.
     if (!spectrumChannelMode || currentState == STILL)
         return;
 
     settings.modulationType = spectrumScanModulation;
-    settings.listenBw = spectrumScanListenBw;
+    if (!spectrumMrBwFixed)
+        settings.listenBw = spectrumScanListenBw;
     if (applyRadio)
     {
         RADIO_SetModulation(settings.modulationType);
@@ -1355,6 +1360,7 @@ static void ResetSpectrumToDefaults()
     settings.scanStepIndex = S_STEP_25_0kHz;
     settings.stepsCount = STEPS_64;
     settings.listenBw = ListenBwFor(gTxVfo->CHANNEL_BANDWIDTH);
+    spectrumMrBwFixed = false;
     settings.modulationType = gTxVfo->Modulation;
     settings.rssiTriggerLevel = RSSI_MAX_VALUE;
     if (spectrumChannelMode)
@@ -1580,6 +1586,10 @@ static void ToggleModulation()
 
 static void ToggleListeningBW()
 {
+    // MR sweep: start from the peak channel's bandwidth shown on screen.
+    if (ShowPeakChannelRf() && !spectrumMrBwFixed)
+        settings.listenBw = spectrumDisplayListenBw;
+    spectrumMrBwFixed = true;
     if (settings.listenBw == BK4819_FILTER_BW_NARROWER)
     {
         settings.listenBw = BK4819_FILTER_BW_WIDE;
@@ -2112,8 +2122,9 @@ static void DrawF(uint32_t f)
     sprintf(String, "%3s", gModulationStr[peakRf ? spectrumDisplayModulation
                                                  : settings.modulationType]);
     GUI_DisplaySmallest(String, 116, 1, false, true);
-    sprintf(String, "%4sk", bwOptions[peakRf ? spectrumDisplayListenBw
-                                             : settings.listenBw]);
+    sprintf(String, "%4sk", bwOptions[peakRf && !spectrumMrBwFixed
+                                          ? spectrumDisplayListenBw
+                                          : settings.listenBw]);
     GUI_DisplaySmallest(String, 108, 7, false, true);
 
 #ifdef ENABLE_FEAT_F4HWN_SPECTRUM
@@ -2361,11 +2372,9 @@ static bool OnKeyDownCommon(uint8_t key) {
             ToggleModulation();
         return true;
     case KEY_6:
-        // While sweeping MR channels, TuneToPeak() applies each channel's own
-        // bandwidth, so 6 would be overwritten. While listening it works until
-        // the squelch closes (graph) or until EXIT (fixed listen).
-        if (!(spectrumChannelMode && currentState == SPECTRUM && !isListening))
-            ToggleListeningBW();
+        // In MR too the choice stays for every channel until the Spectrum
+        // closes or is reset (long MENU), as in VFO.
+        ToggleListeningBW();
         return true;
     case KEY_SIDE2:
         ToggleBacklight();
@@ -3212,6 +3221,7 @@ void APP_RunSpectrum()
 #endif
     settings.listenBw = ListenBwFor(gTxVfo->CHANNEL_BANDWIDTH);
     spectrumScanListenBw = settings.listenBw;
+    spectrumMrBwFixed = false;
     spectrumScanModulation = gTxVfo->Modulation;
     spectrumDisplayModulation = gTxVfo->Modulation;
     currentState = previousState = SPECTRUM;

@@ -1382,7 +1382,7 @@ Canais criados pela busca mantêm a potência que estava em uso, ficam em **NARR
 
 **F + 5** abre o analisador.
 
-- **Em MR**: varre os canais da lista de scan ativa (**ScList** ou a última lista escolhida no scan) e mostra nome, frequência, modulação e banda de escuta do canal selecionado.
+- **Em MR**: varre os canais da lista de scan ativa (**ScList** ou a última lista escolhida no scan) e mostra nome, frequência, modulação e banda de escuta do canal selecionado. Depois da tecla 6, a banda mostrada é a escolhida.
   - Canais excluídos (MENU segurado) ficam de fora, como no scan de memória.
   - **ALL** pega os canais que estão em alguma lista. Canais com `ChList OFF` ficam de fora.
   - Com a prioridade ligada (`+`), os 2 canais prioritários ficam de fora de uma lista 01–24, mas aparecem em ALL.
@@ -1406,7 +1406,7 @@ Canais criados pela busca mantêm a potência que estava em uso, ficam em **NARR
 | **4** | VFO: número de pontos 128 / 64 / 32 / 16 · MR: próxima lista de scan |
 | **5** | Digitar uma frequência (\* = ponto decimal, MENU confirma) |
 | **0** | Muda a modulação (só em VFO) |
-| **6** | Largura de banda de escuta 25k / 12,5k / 6,25k, aplicada na hora (em MR, só escutando: no gráfico vale até o sinal cair, após o PTT até o EXIT; o canal não muda) |
+| **6** | Largura de banda de escuta 25k / 12,5k / 6,25k, aplicada na hora. Em MR vale para todos os canais, no gráfico e na escuta, até sair ou segurar MENU; antes dela, cada canal usa a própria banda. O canal não muda |
 | **UP/DOWN** | Desloca a faixa / retoma a varredura |
 | **SIDE1** | Ignora o pico atual (o canal ou passo que está tocando) até sair do Spectrum |
 | **SIDE2** | Luz no máximo / mínimo |
@@ -1431,11 +1431,11 @@ A lista trocada com a tecla 4 vale também para o scan de memória depois de sai
 | **MENU** | Percorre os ganhos LNAs → LNA → PGA |
 | **SIDE1** | Monitor |
 | **0** | Muda a modulação da escuta (só em VFO; a escuta continua abrindo com o mesmo nível de disparo) |
-| **6** | Largura de banda de escuta (em MR vale até o EXIT; o canal não muda) |
+| **6** | Largura de banda de escuta (em MR continua valendo depois do EXIT, para todos os canais; o canal não muda) |
 | **EXIT** | Fecha o menu de ganho / volta ao gráfico |
 | **PTT** de novo | Leva o pico para o canal MR ou para o VFO ativo e sai, **sem transmitir** |
 
-Em MR, a escuta usa a modulação e a banda do canal, e continua com elas quando o sinal cai e volta.
+Em MR, a escuta usa a modulação e a banda do canal (ou a banda escolhida com a tecla 6), e continua com elas quando o sinal cai e volta.
 
 Ao sair com o segundo PTT:
 
