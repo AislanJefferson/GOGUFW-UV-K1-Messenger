@@ -996,8 +996,11 @@ void MSG_RF_ServiceSquelchClose(void)
      * channel is idle.  Confirm that state for 30 ms, outside an FSK capture,
      * then feed only the missing close state back to the stock receive state
      * machine.  HandleReceive() remains responsible for closing audio and
-     * rebuilding RX; do not restore speaker state or reset BK4829 here. */
-    if (gCurrentFunction == FUNCTION_RECEIVE &&
+     * rebuilding RX; do not restore speaker state or reset BK4829 here.
+     * Without the sidecar armed (MsgRx OFF) the stock SQL IRQ is intact, so
+     * the stock state machine alone decides when RX ends. */
+    if (s_sidecar_armed &&
+        gCurrentFunction == FUNCTION_RECEIVE &&
         g_SquelchLost &&
         !s_rx_capture_active &&
         s_rx_stale_ticks == 0u &&
