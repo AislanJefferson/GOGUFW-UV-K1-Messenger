@@ -87,7 +87,7 @@ static void FM_UI_DrawVfoScale(uint16_t freq10)
     }
 
     x = FM_UI_MapFreqToScaleX(freq10);
-    UI_DrawLineBuffer(gFrameBuffer, x, y - 6U, x, y + 5U, 1);
+    UI_DrawLineBuffer(gFrameBuffer, x, y - 6U, x, y + 2U, 1);  // ends with the ticks: one clear row above the labels (y=39)
     if (x > 0U) UI_DrawLineBuffer(gFrameBuffer, x - 1U, y - 4U, x - 1U, y - 1U, 1);
     if (x < 127U) UI_DrawLineBuffer(gFrameBuffer, x + 1U, y - 4U, x + 1U, y - 1U, 1);
 

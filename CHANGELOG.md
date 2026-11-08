@@ -2,6 +2,26 @@
 
 ## Unreleased
 
+- UI overlaps fixed:
+  - The TX lock icon (x=24..30) could be drawn over the `CALLTX` label
+    (x=10..33) while transmitting. This happened on split or cross-band
+    channels whose RX frequency is outside the F Lock plan. The transmitting
+    VFO now runs the lock check with its TX frequency, so the lock is never
+    shown there.
+  - MAIN ONLY + SetGUI CLASSIC + scan range with a detected subtone: the
+    `CTCSS`/`DCS` label was drawn over the VFO tone and step on the bottom
+    line, leaving stray characters such as `D023NK`. The line is now cleared
+    first.
+  - FM radio: the frequency pointer no longer runs into the band-edge
+    labels of the scale.
+- MANUAL section 6: every menu item now has its own entry with what it does,
+  its options, the default after `Reset ALL`, when to change it and caveats.
+  The defaults come from the code. Missing defaults are filled in (SetCtr 15,
+  SetMet/SetGUI CLASSIC, SetTOT/SetEOT OFF, SetTmr ON), and `SetLck` is
+  corrected to KEYS+PTT. The Service items in section 21.2 get the same
+  treatment.
+- 120,524 / 120,832 bytes (308 bytes free); the UI fixes are -4 B.
+
 - HOP follows the same FM-only rule as the fixed scrambler: an AM channel set
   to Scramb = HOP no longer sends the FSK seed burst or inverts the TX voice,
   and the HOP receiver only starts (and keeps) a session on FM with ScraEn on.

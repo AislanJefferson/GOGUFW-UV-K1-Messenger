@@ -284,131 +284,720 @@ Com `SetPTT = ONEPUSH`, o primeiro toque no PTT começa a transmitir e o segundo
 > [!NOTE]
 > A categoria **Power** trata de bateria e modo sono. A **potência de TX** (item `Power`) fica em **Channels**.
 
+### Como ler as seções seguintes
+
+Cada categoria começa com uma tabela de consulta rápida. Abaixo dela, cada item é explicado em detalhe:
+
+- **O que faz**: a função do item, em palavras simples.
+- **Opções**: o que significa cada valor.
+- **Padrão**: o valor depois de um `Reset ALL`. Num rádio já usado, vale o que estiver gravado.
+- **Quando mudar**: uma situação prática.
+- **Atenção**: cuidados e itens relacionados.
+
+> [!TIP]
+> **Itens de canal × itens globais.** Os itens marcados como *(canal)* valem para o VFO ou canal que está na tela.
+> - No modo **MR**, a mudança fica gravada no próprio canal.
+> - No modo **VFO**, ela vale só para aquele VFO.
+>
+> Todos os outros itens são globais e valem para o rádio inteiro.
+
 ### 6.3 Channels
 
-| Item | Opções | Padrão | Descrição |
+| Item | Opções | Padrão | Resumo |
 |---|---|---|---|
-| **Step** | 0.01 a 500 kHz (24 passos) | 12.5 kHz | Passo de sintonia |
-| **Power** | USER, LOW 1 (<20 mW), LOW 2 (125 mW), LOW 3 (250 mW), LOW 4 (500 mW), LOW 5 (1 W), MID (2 W), HIGH (5 W) | LOW 1 | Potência de TX do canal. USER usa o valor de `SetPwr` |
-| **SetPwr** | LOW 1 a HIGH | LOW 1 | Potência usada quando o canal está em USER |
-| **RxDCS / TxDCS** | OFF, D023N–D754N, D023I–D754I | OFF | Código DCS. O selo `NNN/MM` mostra a posição na lista completa / na lista homologada (`--` = não homologado) |
-| **RxCTCS / TxCTCS** | OFF, 67.0–254.1 Hz (50 tons) | OFF | Tom CTCSS. **\*** no RxCTCS/RxDCS busca o tom recebido |
-| **TxODir** | OFF, +, − | OFF | Direção do offset de repetidora |
-| **TxOffs** | 0 a 999.99999 MHz | — | Valor do offset (6 dígitos ou UP/DOWN) |
-| **W/N** | WIDE, NARROW | NARROW | Largura de banda (seção 13) |
-| **SetNFM** | NARROW (12,5 kHz), NARROWER (6,25 kHz = N+) | NARROW | O que "Narrow" significa em todos os canais |
-| **Scramb** | OFF, 2600–3500 Hz (passos de 100 Hz), HOP | OFF | Scrambler de voz do canal (seção 12) |
-| **BusyCL** | OFF, ON | OFF | Impede TX com o canal ocupado |
-| **Compnd** | OFF, TX, RX, TX/RX | OFF | Compressor/expansor de áudio |
-| **Mode** | FM, AM, USB | FM | Modulação |
-| **TXLock** | OFF, ON | ON | ON = respeita o F Lock. **OFF libera TX de voz** neste canal mesmo fora do plano (não vale para o Messenger) |
-| **PTT ID** | OFF, UP CODE, DOWN CODE, UP+DOWN CODE, APOLLO QUINDAR | OFF | DTMF ao apertar/soltar o PTT |
-| **ChList** | OFF, 01–24, ALL | — | Lista de scan a que o canal pertence |
-| **ChSave** | Canal 1–1024 | — | Grava o VFO num canal (pede `SURE?`) |
-| **ChDele** | Canal 1–1024 | — | Apaga um canal (pede `SURE?`) |
-| **ChName** | Até 10 caracteres | — | Nome do canal (editor da seção 23) |
-| **SetCfg** | CFG M, CFG 1–4 | Banco atual | Banco de configuração do multiboot (reinicia o rádio) |
+| **Step** | 0.01 a 500 kHz (24 passos) | 12.5 kHz | Passo de sintonia *(canal)* |
+| **Power** | USER, LOW 1 a LOW 5, MID, HIGH | LOW 1 | Potência de TX *(canal)* |
+| **SetPwr** | LOW 1 a HIGH | LOW 1 | Potência usada pelos canais em USER |
+| **RxDCS / TxDCS** | OFF, D023N–D754N, D023I–D754I | OFF | Código DCS de RX / TX *(canal)* |
+| **RxCTCS / TxCTCS** | OFF, 67.0–254.1 Hz (50 tons) | OFF | Tom CTCSS de RX / TX *(canal)* |
+| **TxODir** | OFF, +, − | OFF | Direção do offset de repetidora *(canal)* |
+| **TxOffs** | 0 a 999.99999 MHz | 0 | Valor do offset *(canal)* |
+| **W/N** | WIDE, NARROW | NARROW | Largura de banda *(canal)* |
+| **SetNFM** | NARROW, NARROWER | NARROW | O que "Narrow" significa no rádio todo |
+| **Scramb** | OFF, 2600–3500 Hz, HOP | OFF | Scrambler de voz *(canal)* |
+| **BusyCL** | OFF, ON | OFF | Impede TX com o canal ocupado *(canal)* |
+| **Compnd** | OFF, TX, RX, TX/RX | OFF | Compressor/expansor de áudio *(canal)* |
+| **Mode** | FM, AM, USB | FM | Modulação *(canal)* |
+| **TXLock** | OFF, ON | ON | Respeitar ou não o F Lock *(canal)* |
+| **PTT ID** | OFF, UP CODE, DOWN CODE, UP+DOWN CODE, APOLLO QUINDAR | OFF | Sinal DTMF ao apertar/soltar o PTT *(canal)* |
+| **ChList** | OFF, 01–24, ALL | — | Lista de scan do canal *(canal)* |
+| **ChSave** | Canal 1–1024 | — | Grava o VFO num canal |
+| **ChDele** | Canal 1–1024 | — | Apaga um canal |
+| **ChName** | Até 10 caracteres | — | Nome do canal |
+| **SetCfg** | CFG M, CFG 1–4 | banco atual | Banco de configuração do multiboot |
+
+#### `Step`: passo de sintonia *(canal)*
+
+- **O que faz**: define de quanto em quanto a frequência anda quando você usa UP/DOWN no VFO. É também o passo do scan de frequência.
+- **Opções**: 24 valores, de 0.01 kHz a 500 kHz. O valor aparece como `12.50kHz`, `25.00kHz` etc.
+- **Padrão**: 12.5 kHz.
+- **Quando mudar**: em VHF/UHF com canais de 12,5 kHz, mantenha 12.5. Para a faixa aérea (canais de 8,33/25 kHz), use 25 kHz ou 8.33 kHz. Para explorar uma banda depressa, use um passo maior.
+- **Atenção**: o passo só afeta a sintonia. Ele não muda a largura de banda (veja `W/N`).
+
+#### `Power`: potência de transmissão *(canal)*
+
+- **O que faz**: escolhe a potência de TX do canal ou VFO atual.
+- **Opções**:
+  - `LOW 1` (<20 mW), `LOW 2` (125 mW), `LOW 3` (250 mW), `LOW 4` (500 mW), `LOW 5` (1 W), `MID` (2 W), `HIGH` (5 W);
+  - `USER` usa o valor definido em `SetPwr`.
+  - A segunda linha da tela mostra a potência aproximada.
+- **Padrão**: LOW 1.
+- **Quando mudar**: use a menor potência que ainda funciona. Para conversar a poucos metros, LOW 1 basta e economiza bateria. Para alcance máximo, use HIGH.
+- **Atenção**: na tela principal, uma pequena seta ao lado da potência indica um canal em `USER`. A ação lateral **POWER** (seção 7) também muda este valor.
+
+#### `SetPwr`: potência do modo USER
+
+- **O que faz**: define a potência real de todos os canais que estão em `Power = USER`.
+- **Opções**: LOW 1 a HIGH (as mesmas de `Power`, sem USER).
+- **Padrão**: LOW 1.
+- **Quando mudar**: deixe vários canais em USER e controle a potência de todos de uma vez por aqui. Exemplo: aumentar a potência de um grupo de canais numa saída de campo.
+
+#### `RxDCS` / `TxDCS`: código DCS *(canal)*
+
+- **O que faz**: o DCS é um código digital subaudível.
+  - Em **RX**, o squelch só abre quando o sinal recebido traz o código escolhido.
+  - Em **TX**, o rádio envia esse código junto com a voz.
+- **Opções**: `OFF`; `D023N`…`D754N` (normal); `D023I`…`D754I` (invertido).
+- **Padrão**: OFF.
+- **Selo no canto**: `NNN/MM` mostra a posição do código na lista completa e na lista homologada. `--` significa que o código não está na lista homologada.
+- **Quando mudar**: para usar uma repetidora ou um grupo que exige DCS, ou para não ouvir outros grupos na mesma frequência.
+- **Atenção**:
+  - Cada sentido (RX ou TX) usa um só tom: escolher um DCS substitui o CTCSS daquele sentido, e vice-versa.
+  - Em `RxDCS`, a tecla **\*** procura o código do sinal que está sendo recebido (só em FM). Durante a busca aparece `SCAN`.
+
+#### `RxCTCS` / `TxCTCS`: tom CTCSS *(canal)*
+
+- **O que faz**: o CTCSS é um tom analógico subaudível (67 a 254,1 Hz). Funciona como o DCS:
+  - em RX, filtra quem você ouve;
+  - em TX, envia o tom para abrir o squelch de repetidoras e de outros rádios.
+- **Opções**: `OFF` e 50 tons, de 67.0 a 254.1 Hz.
+- **Padrão**: OFF.
+- **Selo no canto**: `NN/MM`, com a posição na lista completa e na lista homologada.
+- **Quando mudar**: uma repetidora que pede "tom 88,5" precisa de `TxCTCS = 88.5Hz`. Use também `RxCTCS = 88.5Hz` para só ouvir quem envia o mesmo tom.
+- **Atenção**: a tecla **\*** em `RxCTCS` procura o tom recebido (só em FM). A busca completa de frequência e tom está na seção 16.
+
+#### `TxODir`: direção do offset *(canal)*
+
+- **O que faz**: diz se a frequência de TX fica acima (`+`) ou abaixo (`−`) da frequência de RX, como as repetidoras exigem.
+- **Opções**: `OFF` (simplex: TX = RX), `+`, `−`.
+- **Padrão**: OFF.
+- **Quando mudar**: uma repetidora em 146,850 MHz com "−600 kHz" precisa de `TxODir = −` e `TxOffs = 0.60000`.
+- **Atenção**:
+  - Na tela aparece `+` ou `-` quando TX ≠ RX.
+  - Digitar uma frequência nova no VFO volta o offset para OFF (seção 5.1). Configure o offset **depois** de digitar a frequência.
+
+#### `TxOffs`: valor do offset *(canal)*
+
+- **O que faz**: define a distância entre a frequência de RX e a de TX.
+- **Opções**: 0 a 999.99999 MHz. Digite os números (até 6 dígitos) ou use UP/DOWN.
+- **Padrão**: 0.
+- **Quando mudar**: junto com `TxODir`. Os valores típicos são 0,6 MHz em 2 m e 5 MHz em 70 cm.
+
+#### `W/N`: largura de banda *(canal)*
+
+- **O que faz**: escolhe entre canal largo (25 kHz) e estreito.
+- **Opções**:
+  - `WIDE`;
+  - `NARROW`: 12,5 kHz, ou 6,25 kHz se `SetNFM = NARROWER`.
+- **Padrão**: NARROW.
+- **Quando mudar**: use a mesma largura dos outros rádios da conversa. Com largura diferente, a voz fica baixa e distorcida (larga demais) ou estoura (estreita demais).
+- **Atenção**: a tabela completa de filtros está na seção 13. A ação lateral **WIDE NARROW** troca a largura temporariamente.
+
+#### `SetNFM`: significado de "Narrow"
+
+- **O que faz**: define, para o rádio todo, se `NARROW` é o Narrow comum (12,5 kHz) ou o Narrower (6,25 kHz, chamado de **N+**).
+- **Opções**: `NARROW`, `NARROWER`.
+- **Padrão**: NARROW.
+- **Quando mudar**: só se o seu grupo usa canais de 6,25 kHz.
+- **Atenção**: é um ajuste **global**: afeta todos os canais em NARROW. N+ não aumenta o alcance (seção 13).
+
+#### `Scramb`: scrambler de voz *(canal)*
+
+- **O que faz**: embaralha a voz para que um rádio comum ouça só um som incompreensível.
+- **Opções**:
+  - `OFF`;
+  - `2600Hz` a `3500Hz` (passos de 100 Hz): scrambler fixo, compatível com outros rádios Quansheng;
+  - `HOP`: a portadora muda a cada 500 ms (seção 12).
+- **Padrão**: OFF.
+- **Quando mudar**: para conversas reservadas entre rádios configurados igualmente. Os dois lados precisam usar o mesmo valor.
+- **Atenção**:
+  - Funciona **só em FM**.
+  - Ao navegar pelos valores fixos, a prévia toca no áudio.
+  - Na tela, aparece um ícone de onda dupla.
+  - O HOP **não é criptografia**.
+  - A ação lateral **SCRAMBLE** liga e desliga o scrambler sem entrar no menu.
+
+#### `BusyCL`: bloqueio de canal ocupado *(canal)*
+
+- **O que faz**: com `ON`, o PTT não transmite enquanto houver sinal no canal.
+- **Opções**: `OFF`, `ON`.
+- **Padrão**: OFF.
+- **Quando mudar**: em canais compartilhados, para não "pisar" em quem já está falando.
+
+#### `Compnd`: compander *(canal)*
+
+- **O que faz**: comprime a voz no TX e a expande no RX. O resultado é menos chiado em sinais fracos.
+- **Opções**: `OFF`, `TX` (só comprime), `RX` (só expande), `TX/RX` (os dois).
+- **Padrão**: OFF.
+- **Quando mudar**: só quando **todos** os rádios da conversa usam o compander. Se só um lado usar, o áudio fica com volume irregular.
+- **Atenção**: com o compander de RX ligado, `SetRxG` fica fixo em `ON (COMPND)`. Na tela aparece um pequeno ícone.
+
+#### `Mode`: modulação *(canal)*
+
+- **O que faz**: escolhe como o sinal é demodulado.
+- **Opções**:
+  - `FM`: rádios portáteis, repetidoras, PMR;
+  - `AM`: faixa aérea;
+  - `USB`: banda lateral superior.
+- **Padrão**: FM.
+- **Quando mudar**: para ouvir aviação (AM, 118–137 MHz) ou sinais em SSB.
+- **Atenção**: só há TX em **FM**. Em AM/USB o PTT mostra `TX DISABLE`. Scrambler, Messenger e HOP também exigem FM. A ação lateral **MODE** alterna FM → AM → USB.
+
+#### `TXLock`: respeitar o F Lock *(canal)*
+
+- **O que faz**:
+  - `ON`: o canal só transmite se a frequência estiver dentro do plano `F Lock` (seção 21).
+  - `OFF`: libera o TX de **voz** neste canal mesmo fora do plano.
+- **Opções**: `OFF`, `ON`. Se a frequência de TX já está dentro do plano, o item mostra `Inside F Lock Plan`.
+- **Padrão**: ON.
+- **Quando mudar**: radioamadores licenciados podem liberar canais específicos sem usar `UNLOCK ALL`.
+- **Atenção**: o Messenger (FSK) continua obedecendo ao F Lock. Um cadeado na tela principal indica um canal com TX bloqueado. Você é responsável por respeitar as normas.
+
+#### `PTT ID`: identificação DTMF *(canal)*
+
+- **O que faz**: envia um código DTMF ao apertar e/ou ao soltar o PTT. Os códigos são `UPCode` e `DWCode` (seção 6.11).
+- **Opções**:
+  - `OFF`;
+  - `UP CODE`: ao apertar;
+  - `DOWN CODE`: ao soltar;
+  - `UP+DOWN CODE`: nos dois momentos;
+  - `APOLLO QUINDAR`: bipes no estilo da NASA.
+- **Padrão**: OFF.
+- **Quando mudar**: quando um sistema de despacho ou de repetidora pede identificação DTMF, ou por estilo (Quindar).
+
+#### `ChList`: lista de scan do canal *(canal)*
+
+- **O que faz**: define em qual lista de scan o canal de memória entra.
+- **Opções**: `OFF` (fora de todas as listas), `01`–`24` (mostra o nome da lista entre parênteses se ela tiver nome), `ALL`.
+- **Padrão**: depende de como o canal foi gravado.
+- **Quando mudar**: para separar grupos de canais (lista 1 para repetidoras, lista 2 para PMR, etc.) e escaneá-los separadamente com `ScList`.
+- **Atenção**: na tela principal, o canto superior direito mostra a lista do canal (`ALL`, `OFF`, número ou nome; `EX` = excluído do scan). Veja a seção 8.4.
+
+#### `ChSave`: gravar canal
+
+- **O que faz**: grava o VFO atual (frequência, tons, offset, potência, largura…) num canal de memória.
+- **Opções**: canal 1–1024. Canais ocupados mostram o nome e a frequência.
+- **Quando usar**: depois de configurar uma frequência no VFO, para tê-la sempre à mão no modo MR.
+- **Atenção**: gravar por cima de um canal ocupado substitui o conteúdo. O rádio pede `SURE?`; confirme com **MENU**.
+
+#### `ChDele`: apagar canal
+
+- **O que faz**: apaga um canal de memória.
+- **Opções**: canal 1–1024.
+- **Atenção**: não há como desfazer. O rádio pede `SURE?`.
+
+#### `ChName`: nome do canal
+
+- **O que faz**: dá um nome de até 10 caracteres ao canal, para mostrar com `ChDisp = NAME`.
+- **Como usar**: escolha o canal, aperte **MENU** para editar com o editor de texto (seção 23) e **MENU** de novo para salvar.
+- **Exemplo**: `REP CENTRO`, `PMR 1`.
+
+#### `SetCfg`: banco de configuração
+
+- **O que faz**: associa o slot do multiboot a outro banco de configurações. Cada banco guarda seus próprios ajustes, a configuração e os rascunhos do Messenger, a CryKey e os nomes de FM (seção 20.1).
+- **Opções**: `CFG M` (principal), `CFG 1`–`CFG 4`.
+- **Padrão**: o banco em uso.
+- **Quando mudar**: para alternar entre perfis de configuração, por exemplo "trabalho" e "radioamador".
+- **Atenção**: pede confirmação e **reinicia o rádio**.
 
 ### 6.4 Scan
 
-| Item | Opções | Padrão | Descrição |
+| Item | Opções | Padrão | Resumo |
 |---|---|---|---|
-| **ScList** | 01–24, ALL | 1 | Lista de scan padrão |
+| **ScList** | 01–24, ALL | 01 | Lista usada pelo scan de memória |
 | **ScPri** | OFF, ON | ON | Scan de prioridade |
-| **PriCh1 / PriCh2** | Canal 1–1024, None | — | Canais prioritários (também usados como C/D no Full Watch) |
-| **ScnRev** | STOP · CARRIER 0,25–20 s · TIMEOUT 5 s–2 min | CARRIER 3,5 s | Como o scan retoma após parar num sinal |
+| **PriCh1 / PriCh2** | Canal 1–1024, None | — | Canais prioritários |
+| **ScnRev** | STOP · CARRIER 0,25–20 s · TIMEOUT 5 s–2 min | CARRIER 3,5 s | Como o scan retoma |
 | **SetScn** | NORMAL, FAST | NORMAL | Velocidade do scan |
+
+#### `ScList`: lista de scan
+
+- **O que faz**: escolhe qual lista o scan de memória percorre.
+- **Opções**: `01`–`24` (com o nome entre parênteses, se houver) ou `ALL` (todos os canais com lista atribuída).
+- **Padrão**: 01.
+- **Quando mudar**: para escanear só um grupo de canais (veja `ChList`).
+- **Atenção**: durante o scan de memória, a ação **SCAN** troca de lista sem parar. A lista ativa aparece na barra de status.
+
+#### `ScPri`: scan de prioridade
+
+- **O que faz**: com `ON`, o scan volta periodicamente aos canais `PriCh1`/`PriCh2`, para não perder o que acontece neles.
+- **Opções**: `OFF`, `ON`.
+- **Padrão**: ON.
+- **Quando mudar**: desligue se você não usa canais prioritários e quer um scan contínuo.
+- **Atenção**: com prioridade ligada, aparece um `+` após o nome da lista na barra de status.
+
+#### `PriCh1` / `PriCh2`: canais prioritários
+
+- **O que faz**: define os dois canais vigiados com prioridade durante o scan.
+- **Opções**: canal 1–1024 ou `None`.
+- **Quando mudar**: coloque o canal principal do seu grupo, ou um canal de emergência.
+- **Atenção**: nos modos **Full Watch** (seção 18), estes canais viram os canais C e D, escutados junto com A e B.
+
+#### `ScnRev`: retomada do scan
+
+- **O que faz**: define o que o scan faz quando para num sinal.
+- **Opções**:
+  - `STOP`: para no sinal e fica ali;
+  - `CARRIER`: espera o sinal sumir e retoma após o tempo escolhido (0,25 a 20 s);
+  - `TIMEOUT`: retoma após o tempo escolhido (5 s a 2 min), mesmo que o sinal continue.
+- **Padrão**: CARRIER 3,5 s.
+- **Quando mudar**: `STOP` para não perder o primeiro sinal achado; `TIMEOUT` para não ficar preso num canal com transmissão contínua.
+
+#### `SetScn`: velocidade do scan
+
+- **O que faz**: escolhe entre a varredura normal e uma mais rápida.
+- **Opções**: `NORMAL`, `FAST`.
+- **Padrão**: NORMAL.
+- **Quando mudar**: `FAST` percorre listas grandes mais depressa. Em `NORMAL`, sinais curtos ou fracos têm um pouco mais de chance de ser detectados.
 
 ### 6.5 Keys
 
-| Item | Opções | Padrão | Descrição |
+| Item | Opções | Padrão | Resumo |
 |---|---|---|---|
 | **F1Shrt / F1Long** | Ações (seção 7) | MONITOR / NONE | SIDE1 curto / segurado |
 | **F2Shrt / F2Long** | Ações (seção 7) | SCAN / NONE | SIDE2 curto / segurado |
 | **M Long** | Ações (seção 7) | NONE | MENU segurado |
 | **KeyLck** | OFF, 15 s a 10 min | OFF | Bloqueio automático do teclado |
-| **SetLck** | KEYS, KEYS+PTT | KEYS | O que o bloqueio trava |
+| **SetLck** | KEYS, KEYS+PTT | KEYS+PTT | O que o bloqueio trava |
 | **SetPTT** | CLASSIC, ONEPUSH | CLASSIC | Modo do PTT |
-| **1 Call** | Canal 1–1024 | — | Canal acessado com 9 segurado |
+| **1 Call** | Canal 1–1024 | — | Canal de acesso rápido |
+
+#### `F1Shrt` / `F1Long` / `F2Shrt` / `F2Long`: botões laterais
+
+- **O que faz**: define a função de cada botão lateral, com toque curto (`Shrt`) ou segurado (`Long`).
+  - `F1` = **SIDE1**, o botão de cima.
+  - `F2` = **SIDE2**, o botão de baixo.
+- **Opções**: a lista de ações da seção 7 (MONITOR, SCAN, POWER, MESSENGER, HEARD, CALLTX, SCRAMBLE…).
+- **Padrão**: F1Shrt = MONITOR, F2Shrt = SCAN, os demais = NONE.
+- **Quando mudar**: coloque nos botões o que você mais usa. Exemplos: `F1Long = MESSENGER`, para abrir o Messenger sem passar pelo menu; `F2Long = SCRAMBLE`, para ligar o scrambler na hora.
+
+#### `M Long`: MENU segurado
+
+- **O que faz**: define uma ação para quando você segura a tecla **MENU** na tela principal.
+- **Opções**: as mesmas ações da seção 7.
+- **Padrão**: NONE.
+- **Quando mudar**: para ganhar mais um atalho além dos botões laterais.
+
+#### `KeyLck`: bloqueio automático
+
+- **O que faz**: bloqueia o teclado sozinho depois de um tempo sem uso.
+- **Opções**: `OFF` ou de 15 s a 10 min, em passos de 15 s.
+- **Padrão**: OFF.
+- **Quando mudar**: para evitar toques acidentais com o rádio no bolso ou no cinto.
+- **Atenção**: para desbloquear, segure **F** (seção 24.1).
+
+#### `SetLck`: o que o bloqueio trava
+
+- **O que faz**: define se o bloqueio do teclado também trava o PTT.
+- **Opções**: `KEYS` (só as teclas; o PTT continua funcionando), `KEYS+PTT` (teclas e PTT).
+- **Padrão**: KEYS+PTT.
+- **Quando mudar**: use `KEYS` se você quer bloquear o teclado e ainda poder transmitir.
+
+#### `SetPTT`: modo do PTT
+
+- **O que faz**:
+  - `CLASSIC`: transmite enquanto o PTT está apertado.
+  - `ONEPUSH`: um toque começa a transmissão e outro toque termina.
+- **Opções**: `CLASSIC`, `ONEPUSH`.
+- **Padrão**: CLASSIC.
+- **Quando mudar**: `ONEPUSH` ajuda em falas longas. Cuidado para não esquecer o rádio transmitindo: o `TxTOut` continua valendo (seção 5.5).
+
+#### `1 Call`: canal de acesso rápido
+
+- **O que faz**: define o canal que é aberto ao segurar a tecla **9**.
+- **Opções**: canal 1–1024.
+- **Quando mudar**: coloque o canal que você mais precisa alcançar depressa (chamada, emergência).
 
 ### 6.6 Power (bateria e sono)
 
-| Item | Opções | Padrão | Descrição |
+| Item | Opções | Padrão | Resumo |
 |---|---|---|---|
 | **BatSav** | OFF, 1:1 a 1:5 | 1:4 | Economia de bateria no RX |
 | **BatTxt** | NONE, VOLTAGE, PERCENT | PERCENT | Texto da bateria na barra de status |
-| **SetOff** | OFF, 1 min a 2 h | 1 h | Modo sono após inatividade: tela e luz apagam e o LED vermelho pisca. O rádio **não** desliga |
+| **SetOff** | OFF, 1 min a 2 h | 1 h | Modo sono após inatividade |
+
+#### `BatSav`: economia de bateria
+
+- **O que faz**: quando não há sinal, o receptor alterna entre períodos ligado e desligado para gastar menos.
+- **Opções**: `OFF` ou a proporção `1:1` a `1:5`. Quanto maior o segundo número, mais tempo o receptor dorme e mais bateria economiza.
+- **Padrão**: 1:4.
+- **Quando mudar**: `OFF` ou `1:1` quando o início das transmissões não pode ser perdido (o receptor dormindo pode cortar a primeira sílaba). Valores altos servem para escuta longa.
+- **Atenção**: durante o sono do receptor aparece um ícone na barra de status.
+
+#### `BatTxt`: texto da bateria
+
+- **O que faz**: escolhe o que aparece ao lado do ícone da bateria.
+- **Opções**: `NONE` (só o ícone), `VOLTAGE` (ex. `4.12`), `PERCENT` (ex. `85%`).
+- **Padrão**: PERCENT.
+- **Atenção**: a porcentagem depende do tipo de bateria configurado em `BatTyp` (Service).
+
+#### `SetOff`: modo sono
+
+- **O que faz**: depois do tempo escolhido sem uso, a tela e a luz se apagam e o LED vermelho pisca.
+- **Opções**: `OFF` ou de 1 min a 2 h.
+- **Padrão**: 1 h.
+- **Quando mudar**: tempos menores economizam bateria quando você esquece o rádio ligado.
+- **Atenção**: o rádio **não** desliga. Qualquer tecla acorda a tela.
 
 ### 6.7 Display
 
-| Item | Opções | Padrão | Descrição |
+| Item | Opções | Padrão | Resumo |
 |---|---|---|---|
 | **ChDisp** | FREQ, CHANNEL NUMBER, NAME, NAME+FREQ | FREQ | Como os canais aparecem |
 | **BLTime** | OFF, 5 s a 5 min, ON | 1 min | Tempo da luz de fundo |
-| **BLMin** | 0–9 | 0 | Brilho mínimo |
-| **BLMax** | 1–10 | 10 | Brilho máximo |
+| **BLMin** | 0–9 | 0 | Brilho com a luz "apagada" |
+| **BLMax** | 1–10 | 10 | Brilho com a luz acesa |
 | **BLTxRx** | OFF, TX, RX, TX/RX | TX/RX | Acende a luz em TX/RX |
-| **SetCtr** | 1–15 | — | Contraste do LCD (prévia ao vivo) |
+| **SetCtr** | 1–15 | 15 | Contraste do LCD |
 | **SetInv** | OFF, ON | OFF | Inverte as cores do LCD |
-| **SetMet** | TINY, CLASSIC | — | Estilo do S-meter |
-| **SetGUI** | TINY, CLASSIC | — | Estilo da tela principal |
+| **SetMet** | TINY, CLASSIC | CLASSIC | Estilo do S-meter |
+| **SetGUI** | TINY, CLASSIC | CLASSIC | Estilo da tela principal |
+
+#### `ChDisp`: exibição dos canais
+
+- **O que faz**: define o que a tela principal mostra para um canal de memória.
+- **Opções**:
+  - `FREQ`: a frequência;
+  - `CHANNEL NUMBER`: só o número;
+  - `NAME`: o nome (ou `CH-xxxx`, se o canal não tiver nome);
+  - `NAME + FREQ`: o nome (ou `CH-xxxx`) em cima e a frequência em baixo.
+- **Padrão**: FREQ.
+- **Quando mudar**: `NAME` ou `NAME + FREQ` quando seus canais têm nomes (`ChName` ou CHIRP).
+
+#### `BLTime`: tempo da luz de fundo
+
+- **O que faz**: define quanto tempo a luz fica acesa depois da última tecla.
+- **Opções**: `OFF` (sempre no brilho mínimo), de 5 s a 5 min (em passos de 5 s), `ON` (sempre acesa).
+- **Padrão**: 1 min.
+- **Quando mudar**: tempos curtos economizam bateria. `ON` serve para uso noturno contínuo.
+
+#### `BLMin` / `BLMax`: brilho mínimo e máximo
+
+- **O que faz**:
+  - `BLMax` é o brilho com a luz acesa.
+  - `BLMin` é o brilho que fica quando o tempo de `BLTime` acaba.
+- **Opções**: `BLMin` de 0 a 9; `BLMax` de 1 a 10. O `BLMin` sempre fica abaixo do `BLMax`.
+- **Padrão**: BLMin = 0 (luz apagada), BLMax = 10.
+- **Quando mudar**: `BLMin = 1` ou `2` deixa a tela legível no escuro sem gastar muito. `BLMax` menor evita ofuscar à noite.
+- **Atenção**: o novo brilho aparece na hora, enquanto você ajusta.
+
+#### `BLTxRx`: luz em TX/RX
+
+- **O que faz**: acende a luz automaticamente quando o rádio transmite e/ou recebe.
+- **Opções**: `OFF`, `TX`, `RX`, `TX/RX`.
+- **Padrão**: TX/RX.
+- **Quando mudar**: `OFF` economiza bateria em escuta longa. `RX` ajuda a ver quem está falando.
+
+#### `SetCtr`: contraste
+
+- **O que faz**: ajusta o contraste do LCD.
+- **Opções**: 1 a 15. A tela muda na hora, enquanto você ajusta.
+- **Padrão**: 15.
+- **Quando mudar**: se a tela parecer apagada ou escura demais, ou se o ângulo de visão estiver ruim.
+
+#### `SetInv`: cores invertidas
+
+- **O que faz**: troca o fundo claro com letras escuras por fundo escuro com letras claras.
+- **Opções**: `OFF`, `ON`.
+- **Padrão**: OFF. Também volta a OFF quando você atualiza o firmware.
+- **Quando mudar**: por gosto pessoal, ou para uso noturno.
+
+#### `SetMet`: estilo do S-meter
+
+- **O que faz**: escolhe o desenho da barra de sinal durante a recepção.
+- **Opções**: `TINY` (compacto), `CLASSIC`.
+- **Padrão**: CLASSIC.
+
+#### `SetGUI`: estilo da tela principal
+
+- **O que faz**: escolhe a fonte da linha de informações do VFO (modulação, tom, potência, largura).
+- **Opções**:
+  - `TINY`: fonte 3x5 com textos longos, como `LOW1` e `NAR+`;
+  - `CLASSIC`: fonte maior com textos curtos, como `L1` e `N+`. No modo MAIN ONLY, mostra também o tom e o passo na linha de baixo.
+- **Padrão**: CLASSIC.
+- **Atenção**: a seção 13 mostra como a largura de banda aparece em cada estilo.
 
 ### 6.8 Timers
 
-| Item | Opções | Padrão | Descrição |
+| Item | Opções | Padrão | Resumo |
 |---|---|---|---|
 | **TxTOut** | 30 s a 15 min | 1 min | Limite de tempo de transmissão |
-| **SetTOT** | OFF, SOUND, VISUAL, ALL | — | Aviso de fim do tempo de TX |
-| **SetEOT** | OFF, SOUND, VISUAL, ALL | — | Aviso de fim de recepção (VISUAL pisca o LED verde) |
-| **SetTmr** | OFF, ON | — | Cronômetro de RX/TX na barra de status |
+| **SetTOT** | OFF, SOUND, VISUAL, ALL | OFF | Aviso de fim do tempo de TX |
+| **SetEOT** | OFF, SOUND, VISUAL, ALL | OFF | Aviso de fim de recepção |
+| **SetTmr** | OFF, ON | ON | Cronômetro de RX/TX na barra de status |
+
+#### `TxTOut`: tempo máximo de TX
+
+- **O que faz**: corta a transmissão automaticamente depois do tempo escolhido. Protege o rádio, a bateria e o canal (PTT preso, ONEPUSH esquecido).
+- **Opções**: de 30 s a 15 min, em passos de 5 s.
+- **Padrão**: 1 min.
+- **Quando mudar**: aumente se você precisa de falas longas. Diminua em canais movimentados.
+
+#### `SetTOT`: aviso de fim do tempo de TX
+
+- **O que faz**: avisa quando o `TxTOut` está acabando.
+- **Opções**: `OFF`, `SOUND` (bipes cada vez mais agudos), `VISUAL` (a luz da tela pisca; com `BLTime = OFF`, pisca a lanterna), `ALL` (os dois).
+- **Padrão**: OFF.
+- **Quando mudar**: ligue se você costuma falar perto do limite e não quer ser cortado de surpresa.
+
+#### `SetEOT`: aviso de fim de recepção
+
+- **O que faz**: avisa quando o outro lado termina de falar.
+- **Opções**: `OFF`, `SOUND` (bipe), `VISUAL` (pisca o LED verde), `ALL` (os dois).
+- **Padrão**: OFF.
+- **Quando mudar**: ajuda a saber a hora de responder, principalmente quando o outro rádio não manda Roger.
+
+#### `SetTmr`: cronômetro de RX/TX
+
+- **O que faz**: mostra no canto esquerdo da barra de status há quanto tempo dura a recepção ou a transmissão atual (`MM:SS`).
+- **Opções**: `OFF`, `ON`.
+- **Padrão**: ON.
+- **Atenção**: durante RX/TX, o cronômetro ocupa o lugar dos indicadores do canto esquerdo.
 
 ### 6.9 Audio
 
-| Item | Opções | Padrão | Descrição |
+| Item | Opções | Padrão | Resumo |
 |---|---|---|---|
 | **Mic** | +1.5 a +31.5 dB (9 níveis) | +16.0 dB | Ganho do microfone |
 | **MicBar** | OFF, ON | ON | Barra de áudio do microfone no TX |
 | **Beep** | OFF, ON | ON | Bipe das teclas |
 | **SetVol** | OFF, 01–63 | 58 | Volume de RX |
 | **SetRxA** | FM: FLAT, CLEAN, MID, BOOST, MAX · AM: SHARP, STOCK, OPEN · USB | FLAT / SHARP | Perfil de áudio de RX |
-| **SetRxG** | OFF, ON | ON | Gate de áudio de RX do BK4829. OFF deixa passar modulação fraca, com mais chiado entre palavras. Com o compander de RX ligado fica sempre ON (`ON (COMPND)`) |
-| **CllTon** | TONE1–TONE5 | TONE1 | Melodia do CALLTX (prévia ao navegar) |
-| **CllVol** | LOW, HIGH | HIGH | Nível do gerador de tom do CALLTX |
+| **SetRxG** | OFF, ON | ON | Gate de áudio de RX |
+| **CllTon** | TONE1–TONE5 | TONE1 | Melodia do CALLTX |
+| **CllVol** | LOW, HIGH | HIGH | Nível do tom do CALLTX |
+
+#### `Mic`: ganho do microfone
+
+- **O que faz**: define a sensibilidade do microfone.
+- **Opções**: 9 níveis, de +1.5 dB a +31.5 dB. Uma barra mostra o nível escolhido.
+- **Padrão**: +16.0 dB.
+- **Quando mudar**: se dizem que sua voz está baixa, aumente. Se está estourada ou com muito ruído de fundo, diminua. Ajuste falando a uns 5 cm do rádio.
+
+#### `MicBar`: barra do microfone
+
+- **O que faz**: mostra na linha central da tela uma barra com o nível da sua voz durante o TX.
+- **Opções**: `OFF`, `ON`.
+- **Padrão**: ON.
+- **Quando mudar**: deixe ligado para conferir se você está falando alto o bastante.
+
+#### `Beep`: bipe das teclas
+
+- **O que faz**: liga ou desliga o bipe de confirmação das teclas.
+- **Opções**: `OFF`, `ON`.
+- **Padrão**: ON.
+- **Atenção**: com `OFF`, o bipe duplo de "ação recusada" (por exemplo, SCRAMBLE num canal AM) também fica mudo.
+
+#### `SetVol`: volume de RX
+
+- **O que faz**: define o ganho de áudio do receptor, independente do botão de volume.
+- **Opções**: `OFF` ou de 01 a 63.
+- **Padrão**: 58.
+- **Quando mudar**: diminua se o áudio distorce mesmo com o botão baixo. Aumente se, com o botão no máximo, ainda está baixo.
+- **Atenção**: o novo volume vale na hora, enquanto você ajusta.
+
+#### `SetRxA`: perfil de áudio de RX
+
+- **O que faz**: aplica uma "equalização" ao áudio recebido. As opções dependem da modulação do VFO atual, que aparece no selo do canto.
+- **Opções**:
+  - FM: `FLAT` (sem alteração), `CLEAN` (menos chiado), `MID`, `BOOST` (mais presença), `MAX`.
+  - AM: `SHARP`, `STOCK`, `OPEN`.
+  - USB: sem opções.
+- **Padrão**: FLAT (FM) e SHARP (AM).
+- **Quando mudar**: `CLEAN` em sinais com muito chiado; `BOOST`/`MAX` em ambientes barulhentos.
+- **Atenção**: durante a recepção, o nome do perfil aparece no lugar de `RX`. A ação lateral **RxA** avança o perfil.
+
+#### `SetRxG`: gate de áudio de RX
+
+- **O que faz**: o gate do BK4829 corta o áudio entre as palavras, quando não há modulação.
+- **Opções**:
+  - `ON`: mais silêncio entre as palavras;
+  - `OFF`: deixa passar modulação fraca, mas com mais chiado.
+- **Padrão**: ON.
+- **Quando mudar**: `OFF` se o início ou o fim das palavras de quem fala baixo estão sumindo.
+- **Atenção**: com o compander de RX ligado (`Compnd = RX` ou `TX/RX`), o item fica fixo em `ON (COMPND)`.
+
+#### `CllTon`: melodia do CALLTX
+
+- **O que faz**: escolhe a melodia transmitida pelo CALLTX (**F+9** ou a ação **CALLTX**). As melodias estão listadas na seção 14.
+- **Opções**: `TONE1` a `TONE5`. Ao navegar pelos valores, a melodia toca como prévia.
+- **Padrão**: TONE1.
+
+#### `CllVol`: nível do CALLTX
+
+- **O que faz**: define a intensidade do tom de chamada transmitido.
+- **Opções**: `LOW`, `HIGH`.
+- **Padrão**: HIGH.
+- **Quando mudar**: use `LOW` se o tom chega estourado no outro rádio.
 
 ### 6.10 Radio
 
-| Item | Opções | Padrão | Descrição |
+| Item | Opções | Padrão | Resumo |
 |---|---|---|---|
 | **Sql** | 0–9 | 1 | Nível de squelch |
-| **STE** | OFF, ON | ON | Elimina o ruído de cauda do squelch |
+| **STE** | OFF, ON | ON | Elimina a cauda do squelch |
 | **RP STE** | OFF, 1–10 × 100 ms | OFF | Elimina a cauda da repetidora |
-| **Roger** | OFF, ROGER, MDC | OFF | Sinal de fim de TX (prévia ao navegar) |
+| **Roger** | OFF, ROGER, MDC | OFF | Sinal de fim de TX |
 | **VOX** | OFF, 1–10 | OFF | Transmissão ativada por voz |
-| **RxMode** | MAIN ONLY, DUAL RX RESPOND, CROSS BAND, MAIN TX DUAL RX, FULL RX RESPOND, MAIN TX FULL RX | DUAL RX RESPOND | Modo de recepção (seção 18) |
+| **RxMode** | 6 modos (seção 18) | DUAL RX RESPOND | Modo de recepção |
+
+#### `Sql`: squelch
+
+- **O que faz**: o squelch silencia o alto-falante quando não há sinal. O número define a força mínima de sinal para o áudio abrir.
+- **Opções**: 0 (sempre aberto, só chiado) a 9 (só sinais fortes).
+- **Padrão**: 1.
+- **Quando mudar**: aumente se o rádio abre sozinho com ruído. Diminua para ouvir sinais fracos e distantes.
+- **Atenção**: ao ajustar, a tela principal mostra `SQL n` por alguns instantes. A ação **MONITOR** abre o squelch na hora.
+
+#### `STE`: eliminação da cauda do squelch
+
+- **O que faz**: remove o "chiado" curto que se ouve quando o outro rádio solta o PTT.
+- **Opções**: `OFF`, `ON`.
+- **Padrão**: ON.
+- **Atenção**: só funciona por completo quando o outro rádio também usa STE ou tom subaudível.
+
+#### `RP STE`: cauda da repetidora
+
+- **O que faz**: é a mesma ideia do `STE`, para o chiado que a **repetidora** deixa depois de cada fala.
+- **Opções**: `OFF` ou de 1 a 10 × 100 ms.
+- **Padrão**: OFF.
+- **Quando mudar**: ao usar uma repetidora com cauda longa. Comece em 3–5 e ajuste.
+
+#### `Roger`: sinal de fim de transmissão
+
+- **O que faz**: envia um som curto quando você solta o PTT, para avisar que terminou.
+- **Opções**: `OFF`, `ROGER` (bipe), `MDC` (rajada no estilo MDC-1200). Ao navegar pelos valores, o som toca como prévia.
+- **Padrão**: OFF.
+- **Atenção**: canais com a política **No Roger** (seção 22) não enviam o sinal. Um ícone de nota musical mostra onde ele está ativo.
+
+#### `VOX`: transmissão por voz
+
+- **O que faz**: transmite sozinho quando você fala, sem apertar o PTT.
+- **Opções**: `OFF` ou um nível de 1 a 10, que define o volume de voz que dispara o TX. Os limites vêm da calibração do rádio.
+- **Padrão**: OFF.
+- **Quando mudar**: uso com as mãos ocupadas e fone com microfone. Teste alguns níveis até achar um que dispara com a sua voz e não com o ruído do ambiente.
+- **Atenção**: com o VOX ligado aparece `VOX` na barra de status. A ação **VOX** liga e desliga.
+
+#### `RxMode`: modo de recepção
+
+- **O que faz**: define se o rádio escuta só o VFO principal ou vários canais ao mesmo tempo, e em qual deles transmite.
+- **Opções**: `MAIN ONLY`, `DUAL RX RESPOND`, `CROSS BAND`, `MAIN TX DUAL RX`, `FULL RX RESPOND`, `MAIN TX FULL RX`. A explicação de cada modo está na seção 18.
+- **Padrão**: DUAL RX RESPOND.
+- **Quando mudar**:
+  - `MAIN ONLY` para focar num canal;
+  - `DUAL`/`FULL` para vigiar 2 a 4 canais;
+  - `CROSS BAND` para receber num VFO e transmitir no outro.
+- **Atenção**: as ações **RX MODE** e **MAIN ONLY** mudam este valor pelo botão.
 
 ### 6.11 DTMF
 
-| Item | Opções | Padrão | Descrição |
+| Item | Opções | Padrão | Resumo |
 |---|---|---|---|
-| **UPCode / DWCode** | Só leitura no rádio | 12345 / 54321 | Códigos enviados no início/fim do TX (edite pelo CHIRP) |
+| **UPCode / DWCode** | Só leitura no rádio | 12345 / 54321 | Códigos do PTT ID |
 | **D ST** | OFF, ON | ON | Ouvir os tons DTMF enviados |
 | **D Prel** | 30–990 ms | 300 ms | Pré-carga antes do DTMF |
 
+#### `UPCode` / `DWCode`: códigos DTMF do PTT ID
+
+- **O que faz**: são os códigos enviados pelo `PTT ID` (seção 6.3).
+  - `UPCode` sai ao apertar o PTT.
+  - `DWCode` sai ao soltar.
+- **Opções**: no rádio, só para ver (até 16 dígitos, em duas linhas). Edite pelo CHIRP.
+- **Padrão**: 12345 / 54321.
+
+#### `D ST`: tom lateral DTMF
+
+- **O que faz**: com `ON`, você ouve no alto-falante os tons DTMF que o rádio está enviando.
+- **Opções**: `OFF`, `ON`.
+- **Padrão**: ON.
+- **Quando mudar**: `OFF` para transmitir DTMF em silêncio.
+
+#### `D Prel`: pré-carga do DTMF
+
+- **O que faz**: define quanto tempo o rádio transmite antes de começar os tons DTMF. Isso dá tempo para a repetidora ou o receptor abrir.
+- **Opções**: de 30 a 990 ms, em passos de 10 ms.
+- **Padrão**: 300 ms.
+- **Quando mudar**: aumente se o outro lado perde o primeiro dígito.
+
 ### 6.12 Msg (Messenger)
 
-| Item | Opções | Padrão | Descrição |
+| Item | Opções | Padrão | Resumo |
 |---|---|---|---|
-| **MsgRx** | OFF, ON | ON | Recepção de mensagens (também necessária para ACK, PONG e HOP no RX) |
-| **MsgAck** | OFF, ON | **OFF** | Envia e espera confirmação de entrega |
-| **MsgBep** | OFF, ON | ON | Alerta de nova mensagem, de ACK e do Range Check |
+| **MsgRx** | OFF, ON | ON | Recepção de mensagens |
+| **MsgAck** | OFF, ON | OFF | Confirmação de entrega |
+| **MsgBep** | OFF, ON | ON | Alerta sonoro do Messenger |
 | **MsgLed** | OFF, GREEN, YELLOW | GREEN | LED de mensagem não lida |
-| **CllSgn** | Até 6 caracteres | UVK1 | Indicativo da estação (também usado pelos apps APRS) |
-| **CryKey** | Até 10 caracteres | vazio (`--`) | Frase-senha do HOP e do Messenger cifrado (seção 11) |
-| **RngRsp** | OFF, ON | ON | Responde automaticamente aos PINGs (PONG) |
+| **CllSgn** | Até 6 caracteres | UVK1 | Indicativo da estação |
+| **CryKey** | Até 10 caracteres | vazio (`--`) | Frase-senha do HOP e do Messenger cifrado |
+| **RngRsp** | OFF, ON | ON | Resposta automática a PING |
+
+#### `MsgRx`: recepção de mensagens
+
+- **O que faz**: liga o receptor de pacotes FSK do Messenger.
+- **Opções**: `OFF`, `ON`.
+- **Padrão**: ON.
+- **Quando mudar**: desligue só se você nunca usa o Messenger e quer o rádio 100% dedicado à voz.
+- **Atenção**: também é necessário para receber ACK, para responder PING (PONG) e para o **HOP** no RX. Com `OFF`, nada disso funciona.
+
+#### `MsgAck`: confirmação de entrega
+
+- **O que faz**: com `ON`, cada mensagem enviada pede um ACK ao destinatário. A lista **SENT** mostra `+` (entregue) ou `x` (falhou).
+- **Opções**: `OFF`, `ON`.
+- **Padrão**: **OFF**.
+- **Quando mudar**: ligue quando é importante saber se a mensagem chegou.
+- **Atenção**: o ACK é mais uma transmissão curta, de quem recebe. Ele ocupa o canal um pouco mais. Veja a seção 9.4.
+
+#### `MsgBep`: alerta sonoro
+
+- **O que faz**: toca um alerta quando chega uma mensagem, quando chega um ACK e no resultado do Range Check.
+- **Opções**: `OFF`, `ON`.
+- **Padrão**: ON.
+
+#### `MsgLed`: LED de mensagem
+
+- **O que faz**: faz o LED piscar enquanto houver mensagem não lida.
+- **Opções**: `OFF`, `GREEN`, `YELLOW`.
+- **Padrão**: GREEN.
+- **Atenção**: na barra de status, um envelope também indica mensagem não lida.
+
+#### `CllSgn`: indicativo
+
+- **O que faz**: é o nome da sua estação nas mensagens, nos ACK e no HEARD. Os apps APRS também o usam.
+- **Opções**: até 6 caracteres, guardados em maiúsculas. Edite com o editor de texto (seção 23).
+- **Padrão**: UVK1.
+- **Quando mudar**: logo no primeiro uso. Use seu indicativo de radioamador ou um apelido curto e único no grupo.
+- **Atenção**: cada banco de configuração do multiboot guarda o seu.
+
+#### `CryKey`: frase-senha
+
+- **O que faz**: é a senha compartilhada do HOP e das mensagens cifradas do Messenger (seção 11).
+- **Opções**: até 10 caracteres. Maiúsculas e minúsculas são diferentes.
+- **Padrão**: vazia (`--`).
+- **Quando mudar**: combine a mesma frase com todos os rádios do grupo e digite exatamente igual em cada um.
+- **Atenção**: só é gravada quando muda, e cada banco do multiboot guarda a sua. Ela aparece na tela do menu: não deixe o rádio à vista de terceiros enquanto edita.
+
+#### `RngRsp`: resposta ao PING
+
+- **O que faz**: com `ON`, o rádio responde sozinho (PONG) aos PINGs do Range Check de outras estações.
+- **Opções**: `OFF`, `ON`.
+- **Padrão**: ON.
+- **Quando mudar**: desligue se você não quer que seu rádio transmita sem você apertar o PTT.
+- **Atenção**: veja a seção 10.
 
 ### 6.13 Service (oculto)
 
-Veja a seção 21.
+Itens de manutenção, visíveis só depois de um boot com PTT+SIDE1. A explicação de cada um está na seção 21.2.
+
 
 ---
 
@@ -941,14 +1530,60 @@ O acesso dura até o próximo boot normal.
 
 ### 21.2 Itens do Service
 
-| Item | Opções | Padrão | Descrição |
+| Item | Opções | Padrão | Resumo |
 |---|---|---|---|
 | **F Lock** | BRASIL, DISABLE ALL, UNLOCK ALL | BRASIL | Plano de frequências liberadas para TX |
 | **350 En** | OFF, ON | ON | Recepção na faixa de 350–400 MHz |
-| **BatCal** | 1500–3500 | — | Calibração da leitura de tensão da bateria |
-| **BatTyp** | 1600 mAh K5, 2200 mAh K5, 3500 mAh K5, 1400 mAh K1, 2500 mAh K1 | 1600 mAh K5 | Tipo de bateria |
-| **SetNav** | LEFT RIGHT UV-K1, UP DOWN UV-K5(8) | — | Direção das setas (seção 24) |
+| **BatCal** | 1500–3500 | — | Calibração da leitura de tensão |
+| **BatTyp** | 1600mAh K5, 2200mAh K5, 3500mAh K5, 1400mAh K1, 2500mAh K1 | 1600mAh K5 | Tipo de bateria |
+| **SetNav** | LEFT RIGHT UV-K1, UP DOWN UV-K5(8) | LEFT RIGHT UV-K1 | Direção das setas |
 | **Reset** | VFO, ALL | — | Restaura o rádio |
+
+#### `F Lock`: plano de TX
+
+- **O que faz**: define em quais frequências o rádio pode transmitir. Os planos estão explicados na seção 21.3.
+- **Opções**: `BRASIL`, `DISABLE ALL`, `UNLOCK ALL`. `UNLOCK ALL` pede três confirmações e mostra `READ MANUAL`.
+- **Padrão**: BRASIL.
+- **Atenção**: canais com `TXLock = OFF` ignoram o plano para TX de voz.
+
+#### `350 En`: recepção em 350–400 MHz
+
+- **O que faz**: libera a **recepção** na faixa de 350 a 400 MHz.
+- **Opções**: `OFF`, `ON`.
+- **Padrão**: ON.
+- **Quando mudar**: desligue só se essa faixa causar problemas no seu uso.
+
+#### `BatCal`: calibração da bateria
+
+- **O que faz**: corrige a leitura de tensão da bateria. A primeira linha mostra a tensão calculada e a segunda, o fator de calibração.
+- **Opções**: fator de 1500 a 3500.
+- **Como usar**:
+  1. Meça a tensão da bateria com um multímetro.
+  2. Ajuste o fator até a tensão na tela ficar igual à medida.
+  3. Confirme com **MENU**.
+- **Atenção**: um fator errado faz o rádio mostrar uma carga errada e pode adiantar ou atrasar o aviso de bateria fraca.
+
+#### `BatTyp`: tipo de bateria
+
+- **O que faz**: escolhe a curva usada para converter a tensão em porcentagem.
+- **Opções**: `1600mAh K5`, `2200mAh K5`, `3500mAh K5`, `1400mAh K1`, `2500mAh K1`.
+- **Padrão**: 1600mAh K5.
+- **Quando mudar**: escolha a bateria que está no rádio. Num UV-K1, use uma das opções `K1`.
+
+#### `SetNav`: direção das setas
+
+- **O que faz**: define se UP/DOWN seguem o padrão do UV-K1 ou do UV-K5 (seção 24.2).
+- **Opções**: `LEFT RIGHT UV-K1`, `UP DOWN UV-K5(8)`.
+- **Padrão**: LEFT RIGHT UV-K1.
+- **Quando mudar**: se as setas parecerem invertidas.
+
+#### `Reset`: restaurar
+
+- **O que faz**: apaga a memória e reinicia o rádio. A seção 21.4 mostra o estado depois do reset.
+- **Opções**:
+  - `VFO`: apaga os canais e mantém as configurações;
+  - `ALL`: apaga canais **e** configurações.
+- **Atenção**: as duas opções apagam os canais. Faça backup com o CHIRP antes. O rádio pede `SURE?`.
 
 ### 21.3 Planos do F Lock
 
@@ -987,6 +1622,7 @@ Estas políticas valem para **canais de memória** e são configuradas **só pel
 | Ondas de rádio | TX FSK (Messenger) permitido neste canal |
 | Nota musical | Roger/MDC global ativo e permitido neste canal |
 | Onda dupla | Scrambler ligado |
+| Cadeado (ao lado do marcador do VFO) | TX bloqueado nesta frequência pelo `F Lock` (canal com `TXLock = ON`). Não aparece durante a recepção nem no VFO que está transmitindo |
 
 ---
 

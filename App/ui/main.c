@@ -1736,6 +1736,10 @@ void UI_DisplayMain(void)
                 if (activeTxVFO == vfo_num)
                 {   // show the TX symbol
                     mode = VFO_MODE_TX;
+                    // Use the TX frequency from here on, also for the TX lock
+                    // check below: TX is allowed there, so the lock icon no
+                    // longer lands on the "CALLTX" label (x=10..33).
+                    frequency = displayVfo->pTX->Frequency;
                     //UI_PrintStringSmallBold("TX", 8, 0, line);
 #ifdef ENABLE_GOGUFW_CALLTX
                     GUI_DisplaySmallest(gCallToneTxActive ? "CALLTX" : "TX", 10, line == 0 ? 1 : 33, false, true);
@@ -1931,11 +1935,14 @@ void UI_DisplayMain(void)
         }
         else
         {
+#ifdef ENABLE_ALARM
+            // The site alarm transmits without VFO_MODE_TX (set above otherwise).
             if (gCurrentFunction == FUNCTION_TRANSMIT)
             {   // transmitting
                 if (activeTxVFO == vfo_num)
                     frequency = displayVfo->pTX->Frequency;
             }
+#endif
 
             if (IS_MR_CHANNEL(displayChannel))
             {   // it's a channel
@@ -2475,8 +2482,12 @@ void UI_DisplayMain(void)
 #endif
 
 #if defined(ENABLE_SCAN_RANGES) && defined(ENABLE_FEAT_F4HWN) && defined(ENABLE_FEAT_F4HWN_SCAN_SUBAUDIBLE) && ENABLE_FEAT_F4HWN_SCAN_SUBAUDIBLE
-    if (isMainOnly() && gScanRangeStart && gScanRangeCssCode != 0xFF)
+    if (isMainOnly() && gScanRangeStart && gScanRangeCssCode != 0xFF) {
+        // SetGUI CLASSIC (gSetting_set_gui) already put the VFO tone and step here:
+        // clear it up to the "VFO A/B" capsule (x=105) before drawing.
+        memset(gFrameBuffer[6], 0, 104);
         UI_PrintScanRangeCss(String, 2, 46, 6);
+    }
 #endif
 
     if (center_line == CENTER_LINE_NONE)

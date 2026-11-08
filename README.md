@@ -149,7 +149,7 @@ GOGUFW uses the F4HWN scan interface:
 
 ### Menu categories
 
-**MENU** opens a category screen (Channels, Scan, Keys, Power, Display, Timers, Audio, Radio, DTMF, Msg and All). **UP/DOWN** selects a category, **MENU** opens it and **EXIT** goes back to the categories. Each category remembers its last position. **All** is the complete flat list with the original order and numbers; typing a number on the category screen jumps straight to that item in All. The status bar shows `MENU` or the open category. Service (hidden menu) appears only after an F-LOCK boot.
+**MENU** opens a category screen (Channels, Scan, Keys, Power, Display, Timers, Audio, Radio, DTMF, Msg and All). **UP/DOWN** selects a category, **MENU** opens it and **EXIT** goes back to the categories. Each category remembers its last position. **All** is the complete flat list with the original order and numbers; typing a number on the category screen jumps straight to that item in All. The status bar shows `MENU` or the open category. Service (hidden menu) appears only after an F-LOCK boot. Every menu item (what it does, its options, default and when to change it) is explained in [MANUAL.md, section 6](MANUAL.md#6-menu).
 
 ### TX frequency lock (F Lock)
 
