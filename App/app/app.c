@@ -551,6 +551,17 @@ static void HandleReceive(void)
 
     if (gFlagTailNoteEliminationComplete)
     {
+        if (g_SquelchLost) {
+            /* A real tail is followed by the carrier dropping, which ends RX
+             * through the squelch path before this window runs out.  Carrier
+             * still up: the tail was false, so resume audio without
+             * rebuilding RX (green LED stays on). */
+            gFlagTailNoteEliminationComplete = false;
+            gEndOfRxDetectedMaybe            = false;
+            AUDIO_AudioPathOn();
+            gEnableSpeaker                   = true;
+            return;
+        }
         Mode = END_OF_RX_MODE_END;
         goto Skip;
     }
@@ -753,7 +764,9 @@ Skip:
             if (gEeprom.TAIL_TONE_ELIMINATION) {
                 AUDIO_AudioPathOff();
 
-                gTailNoteEliminationCountdown_10ms = 20;
+                /* 300 ms: covers the 200 ms TX tail plus detector latency
+                 * and the squelch close delay before a false tail resumes. */
+                gTailNoteEliminationCountdown_10ms = 30;
                 gFlagTailNoteEliminationComplete   = false;
                 gEndOfRxDetectedMaybe = true;
                 gEnableSpeaker        = false;
