@@ -59,8 +59,9 @@ set(CMAKE_EXE_LINKER_FLAGS "${TARGET_FLAGS}")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --specs=nano.specs")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--gc-sections")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--print-memory-usage")
-# Order input sections by alignment: less padding, no code change (-100 B).
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--sort-section=alignment")
+# Not used: -Wl,--sort-section=alignment (-100 B) moves byte arrays to odd
+# addresses; code that casts them to wider structs then HardFaults (it froze
+# every USB reply, e.g. the UV Studio handshake).
 set(TOOLCHAIN_LINK_LIBRARIES "m")
 
 set(CMAKE_EXE_LINKER_FLAGS_INIT

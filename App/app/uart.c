@@ -208,7 +208,10 @@ static UART_Command_t SharedCommand;
 #ifdef ENABLE_USB
 static void SendReply_VCP(void *pReply, uint16_t Size)
 {
-    static uint8_t VCP_ReplyBuf[MAX_REPLY_SIZE + sizeof(Header_t) + sizeof(Footer_t)];
+    /* Header_t/Footer_t are written through casts below: the buffer must be
+     * aligned or the 16-bit stores HardFault on the Cortex-M0+. */
+    static uint8_t VCP_ReplyBuf[MAX_REPLY_SIZE + sizeof(Header_t) + sizeof(Footer_t)]
+        __attribute__((aligned(4)));
 
     // !!
     if (Size > MAX_REPLY_SIZE)

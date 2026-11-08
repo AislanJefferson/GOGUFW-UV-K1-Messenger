@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Fixed: the radio froze on any USB serial command (UV Studio Apps/handshake,
+  CHIRP over USB). The `-Wl,--sort-section=alignment` link flag placed the USB
+  reply buffer at an odd address, and the 16-bit store of the reply footer
+  then HardFaulted (Cortex-M0+ has no unaligned access). The flag is removed
+  and the buffer is now explicitly 4-byte aligned. Installed apps are not
+  affected (their load address is fixed). +96 B of program flash.
 - Spectrum MR: key 6 (25k / 12.5k / 6.25k) now works as in VFO. The chosen
   listen bandwidth stays for every channel, while sweeping and listening,
   until EXIT or the long-MENU reset. Before the first press each channel
