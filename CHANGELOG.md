@@ -20,7 +20,18 @@
   SetMet/SetGUI CLASSIC, SetTOT/SetEOT OFF, SetTmr ON), and `SetLck` is
   corrected to KEYS+PTT. The Service items in section 21.2 get the same
   treatment.
-- 120,524 / 120,832 bytes (308 bytes free); the UI fixes are -4 B.
+- Messenger: the 30 ms squelch-close fallback now runs only while the FSK
+  sidecar is armed, the only case where it can hide `SQL_FOUND`. With MsgRx
+  OFF, only the stock receive logic ends a reception. +12 B.
+- Squelch chopping on a strong repeater signal in VFO/MR (audio and green LED
+  dropping at random, Spectrum unaffected): with STE ON, a false CTCSS/DCS
+  tail ends the reception while the carrier is still up. Confirmed on a UHF
+  repeater at S9: with STE OFF the chopping stops. The behaviour is the same
+  in upstream GOGUFW, in armel's uv-k1-k5v3-firmware-custom and before the
+  3.6.2 merge, so no code change; MANUAL (STE item and section 28) now says
+  to use STE OFF on such channels.
+- 120,524 / 120,832 bytes (308 bytes free); the Messenger fix is +12 B, the
+  UI fixes -4 B.
 
 - HOP follows the same FM-only rule as the fixed scrambler: an AM channel set
   to Scramb = HOP no longer sends the FSK seed burst or inverts the TX voice,

@@ -865,6 +865,7 @@ Cada categoria começa com uma tabela de consulta rápida. Abaixo dela, cada ite
 - **Opções**: `OFF`, `ON`.
 - **Padrão**: ON.
 - **Atenção**: só funciona por completo quando o outro rádio também usa STE ou tom subaudível.
+- **Detecção falsa**: numa repetidora, o rádio pode confundir o tom subaudível ou a voz com o aviso de fim de transmissão. Aí o áudio corta e o LED verde apaga por um instante, mesmo com sinal forte, e o som sai picotado. Nesses canais deixe `STE` em OFF; para a cauda da repetidora use `RP STE`.
 
 #### `RP STE`: cauda da repetidora
 
@@ -1792,6 +1793,7 @@ A memória Flash do rádio suporta um número limitado de apagamentos por setor.
 | Sempre `x` em Sent | `MsgAck` OFF no receptor, CryKey diferente ou fora de alcance | Ligue `MsgAck` no receptor, confira a CryKey, faça um SEND PING |
 | Mensagens sumiram | Inbox/Sent ficam só na RAM | Comportamento normal após desligar |
 | Última configuração não ficou salva | Rádio desligado menos de 2 s após a mudança | Espere cerca de 2 s antes de desligar |
+| Áudio picota e o LED verde apaga num sinal forte de repetidora | `STE` ON detectando em falso o fim de transmissão | Use `STE` OFF nesse canal (e `RP STE` para a cauda da repetidora) |
 | Tons/offset sumiram ao digitar uma frequência | Frequência digitada entra em simplex limpo | Configure tons e offset depois de digitar, ou use F+1 a partir de um canal |
 | HOP sai embaralhado | Receptor perdeu o burst, CryKey diferente, receptor fora de HOP, VOX ON ou MsgRx OFF | Confira os requisitos da seção 12.3 e espere o próximo resync (8 s) |
 | Início da fala cortado no HOP | Mic mudo durante o burst | Espere meio segundo após o PTT |
