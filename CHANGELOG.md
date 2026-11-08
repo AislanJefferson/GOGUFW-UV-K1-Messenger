@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Fixed: the radio froze on any USB serial command (UV Studio Apps/handshake,
+  CHIRP over USB). The `-Wl,--sort-section=alignment` link flag placed the USB
+  reply buffer at an odd address, and the 16-bit store of the reply footer
+  then HardFaulted (Cortex-M0+ has no unaligned access). The flag is removed
+  and the buffer is now explicitly 4-byte aligned. Installed apps are not
+  affected (their load address is fixed). +96 B of program flash.
 - Squelch no longer chops strong signals in VFO/MR when STE is ON. A false
   CTCSS/DCS tail (for example the 55 Hz detector on a channel with RX tone
   OFF, seen on a UHF repeater at S9) muted the audio, and when the tail
