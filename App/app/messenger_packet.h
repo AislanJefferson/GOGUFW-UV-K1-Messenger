@@ -1,3 +1,4 @@
+/* Modified by AislanJefferson for KLEANFW, 2026 (see git history). */
 #ifndef APP_MESSENGER_PACKET_H
 #define APP_MESSENGER_PACKET_H
 

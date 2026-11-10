@@ -12,6 +12,8 @@
  *     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *     See the License for the specific language governing permissions and
  *     limitations under the License.
+ *
+ * Modified by AislanJefferson for KLEANFW, 2026 (see git history).
  */
 
 #include <string.h>
@@ -116,12 +118,12 @@ static uint8_t mb_copy_slot_version(char *dst, uint8_t cap, const mb_slot_header
     return n;
 }
 
-/* "GOGUFW MULTIBOOT" banner in the top status bar, shown on every screen - the
+/* "KLEANFW MULTIBOOT" banner in the top status bar, shown on every screen - the
  * same way the firmware puts mode labels there (inverse 3x5 capsule). */
 static void mb_status_bar(void)
 {
     UI_StatusClear();
-    GUI_DisplaySmallestInverse("GOGUFW MULTIBOOT", 30, 0, true, true, 98);
+    GUI_DisplaySmallestInverse("KLEANFW MULTIBOOT", 30, 0, true, true, 98);
 
     /* Thin line dressing up the otherwise blank row between the status bar and
      * the first content row. Drawn on gFrameBuffer[0] (line 0), which every

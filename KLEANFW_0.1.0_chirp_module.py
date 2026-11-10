@@ -1,8 +1,13 @@
-# GOGUFW UV-K1 / UV-K5 V3 Messenger CHIRP module v3.6.2m
-# Release build: 2026-11-07
-# Matches only the current firmware (v3.6.2m); older GOGUFW builds are not supported.
+# KLEANFW UV-K1 / UV-K5 V3 CHIRP module v0.1.0
+# Release build: 2026-11-10
+# Matches only the current firmware (KLEANFW v0.1.0); GOGUFW and older builds
+# are not supported.
+#
+# Modified by AislanJefferson for KLEANFW, 2026-11-10: adapted from the
+# GOGUFW 3.6.2 module by Gogu-Qs; adds the CryKey and HOP scrambler settings
+# and follows the KLEANFW menu and settings layout (see the git history).
 # Based on F4HWN Fusion CHIRP 5.5.0 support.
-# Matches the GOGUFW external-flash EEPROM aliases:
+# Matches the KLEANFW (GOGUFW layout) external-flash EEPROM aliases:
 #   FM names: 0x00D000 alias -> firmware flash 0x013000
 #   Messenger/Call config: 0x00E000 alias -> firmware flash 0x012000
 #   CryKey passphrase:     0x00E140 alias -> firmware flash 0x012140
@@ -67,11 +72,11 @@ DEBUG_SHOW_OBFUSCATED_COMMANDS = False
 DEBUG_SHOW_MEMORY_ACTIONS = False
 
 # TODO: remove the driver version when it's in mainline chirp
-DRIVER_VERSION = "GOGUFW UV-K1 / UV-K5 V3 CHIRP driver v3.6.2m (2026-11-07)"
-FIRMWARE_VERSION_UPDATE = "https://github.com/Gogu-Qs/GOGUFW-UV-K1-Messenger/releases"
-CHIRP_DRIVER_VERSION_UPDATE = "https://github.com/Gogu-Qs/GOGUFW-UV-K1-Messenger/releases"
+DRIVER_VERSION = "KLEANFW UV-K1 / UV-K5 V3 CHIRP driver v0.1.0 (2026-11-10)"
+FIRMWARE_VERSION_UPDATE = "https://github.com/AislanJefferson/KLEANFW/releases"
+CHIRP_DRIVER_VERSION_UPDATE = "https://github.com/AislanJefferson/KLEANFW/releases"
 
-GOGUFW_PROJECT_URL = "https://github.com/Gogu-Qs/GOGUFW-UV-K1-Messenger"
+GOGUFW_PROJECT_URL = "https://github.com/AislanJefferson/KLEANFW"
 
 VALEUR_COMPILER = "ENABLE"
 
@@ -1294,10 +1299,10 @@ def _ggfw_msg_config_ensure(_mem):
 
 @directory.register
 class UVK5RadioEgzumer(chirp_common.CloneModeRadio):
-    """Quansheng UV-K1 / UV-K5 V3 running GOGUFW."""
+    """Quansheng UV-K1 / UV-K5 V3 running KLEANFW."""
     VENDOR = "Quansheng"
-    MODEL = "UV-K1 / UV-K5 V3 GOGUFW Messenger"
-    VARIANT = "3.6.2m"
+    MODEL = "UV-K1 / UV-K5 V3 KLEANFW"
+    VARIANT = "0.1.0"
     BAUD_RATE = 38400
     NEEDS_COMPAT_SERIAL = False
     FIRMWARE_VERSION = ""
@@ -2296,7 +2301,7 @@ class UVK5RadioEgzumer(chirp_common.CloneModeRadio):
 
 # add menu firmware with version and option display if version 3.0 and up
         ValFirm = "Firmware : " + self.FIRMWARE_VERSION
-        Compair1 = "GOGUFW v3.6.2m"
+        Compair1 = "KLEANFW v0.1.0"
 
         if self.FIRMWARE_VERSION == "":
             ValFirm = "Firmware : Only when read from the radio "
@@ -2311,7 +2316,7 @@ class UVK5RadioEgzumer(chirp_common.CloneModeRadio):
         val = RadioSettingValueBoolean(False)
         def validate_Go_Web_Firmware(value):
             if value :
-                msg = "To see information for the update of GOGUFW firmware \n"
+                msg = "To see information for the update of KLEANFW firmware \n"
                 ret = wx.MessageBox(msg, "Warning", wx.OK | wx.CANCEL |
                                     wx.CANCEL_DEFAULT | wx.ICON_WARNING)
                 if ret == wx.OK :
@@ -2321,8 +2326,8 @@ class UVK5RadioEgzumer(chirp_common.CloneModeRadio):
             return value
 
         val.set_validate_callback(validate_Go_Web_Firmware)
-        rs = RadioSetting("Update_Firmware_mise_a_jour","To see information for the GOGUFW firmware update, select this box ->", val)
-        rs.set_doc('Open the GOGUFW firmware release page.')
+        rs = RadioSetting("Update_Firmware_mise_a_jour","To see information for the KLEANFW firmware update, select this box ->", val)
+        rs.set_doc('Open the KLEANFW firmware release page.')
         radio_firmware.append(rs)
 
 # end add link for mise a jour information
@@ -2877,7 +2882,7 @@ class UVK5RadioEgzumer(chirp_common.CloneModeRadio):
         val = RadioSettingValueList(TALK_TIME_LIST, None, tmptot)
         tx_t_out_setting = RadioSetting("tot", "Max TX Timeout (TxTOut)", val)
         tx_t_out_setting.set_doc('TxTOut: Select the TX time limit\n' + \
-                                 'See option (SetTot) of GOGUFW')
+                                 'See option (SetTot) of KLEANFW')
 
         tmpbatsave = list_def(_mem.battery_save, BATSAVE_LIST, 5)
         val = RadioSettingValueList(BATSAVE_LIST, None, tmpbatsave)
@@ -3210,7 +3215,7 @@ class UVK5RadioEgzumer(chirp_common.CloneModeRadio):
             firmware = self.FIRMWARE_VERSION
 
         append_label(roinfo,
-                     "=" * 6 + " GOGUFW Firmware " + "=" * 300, "=" * 300)
+                     "=" * 6 + " KLEANFW Firmware " + "=" * 300, "=" * 300)
 
         append_label(roinfo, "Firmware Version", firmware)
 
@@ -3219,7 +3224,7 @@ class UVK5RadioEgzumer(chirp_common.CloneModeRadio):
         val = RadioSettingValueBoolean(False)
         def validate_Go_Web_Page0(value):
             if value :
-                msg = "Go to the GOGUFW firmware release page \n" \
+                msg = "Go to the KLEANFW firmware release page \n" \
                       + FIRMWARE_VERSION_UPDATE
                 ret = wx.MessageBox(msg, "Warning", wx.OK | wx.CANCEL |
                                     wx.CANCEL_DEFAULT | wx.ICON_WARNING)
@@ -3230,7 +3235,7 @@ class UVK5RadioEgzumer(chirp_common.CloneModeRadio):
             return value
 
         val.set_validate_callback(validate_Go_Web_Page0)
-        rs = RadioSetting("Update_Firmware_0","Open the latest GOGUFW firmware release page ->", val)
+        rs = RadioSetting("Update_Firmware_0","Open the latest KLEANFW firmware release page ->", val)
         rs.set_doc('Be sure you have the latest firmware available!')
         roinfo.append(rs)
 
@@ -3238,11 +3243,11 @@ class UVK5RadioEgzumer(chirp_common.CloneModeRadio):
         rs = RadioSetting("Update_Firmware_1","Or copy this link (CTRL-C), paste (CTRL-V) to your browser -> ", val)
         rs.set_doc('Be sure you have the latest firmware available!')
         roinfo.append(rs)
-        append_label(roinfo, "GOGUFW firmware by Gogu-Qs","")
+        append_label(roinfo, "KLEANFW by AislanJefferson, based on GOGUFW by Gogu-Qs","")
         append_label(roinfo,"","")
 
         append_label(roinfo,
-                     "=" * 6 + " GOGUFW CHIRP Driver " + "=" * 300, "=" * 300)
+                     "=" * 6 + " KLEANFW CHIRP Driver " + "=" * 300, "=" * 300)
 
         append_label(roinfo, "Driver Chirp Version         ", DRIVER_VERSION)
 
@@ -3251,7 +3256,7 @@ class UVK5RadioEgzumer(chirp_common.CloneModeRadio):
         val = RadioSettingValueBoolean(False)
         def validate_Go_Web_Page(value):
             if value :
-                msg = "Go to the GOGUFW CHIRP driver release page \n" \
+                msg = "Go to the KLEANFW CHIRP driver release page \n" \
                       + CHIRP_DRIVER_VERSION_UPDATE
                 ret = wx.MessageBox(msg, "Warning", wx.OK | wx.CANCEL |
                                     wx.CANCEL_DEFAULT | wx.ICON_WARNING)
@@ -3262,7 +3267,7 @@ class UVK5RadioEgzumer(chirp_common.CloneModeRadio):
             return value
 
         val.set_validate_callback(validate_Go_Web_Page)
-        rs = RadioSetting("Update_Driver_Chirp_0","Open the latest GOGUFW CHIRP driver release page ->", val)
+        rs = RadioSetting("Update_Driver_Chirp_0","Open the latest KLEANFW CHIRP driver release page ->", val)
         rs.set_doc('Be sure you have the latest CHIRP driver available!')
         roinfo.append(rs)
 
@@ -3271,7 +3276,7 @@ class UVK5RadioEgzumer(chirp_common.CloneModeRadio):
         rs.set_doc('Be sure you have the latest CHIRP driver available!')
         roinfo.append(rs)
 
-        append_label(roinfo, "GOGUFW CHIRP driver module")
+        append_label(roinfo, "KLEANFW CHIRP driver module")
         append_label(roinfo,"","" )
 
         # ----------------- Calibration
@@ -3637,7 +3642,7 @@ class UVK5RadioEgzumer(chirp_common.CloneModeRadio):
 
         # -------- LAYOUT
         append_label(basic,
-                     "=" * 6 + " Start of GOGUFW Settings." + "=" * 300, "=" * 300)
+                     "=" * 6 + " Start of KLEANFW Settings." + "=" * 300, "=" * 300)
         basic.append(SetPwrSetting)
         basic.append(SetPttSetting)
         basic.append(SetTotSetting)
@@ -3659,7 +3664,7 @@ class UVK5RadioEgzumer(chirp_common.CloneModeRadio):
             basic.append(SetMenuLockSetting)
 
         append_label(basic,
-                     "=" * 6 + " End of GOGUFW settings " + "=" * 300, "=" * 300)
+                     "=" * 6 + " End of KLEANFW settings " + "=" * 300, "=" * 300)
 
         append_label(basic,
                      "=" * 6 + " General settings " + "=" * 300, "=" * 300)

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Modified by AislanJefferson for KLEANFW, 2026 (see git history).
 """Report real FLASH use including the RAM overlay load image, and check layout.
 Example: python3 tools/check_memory_build.py build/Fusion --baseline BASELINE_DIR
 """
@@ -15,7 +16,7 @@ p.add_argument('--baseline', type=Path)
 a = p.parse_args()
 
 def measure(directory):
-    elf = directory / 'gogufw.elf'
+    elf = directory / 'kleanfw.elf'
     symbols = {}
     for line in subprocess.check_output(['arm-none-eabi-nm', '-n', str(elf)], text=True).splitlines():
         fields = line.split()
@@ -24,7 +25,7 @@ def measure(directory):
     flash = symbols['_eflash_used'] - symbols['g_pfnVectors']
     static_ram = symbols['_ebss'] - symbols['_sdata']
     reserved = ((static_ram + 7) // 8) * 8 + symbols['_Min_Heap_Size'] + symbols['_Min_Stack_Size']
-    assert flash == (directory / 'gogufw.bin').stat().st_size
+    assert flash == (directory / 'kleanfw.bin').stat().st_size
     assert 0 < flash <= 118 * 1024 and reserved <= 16 * 1024
     assert symbols['__mb_workspace_start'] == symbols['__mb_ramfunc_start'] == 0x20000280
     assert symbols['__mb_workspace_size'] == 4096
@@ -34,7 +35,7 @@ def measure(directory):
             'ram_stub_bytes': symbols['__mb_ramfunc_size']}
 
 result = measure(a.build)
-headers = subprocess.check_output(['arm-none-eabi-objdump', '-h', str(a.build/'gogufw.elf')], text=True)
+headers = subprocess.check_output(['arm-none-eabi-objdump', '-h', str(a.build/'kleanfw.elf')], text=True)
 section = re.search(r'^\s*\d+ \.noncacheable\s+[^\n]+\n([^\n]+)', headers, re.M)
 assert section and 'LOAD' not in section[1], 'USB NOLOAD section unexpectedly has a FLASH image'
 result['usb_noload'] = True
@@ -47,7 +48,7 @@ if a.baseline:
         for i, directory in enumerate([a.baseline, a.build]):
             blob = Path(td)/f'{i}.bin'
             subprocess.run(['arm-none-eabi-objcopy', '--dump-section', f'.mb_ramfunc={blob}',
-                            str(directory/'gogufw.elf'), str(Path(td)/f'{i}.elf')], check=True)
+                            str(directory/'kleanfw.elf'), str(Path(td)/f'{i}.elf')], check=True)
             blobs.append(blob.read_bytes())
         assert blobs[0] == blobs[1], 'RAM restore code changed: review before hardware testing'
         result['ram_stub_identical_to_baseline'] = True

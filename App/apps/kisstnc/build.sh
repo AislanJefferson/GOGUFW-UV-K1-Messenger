@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Modified by AislanJefferson for KLEANFW, 2026 (see git history).
 # Build one overlay-app blob (.app). Invoked by ../../../compile-app.sh inside
 # the uvk1-uvk5v3 Docker image, run from this app's directory. Everything is
 # derived from the directory name; only APP_NAME - the human label baked into

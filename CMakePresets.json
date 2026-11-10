@@ -83,7 +83,7 @@
                 "ENABLE_RDS_PROBE": false,
                 "ENABLE_SWD": false,
                 "VERSION_STRING_1": "v0.22",
-                "VERSION_STRING_2": "v3.6.2m"
+                "VERSION_STRING_2": "v0.1.0"
             }
         },
         {
@@ -122,8 +122,8 @@
                 "ENABLE_GOGUFW_RF_LOG": false,
                 "ENABLE_GOGUFW_SCRAMBLER": true,
                 "ENABLE_SWD": true,
-                "EDITION_STRING": "GGFW",
-                "TARGET": "gogufw"
+                "EDITION_STRING": "KLFW",
+                "TARGET": "kleanfw"
             }
         },
         {
@@ -132,7 +132,7 @@
             "cacheVariables": {
                 "ENABLE_RDS_PROBE": true,
                 "ENABLE_MESSENGER": false,
-                "TARGET": "gogufw-rds-probe"
+                "TARGET": "kleanfw-rds-probe"
             }
         }
     ],

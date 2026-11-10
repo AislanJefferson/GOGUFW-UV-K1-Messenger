@@ -1,3 +1,56 @@
+KLEANFW firmware for Quansheng UV-K1 and UV-K5 V3
+==================================================
+
+Copyright 2026 AislanJefferson
+https://github.com/AislanJefferson/KLEANFW
+
+KLEANFW is a modified version of GOGUFW 3.6.2 (Copyright 2026 Gogu-Qs,
+https://github.com/Gogu-Qs/GOGUFW-UV-K1-Messenger) and is distributed under
+the Apache License, Version 2.0 (see LICENSE). The GOGUFW NOTICE is reproduced
+unchanged below; its attributions apply to KLEANFW as well.
+
+KLEANFW is an independent project. It is not affiliated with, sponsored by or
+endorsed by Gogu-Qs, Armel / F4HWN, muzkr, any other person or project named
+in this file, or Quansheng. "GOGUFW", "Quansheng", "UV-K1" and "UV-K5" are
+names or trademarks of their respective owners and are used here only to
+describe the origin of the code and the supported hardware.
+
+KLEANFW changes
+---------------
+
+Changes made by AislanJefferson on top of GOGUFW 3.6.2 include the HOP voice
+scrambler and the CryKey passphrase with XTEA-CTR encrypted Messenger text,
+the CryKey menu item, Spectrum changes (MR list sweep, bandwidth persistence,
+backlight timer), reduced SPI flash wear, the USB reply alignment fix and
+other fixes listed in CHANGELOG.md. Modified source files carry a
+"Modified by AislanJefferson for KLEANFW" notice; the git history records
+every change. Files added by KLEANFW carry their own copyright header.
+
+CHIRP module
+------------
+
+KLEANFW_<version>_chirp_module.py is derived from the Quansheng UV-K5 CHIRP
+driver (c) 2023 Jacek Lipkowski and its EGZUMER, JOC2, F4HWN and GOGUFW
+adaptations. It is licensed under the GNU General Public License, version 2
+or (at your option) any later version, not under the Apache License. The
+GPL-2.0 text is included in LICENSE-GPL-2.0.txt.
+
+Cryptography
+------------
+
+This firmware contains cryptographic software (XTEA). The country in which
+you use, import or export it may restrict such software. Check the applicable
+laws before using, distributing or exporting it.
+
+No warranty
+-----------
+
+KLEANFW is provided "AS IS", WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND
+(Apache License 2.0, sections 7 and 8). Flashing custom firmware can damage
+the radio or erase its calibration, and transmitting with it can break radio
+regulations. You are solely responsible for its use.
+
+
 GOGUFW firmware for Quansheng UV-K1 and UV-K5 V3
 =================================================
 

@@ -1,3 +1,4 @@
+# Modified by AislanJefferson for KLEANFW, 2026 (see git history).
 
 add_library(App INTERFACE)
 target_include_directories(App INTERFACE .)

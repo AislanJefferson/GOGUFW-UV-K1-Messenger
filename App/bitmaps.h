@@ -1,3 +1,4 @@
+/* Modified by AislanJefferson for KLEANFW, 2026 (see git history). */
 
 #ifndef BITMAP_H
 #define BITMAP_H

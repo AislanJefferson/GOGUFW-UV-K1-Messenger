@@ -1,3 +1,4 @@
+# Modified by AislanJefferson for KLEANFW, 2026 (see git history).
 set(CMAKE_SYSTEM_NAME Generic)
 set(CMAKE_SYSTEM_PROCESSOR arm)
 

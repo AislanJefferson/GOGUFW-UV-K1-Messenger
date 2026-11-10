@@ -1,20 +1,22 @@
 #!/usr/bin/env bash
+# Modified by AislanJefferson for KLEANFW, 2026 (see git history).
 set -euo pipefail
 
-# GOGUFW public build helper.
+# KLEANFW public build helper.
 # Usage:
 #   ./compile-with-docker.sh [extra CMake options...]
 #
-# The only supported public build target is the GGFW firmware build,
+# The only supported public build target is the KLEANFW firmware build,
 # implemented through the upstream Fusion feature set.
 
 IMAGE=uvk1-uvk5v3
 PRESET=Fusion
 EXTRA_ARGS=()
 
-# Backward-compatible aliases: allow ./compile-with-docker.sh Fusion or GGFW,
+# Backward-compatible aliases: allow ./compile-with-docker.sh Fusion, KLEANFW,
+# GGFW or gogufw (older names),
 # but do not expose the old multi-edition preset list.
-if [[ $# -gt 0 && ( "$1" == "Fusion" || "$1" == "GGFW" || "$1" == "gogufw" ) ]]; then
+if [[ $# -gt 0 && ( "$1" == "Fusion" || "$1" == "KLEANFW" || "$1" == "kleanfw" || "$1" == "GGFW" || "$1" == "gogufw" ) ]]; then
   shift
 fi
 EXTRA_ARGS=("$@")
@@ -24,11 +26,11 @@ if [[ "$(docker images -q $IMAGE)" == "" ]]; then
   docker build -t "$IMAGE" .
 fi
 
-rm -rf build/Fusion build/GGFW build/gogufw
+rm -rf build/Fusion build/GGFW build/gogufw build/kleanfw
 export MSYS_NO_PATHCONV=1
 
 echo ""
-echo "=== 🚀 Building GOGUFW 3.1.1 ==="
+echo "=== 🚀 Building KLEANFW ==="
 echo "---------------------------------------------"
 docker run --rm \
   -u $(id -u):$(id -g) \
@@ -36,4 +38,4 @@ docker run --rm \
   bash -c "which arm-none-eabi-gcc && arm-none-eabi-gcc --version && \
            cmake --preset ${PRESET} ${EXTRA_ARGS[@]+"${EXTRA_ARGS[@]}"} && \
            cmake --build --preset ${PRESET} -j"
-echo "✅ Done: GOGUFW 3.1.1"
+echo "✅ Done: KLEANFW (build/Fusion/kleanfw.bin)"

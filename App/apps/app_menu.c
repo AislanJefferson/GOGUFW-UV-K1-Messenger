@@ -12,6 +12,8 @@
  *     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *     See the License for the specific language governing permissions and
  *     limitations under the License.
+ *
+ * Modified by AislanJefferson for KLEANFW, 2026 (see git history).
  */
 
 #include "apps/app_overlay.h"
@@ -46,7 +48,7 @@ static void app_status_bar(uint8_t selected, uint8_t total)
     counter[4] = (char)('0' + total % 10u);
     counter[5] = '\0';
     UI_DisplayStatus();
-    UI_GOGU_DrawHeader("GOGUFW APPS", counter);
+    UI_GOGU_DrawHeader("KLEANFW APPS", counter);
     UI_GOGU_DrawDottedSeparator(UI_GOGU_TOP_SEPARATOR_Y);
 }
 

@@ -1,3 +1,4 @@
+/* Modified by AislanJefferson for KLEANFW, 2026 (see git history). */
 #include <string.h>
 
 #include "app/messenger_rf.h"

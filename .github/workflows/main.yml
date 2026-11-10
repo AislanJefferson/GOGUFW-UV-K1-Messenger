@@ -22,8 +22,8 @@ jobs:
     - name: Upload firmware artifact
       uses: actions/upload-artifact@v4
       with:
-        name: gogufw-2.0.6-firmware
+        name: kleanfw-firmware
         path: |
-          build/Fusion/gogufw.bin
-          build/Fusion/gogufw.hex
-          build/Fusion/gogufw.elf
+          build/Fusion/kleanfw.bin
+          build/Fusion/kleanfw.hex
+          build/Fusion/kleanfw.elf

@@ -1,3 +1,4 @@
+# Modified by AislanJefferson for KLEANFW, 2026 (see git history).
 cmake_minimum_required(VERSION 3.22)
 
 set(CMAKE_C_STANDARD 11)
@@ -9,7 +10,7 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "Debug")
 endif()
 
-set(CMAKE_PROJECT_NAME gogufw)
+set(CMAKE_PROJECT_NAME kleanfw)
 
 # Enable compile command to ease indexing with e.g. clangd
 set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
@@ -39,16 +40,16 @@ if(ENABLE_FEAT_F4HWN)
         set(AUTHOR_STRING_1 "EGZUMER")
     endif()
     if(NOT AUTHOR_STRING_2)
-        set(AUTHOR_STRING_2 "GOGUFW")
+        set(AUTHOR_STRING_2 "KLEANFW")
     endif()
     if(NOT VERSION_STRING_1)
         set(VERSION_STRING_1 "v0.22")
     endif()
     if(NOT VERSION_STRING_2)
-        set(VERSION_STRING_2 "v3.6.2")
+        set(VERSION_STRING_2 "v0.1.0")
     endif()
     if(NOT EDITION_STRING)
-        set(EDITION_STRING "GGFW")
+        set(EDITION_STRING "KLFW")
     endif()
     if(NOT AUTHOR_STRING)
         set(AUTHOR_STRING "${AUTHOR_STRING_1}+${AUTHOR_STRING_2}")
@@ -145,7 +146,7 @@ add_custom_command(
 # Keep the normal target-named binary for direct flashing and also emit the
 # canonical F4HWN multiboot/release filename from the exact same image.
 if(ENABLE_FEAT_F4HWN AND ENABLE_FEAT_F4HWN_MULTIBOOT)
-    set(MULTIBOOT_BIN "f4hwn.gogufw.${VERSION_STRING_2}.bin")
+    set(MULTIBOOT_BIN "f4hwn.kleanfw.${VERSION_STRING_2}.bin")
     add_custom_command(
         TARGET ${EXE_NAME}
         POST_BUILD

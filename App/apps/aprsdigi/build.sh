@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Modified by AislanJefferson for KLEANFW, 2026 (see git history).
 # Build APRS DIGI through compile-app.sh. The user owns all build execution.
 set -euo pipefail
 

@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Modified by AislanJefferson for KLEANFW, 2026 (see git history).
 set -euo pipefail
 
 APP="$(basename "$PWD")"

@@ -2,6 +2,8 @@
  * https://github.com/DualTachyon
  *
  * Licensed under the Apache License, Version 2.0
+ *
+ * Modified by AislanJefferson for KLEANFW, 2026 (see git history).
  */
 
 #ifdef ENABLE_FMRADIO

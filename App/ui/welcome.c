@@ -12,6 +12,8 @@
  *     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *     See the License for the specific language governing permissions and
  *     limitations under the License.
+ *
+ * Modified by AislanJefferson for KLEANFW, 2026 (see git history).
  */
 
 #include <string.h>
@@ -64,6 +66,8 @@ void UI_DisplayLogo(void)
 #ifdef ENABLE_FEAT_F4HWN_QRCODE
 // QR code (version 4, 33x33 modules, EC level L) encoding:
 // https://github.com/Gogu-Qs/GOGUFW-UV-K1-Messenger
+// (the upstream GOGUFW URL; ENABLE_FEAT_F4HWN_QRCODE is off in KLEANFW, so
+// regenerate this bitmap for the KLEANFW URL before turning it on).
 // Stored in framebuffer column-major format: 5 fb-lines x 33 columns.
 // Each byte packs 8 vertical pixels (bit 0 = top). Last fb-line uses
 // only bit 0 (row 32); bits 1..7 are always 0.
@@ -250,7 +254,7 @@ void UI_DisplayScreenSaver(uint8_t mode)
                 gFrameBuffer[y][x] = (uint8_t)(0x11u << (y & 1));
             }
         }
-        UI_PrintStringSmallNormal("GOGUFW", 0, 127, 2);
+        UI_PrintStringSmallNormal("KLEANFW", 0, 127, 2);
         UI_PrintStringSmallNormal("MATRIX", 0, 127, 4);
     }
 
