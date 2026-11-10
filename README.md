@@ -1,426 +1,206 @@
-# KLEANFW 0.1.0
+# KLEANFW
 
-KLEANFW is a custom firmware for the Quansheng UV-K1 / UV-K5 V3. It is a
-modified version of **[GOGUFW 3.6.2](https://github.com/Gogu-Qs/GOGUFW-UV-K1-Messenger)
-by Gogu-Qs**, which is based on **F4HWN 6.3.0** with selected F4HWN 7.0
-services. KLEANFW keeps the GOGUFW Messenger, HEARD, Range Check, CALLTX and
-FM features and adds the HOP voice scrambler, encrypted Messenger text
-(CryKey), a reworked Spectrum, lower SPI flash wear and a set of fixes.
+**Field-ready firmware for the Quansheng UV-K1 / UV-K5 V3: radio-to-radio
+text, hopping voice inversion and a firmware that goes easy on its own flash.**
+
+[![Latest release](https://img.shields.io/github/v/release/AislanJefferson/KLEANFW?style=flat-square&label=release)](https://github.com/AislanJefferson/KLEANFW/releases/latest)
+[![Downloads](https://img.shields.io/github/downloads/AislanJefferson/KLEANFW/total?style=flat-square&label=downloads&color=blue)](https://github.com/AislanJefferson/KLEANFW/releases)
+[![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-green?style=flat-square)](LICENSE)
 
 > [!IMPORTANT]
-> KLEANFW is an independent project. It is **not affiliated with or endorsed
-> by** Gogu-Qs, Armel / F4HWN, Quansheng or any other project credited below.
-> Read the [Legal notices](#legal-notices) before flashing or transmitting.
+> Only for UV-K1 / UV-K5 V3 radios with the **PY32F071 MCU and BK4829 RF chip**.
+> Never flash it on UV-K5 V1/V2 or other BK4819 radios. KLEANFW is an
+> independent project; read the [Legal notices](#legal-notices) before you
+> flash it or transmit with it.
 
-## Firmware at a glance
+## Why KLEANFW
 
-| Statistic | Project status |
-| --- | --- |
-| 📦 **Current release** | KLEANFW 0.1.0 (`KLEANFW v0.1.0` on the radio, SystemInfo and multiboot; the USB identity read by CHIRP/UV Studio stays `v7 GGFW v6.3.0`) |
-| ⬇️ **Release downloads** | [![Total release downloads](https://img.shields.io/github/downloads/AislanJefferson/KLEANFW/total?style=flat-square&label=downloads&color=blue)](https://github.com/AislanJefferson/KLEANFW/releases) |
-| ⭐ **GitHub stars** | [![GitHub stars](https://img.shields.io/github/stars/AislanJefferson/KLEANFW?style=flat-square&label=stars&color=yellow)](https://github.com/AislanJefferson/KLEANFW/stargazers) |
-| 🧩 **Firmware base** | GOGUFW 3.6.2 → F4HWN 6.3.0 + selected F4HWN 7.0 additions |
-| 📻 **Supported radios** | Quansheng UV-K1 / UV-K5 V3 |
-| ⚙️ **Hardware** | PY32F071 MCU · BK4829 RF IC |
-| 🛠️ **Build preset** | Fusion · Release · ARM GNU Embedded |
-| 💾 **Firmware image** | 120,772 / 120,832 bytes · **99.95%** · 60 bytes free, including the 920-byte multiboot load image |
-| ✉️ **Tools** | Messenger (optional XTEA-CTR text) · HEARD · Auto Check · Range Check · CALLTX · Full Watch · FM names/RSSI |
-| 🔀 **Voice scrambler** | Fixed carriers 2600–3500 Hz and HOP (carrier changes every 500 ms), FM only |
-| 🔌 **CHIRP support** | Matching 0.1.0 module with 1024 memories, Messenger settings, CryKey, HOP, F Lock, FM names and all channel policies |
+KLEANFW is aimed at small groups that carry the same radio: a team on a trail,
+a club net or a family on a trip. When several people run the same firmware,
+the radios can exchange short texts, confirm who is in range and, where the
+rules allow it, keep casual listeners from following the conversation.
 
-## Compatibility and downloads
+It starts from [GOGUFW 3.6.2](https://github.com/Gogu-Qs/GOGUFW-UV-K1-Messenger)
+by Gogu-Qs, itself built on Armel's F4HWN firmware. KLEANFW then takes its own
+direction:
 
-KLEANFW is intended only for Quansheng **UV-K1 / UV-K5 V3** radios built around
-the **PY32F071 MCU and BK4829 RF IC**. Do not install it on UV-K5 V1/V2 or other
-BK4819-based radios.
+- **Shared key, shared group.** One passphrase (CryKey) drives both the voice
+  hopping and the message encryption.
+- **Flash that lasts.** The SPI flash is erased far less often, so settings
+  saves, Messenger traffic and tuning do not wear it out.
+- **Safe defaults.** Transmit is limited to Brazil's general-use channels until
+  you change F Lock, and fresh channels start in Narrow.
+- **Room for fixes.** Rarely used features were moved out of the build so that
+  bug fixes still fit the 118 KiB program flash.
 
-[Download KLEANFW releases](https://github.com/AislanJefferson/KLEANFW/releases)
+## Highlights
 
-Release 0.1.0 contains:
+**Talk**
+- **HOP voice scrambler.** The inversion carrier changes every 500 ms in a
+  sequence derived from the CryKey. A short data burst at each PTT keeps
+  receivers in step, and late listeners catch up within 8 s.
+- **Fixed scrambler** (2600–3500 Hz) for radios that only know classic
+  inversion. Both scramblers work on FM only.
+- **CALLTX.** Five call melodies sent over the air with F+9.
 
-- `KLEANFW-v0.1.0.bin` and `KLEANFW-v0.1.0-multiboot.bin`: normal and multiboot
-  firmware images (same image, multiboot file name);
-- `KLEANFW_0.1.0_chirp_module.py`: the matching custom CHIRP module;
-- `FM-Search-Apps.zip`: `FMVFO.app` and `FMMemory.app` (the two required
-  Broadcast FM overlays) and `Search.app` (Frequency/Tone Search, F+4 and
-  F+STAR);
-- `Apps.zip`: every overlay app built from this source tree, except the
-  unsupported Beam;
-- `SHA256SUMS.txt`: checksums of the files above.
+**Text**
+- **Messenger.** 36-character messages with delivery receipts, retries,
+  a 16-message Inbox, 8 sent messages and 8 reusable drafts. It listens in the
+  background on any screen.
+- **CryKey encryption.** With a passphrase set, the message text is sent
+  XTEA-CTR encrypted. Radios without the same key simply never see it.
+- **HEARD, Range Check and Auto Check.** See who answered, with battery voltage
+  and signal strength, on demand or every 30 s to 10 min.
 
-GitHub does not accept `.app` attachments, so the apps come zipped.
+**Listen and scan**
+- **Spectrum.** Sweep a frequency range, or only the channels of the active
+  scan list, then listen to a peak or jump straight to its saved channel.
+- **Scanning** with an RSSI trail, scan-list switching on the fly and Full
+  Watch over up to four channels.
+- **Broadcast FM** with 48 named memories, through two small overlay apps.
 
-**Broadcast FM is not a resident screen. Install both `FMVFO.app` and
-`FMMemory.app`; installing only one leaves mode switching incomplete. Install
-`Search.app` for F+4/F+STAR.**
+**Built to last**
+- Deferred flash erases, Messenger IDs reserved 64 at a time, and no
+  calibration-sector writes on mute.
+- **F Lock**: BRASIL (default), DISABLE ALL or UNLOCK ALL.
+- **Multiboot** with up to five firmware images and separate settings banks,
+  plus 48 slots for overlay apps (APRS, SSTV, tools, games).
 
-Overlay apps use F4HWN's official ABI 1 / API 4 layout, as in GOGUFW 3.6.x.
-Apps built for the old experimental GOGUFW API 4–9 are rejected as
-incompatible. The `Crypto.app` of earlier development builds is no longer
-used: the CryKey is a menu item now.
+| Messenger home | Reading a message | Range Check answer |
+| --- | --- | --- |
+| ![Messenger home screen with Inbox, Compose, Sent and Drafts](docs/screenshots/messenger_mainpage.png) | ![An opened Inbox message](docs/screenshots/inbox_read.png) | ![HEARD list showing a station that answered a PING](docs/screenshots/heard_auto_result.png) |
+
+## Get started
+
+1. **Check the radio.** UV-K1 or UV-K5 V3 with PY32F071 + BK4829 only.
+2. **Back up.** Save a full CHIRP image, including calibration, and keep a DFU
+   recovery image at hand.
+3. **Download** the files from the
+   [latest release](https://github.com/AislanJefferson/KLEANFW/releases/latest):
+
+   | File | What it is for |
+   | --- | --- |
+   | `KLEANFW-v0.1.0.bin` | The firmware |
+   | `KLEANFW-v0.1.0-multiboot.bin` | The same image, named for a multiboot slot |
+   | `KLEANFW_0.1.0_chirp_module.py` | CHIRP module for this version |
+   | `FM-Search-Apps.zip` | `FMVFO.app`, `FMMemory.app` and `Search.app` |
+   | `Apps.zip` | Every other overlay app (Beam is not supported) |
+   | `SHA256SUMS.txt` | Checksums to verify the downloads |
+
+4. **Flash** the firmware with your usual tool (UV Studio, DFU, k5prog).
+5. **Install the apps.** With the radio running, use the **Apps** page of
+   UV Studio. Broadcast FM needs both `FMVFO.app` and `FMMemory.app`; F+4 and
+   F+STAR need `Search.app`.
+6. **Load the CHIRP module.** Use **File → Load Module**, then pick the model
+   **Quansheng → UV-K1 / UV-K5 V3 KLEANFW**. Modules from GOGUFW or other
+   versions can overwrite fields: do not use them.
 
 > [!NOTE]
-> **First boot after flashing:** the version changes, so the firmware runs its
-> one-time version reset: keypad lock, menu lock, SET_KEY and display
-> inversion (SET_INV) are cleared, `SetRxG` is turned back ON, and invalid
-> boot-logo lines or erased dBm corrections are repaired. Channels,
-> calibration and the other settings are kept. If you used the CryKey of an
-> older development build through `Crypto.app`, enter it again in
-> **MENU → Msg → CryKey**.
+> On the first boot after an update, the firmware clears the keypad and menu
+> locks, the side-key setup and display inversion, and turns `SetRxG` back ON.
+> Channels and calibration stay as they were.
 
-Back up the radio with CHIRP before updating and keep a known-good DFU recovery
-image available. The complete user manual (Portuguese) is in
-[MANUAL.md](MANUAL.md). See [CHANGELOG.md](CHANGELOG.md) for the list of
-changes.
+## Keys you will use
 
-## Differences from GOGUFW 3.6.2
-
-**Added**
-
-- **HOP voice scrambler** (Scramb = HOP): the inversion carrier changes every
-  500 ms over 16 carriers chosen per bandwidth, following the shared CryKey.
-  A short FSK seed burst starts every PTT and resyncs receivers every 8 s.
-  HOP is not encryption.
-- **CryKey** (MENU → Msg → CryKey, up to 10 characters, also editable in
-  CHIRP): with a passphrase set, Messenger text is sent XTEA-CTR encrypted.
-- **SCRAMBLE** side-key action (toggles the channel scrambler, HOP by default).
-- **Menu categories** from F4HWN, with an `Msg` category for Messenger settings.
-- **Spectrum**: MR mode sweeps the active scan list (key 4 changes it), shows
-  the channel modulation/bandwidth like VFO, key 6 bandwidth persists for all
-  channels until EXIT, PTT×2 opens the matching MR channel or lands in the VFO
-  like a typed frequency, backlight follows `BLTime`, and SIDE2 runs the F+8
-  backlight cycle.
-
-**Changed**
-
-- **Less SPI flash wear**: sector erases are deferred and committed once,
-  Messenger IDs are reserved in blocks of 64, mute no longer writes the
-  calibration sector, and a menu change is committed on the next idle tick.
-- **F Lock** offers only BRASIL (Anatel general-use channels, default),
-  DISABLE ALL and UNLOCK ALL.
-- Default bandwidth for fresh channels and VFOs is Narrow (12.5 kHz).
-- Typing a VFO frequency starts a clean simplex setting (tones, offset and
-  reverse cleared).
-- The fixed and HOP scramblers work only on FM, on TX and RX.
-- Boot goes straight to the radio (the `POnMsg` welcome option was removed).
-
-**Removed from the Fusion build** (to fit the flash): K5Viewer, Audio Scope,
-RF Log Lite, Resume State, Scan Progress bar, the PMR/GMRS/FRS/MURS/CA TX plans
-and `Crypto.app`. The source of the disabled features stays in the tree behind
-their build flags.
-
-**Fixed** (selection): USB serial replies HardFaulted the radio (UV Studio and
-CHIRP over USB froze it), Spectrum hangs and wrong listen filters, AM register
-values without `ENABLE_FEAT_F4HWN_AUDIO`, LNA/PGA gain leaking out of Spectrum,
-UI overlaps (TX lock vs CALLTX, scan-range tone line, FM pointer). See the
-[CHANGELOG](CHANGELOG.md) for details.
-
-## Main features
-
-### Messenger
-
-Messenger sends and receives short text messages directly between compatible KLEANFW and GOGUFW radios over FSK (encrypted text needs KLEANFW and the same CryKey on both sides). It works as a sidecar to normal analog operation, so receiving messages does not require leaving the Messenger screen open.
-
-New messages use a distinct monophonic classic-phone alert measured from the
-requested Nokia reference: four equal 932 Hz, 200 ms notes in two close pairs,
-with a longer pause between the pairs. ACK uses the same short single
-confirmation chirp as a manual PONG instead of the message rhythm. Both still
-follow the Messenger `MsgBeep` setting.
-
-- 36-character messages with T9-style text entry;
-- 16-message Inbox, 8-message Sent list and 8 editable quick-message Drafts;
-- delivery acknowledgements, retry status and up to three responding callsigns;
-- Reply, Resend and Delete controls;
-- duplicate-message protection;
-- a shared `CllSgn` station callsign used by Messenger and compatible APRS TX/Beacon apps, plus receive, ACK, alert-beep and LED settings;
-- a short wake frame before the first normal message attempt to improve reception while the destination radio is idle;
-- per-channel **No FSK TX** protection for channels where Messenger transmission must remain disabled;
-- TX-frequency, F Lock, modulation and channel-policy checks before every message, retry, ACK, PING or PONG;
-- a clear TX-blocked popup that identifies No FSK, frequency, modulation, configuration or battery restrictions.
-
-Open Messenger with **F + MENU**, or assign **MESSENGER** to a side key. The assigned Messenger action is a toggle: use it again on the Messenger home screen to return to the radio.
-
-| Messenger hub | Messaging preferences |
+| To do this | Press |
 | --- | --- |
-| ![Messenger feature menu](docs/screenshots/messenger_mainpage.png) | ![Messenger configuration screen](docs/screenshots/messenger_settings.png) |
+| Open Messenger | **F + MENU** |
+| See who is in range (HEARD, PING, Auto Check) | **F + 7** |
+| Send a call melody | **F + 9** |
+| Open the spectrum analyser | **F + 5** |
+| Broadcast FM (needs the FM apps) | **F + 0** |
+| Search a frequency / a CTCSS-DCS tone (needs `Search.app`) | **F + 4** / **F + STAR** |
+| Backlight: always on → always off → normal | **F + 8** |
+| Lock or unlock the keypad | Hold **F** |
+| Pick a firmware slot | Hold **MENU** while switching on |
+| Turn the channel scrambler on or off | Side key set to **SCRAMBLE** |
+| Spectrum: next scan list (MR) / listen bandwidth | **4** / **6** |
+| Spectrum: ignore this peak / backlight cycle | **SIDE1** / **SIDE2** |
 
-| New message editor | Message ready to send |
-| --- | --- |
-| ![Blank message composition screen](docs/screenshots/messenger_compose.png) | ![Composed Messenger text](docs/screenshots/messenger_compose2.png) |
+## HOP and CryKey in 60 seconds
 
-| Quick-message drafts | Received message view |
-| --- | --- |
-| ![Saved quick-message list](docs/screenshots/messenger_drafts.png) | ![Opened Inbox message](docs/screenshots/inbox_read.png) |
+On **every** radio of the group:
 
-| Delivery overview | Sent message details |
-| --- | --- |
-| ![Outgoing message list](docs/screenshots/sent_messages.png) | ![Opened Sent message](docs/screenshots/sent.png) |
+1. **MENU → Msg → CryKey**: type the same passphrase, up to 10 characters
+   (case sensitive).
+2. On the channel you will use: **Channels → Scramb = HOP**, FM modulation.
+3. Keep **MsgRx ON** and **VOX OFF**, and do not scan while you listen.
 
-#### Messenger controls
+After pressing PTT, wait a moment before talking, because the first quarter of
+a second carries the sync burst. A soft tick every half second on receive is
+normal.
 
-| Screen | Controls |
-| --- | --- |
-| Home | **UP/DOWN** selects Inbox, Compose, Sent or Drafts; **MENU** opens; **EXIT** returns to the radio. |
-| Inbox / Sent | Four visible rows; **UP/DOWN** selects; **MENU** reads; **F** deletes; **EXIT** returns. Inbox rows show unread state, sender, preview and age; Sent rows show delivery state, preview and age. |
-| Read | **UP/DOWN** changes message; **MENU** replies or resends; **F** deletes; **EXIT** returns. |
-| Compose / Draft edit | Number keys enter text; hold a number for the digit; **STAR** cycles `B`/`b`/`2`; **F** deletes; **MENU** sends; **EXIT** returns. |
-
-### HEARD and Range Check
-
-HEARD records recently received Messenger packets with callsign, battery voltage when available, RSSI bar and numeric RSSI, packet type and age. Range Check now runs directly inside the same list instead of opening a separate result view.
-
-- Open HEARD with **F + 7**, or assign **HEARD** to a side key.
-- Press **MENU** on HEARD to open **SEND PING** and **AUTO CHECK**. SEND PING starts the normal 12-second Range Check.
-- If a manual or automatic PING is blocked by channel/frequency/modulation or
-  battery policy, the same visible TX-blocked warning and dedicated short/long
-  error tone are produced. A blocked automatic attempt also cancels AUTO CHECK
-  instead of appearing to remain active.
-- AUTO CHECK offers **OFF**, **30 seconds, 1 minute, 5 minutes and 10 minutes** and can repeat the check on every normal firmware screen. A received PONG updates HEARD silently; a cycle with no replies gives a restrained 450-to-320 Hz descending two-tone immediately from the background service rather than waiting for a key press. Active voice TX/RX and scanning defer the check until the RF path is free.
-- Selecting a timed AUTO CHECK sends the first PING immediately. Its VOX status-bar slot remains empty until that first result is known. A chain-link icon stays fixed after a PONG; the same icon blinks at one-second intervals if the 12-second reply window expires unanswered. Later checks keep the last completed result visible until a new result replaces it. If VOX is enabled, the VOX icon takes priority and the AUTO CHECK mark is hidden.
-- The Messenger envelope is independent of AUTO CHECK: it appears only while at least one Inbox message is unread and clears immediately after the last unread message is read or deleted.
-- Existing MSG, ACK, PNG and PON rows remain visible during the check. Each responding station is moved to the top with its voltage and RSSI details.
-- Each row uses four separated groups: station ID with voltage, RSSI bar with numeric RSSI, packet type, and age. Voltage, numeric RSSI, packet type and age use a compact font aligned to the bottom of the normal-font station ID.
-- Use **UP/DOWN** to move through entries and **EXIT** to return to the radio.
-- `RngRsp` controls automatic PONG replies.
-- Randomized ACK and PONG timing reduces collisions when several radios answer together.
-
-The assigned HEARD action also behaves as a toggle.
-
-| AUTO CHECK status on the radio screen | HEARD activity and PONG result |
-| --- | --- |
-| ![Chain-link AUTO CHECK result in the status bar](docs/screenshots/auto_check_status.png) | ![HEARD activity list with a PONG result](docs/screenshots/heard_auto_result.png) |
-
-| HEARD action menu | AUTO CHECK interval selection |
-| --- | --- |
-| ![SEND PING and AUTO CHECK menu](docs/screenshots/heard_menu.png) | ![AUTO CHECK interval menu](docs/screenshots/heard_auto_menu.png) |
-
-### Encrypted Messenger text (CryKey)
-
-Set a shared passphrase in **MENU → Msg → CryKey** (up to 10 characters, case
-sensitive) or in CHIRP. With a CryKey, the text of every Messenger message is
-sent XTEA-CTR encrypted with a random salt per message. The sender callsign,
-message ID, ACK, PING, PONG and WAKE packets stay in clear, and there is no
-message authentication (MAC). Radios with a different or empty CryKey drop the
-encrypted message silently; GOGUFW radios reject the packet type. An empty
-CryKey keeps Messenger text in clear.
-
-### Voice scrambler (fixed and HOP)
-
-Set the scrambler per channel in **Channels → Scramb**, with the **SCRAMBLE**
-side-key action or in CHIRP. A double-wave icon on the VFO line shows that it
-is on. Both scramblers work only on FM.
-
-- **Fixed** (2600–3500 Hz): spectrum inversion with a fixed carrier; both radios
-  must use the same carrier.
-- **HOP**: each PTT sends a ~0.25 s FSK seed burst (wait a moment before
-  talking), then the carrier changes every 500 ms (N/N+: 2600–3100 Hz, Wide:
-  2900–3400 Hz) in a sequence derived from the CryKey. A resync burst every 8 s
-  lets late receivers join. The receiver needs Scramb = HOP, `MsgRx` ON, VOX
-  OFF, the same CryKey and no scan.
+With a CryKey set, message **text** is encrypted. Callsigns, message IDs,
+receipts, PING/PONG and battery voltage still go out in clear, and there is no
+message authentication. An empty CryKey means plain-text messages and a common
+default HOP sequence.
 
 > [!WARNING]
-> Scrambling and encryption are **not allowed on amateur radio** and are
-> restricted on many other services. HOP only defeats quick decoding with a
-> fixed-inversion scrambler; it is not secure. See [Legal notices](#legal-notices).
+> HOP is spectrum inversion with a changing carrier, not encryption, and the
+> Messenger encryption is not authenticated. Neither is meant for real
+> security. Both are **forbidden on amateur bands** and restricted on many
+> other services. See [Legal notices](#legal-notices).
 
-### Scanning
+## Coming from GOGUFW
 
-KLEANFW uses the F4HWN scan interface without the progress bar:
+- **Messenger** still talks to GOGUFW radios in plain text. Encrypted text only
+  works between KLEANFW radios with the same CryKey; GOGUFW rejects it.
+- **CHIRP** needs `KLEANFW_0.1.0_chirp_module.py`. Over USB, CHIRP and UV Studio
+  read the host identity `v7 GGFW v6.3.0`, which UV Studio uses to choose the
+  app catalog. The radio itself, SystemInfo and multiboot show
+  `KLEANFW v0.1.0`.
+- **Apps** use the same official F4HWN API 4 as GOGUFW 3.6.x, so your
+  installed apps keep working. The CryKey of the old `Crypto.app` test builds
+  must be typed again in the menu.
+- **Left out of this build** to make room: K5Viewer, Audio Scope, RF Log Lite,
+  resume-after-power-off, the scan progress bar, and the PMR, GMRS/FRS/MURS
+  and CA transmit plans.
 
-- An RSSI sparkline of the last scanned steps is drawn on the scanning VFO line in normal and fast scan.
-- **F + UP/DOWN** or two number keys (`00` = ALL, `01`–`24`) change the scan list while scanning; the status bar shows the active list (`ALL`, the list name or number, `+` when priority scanning is on).
-- Hold **MENU** on a stopped channel or frequency to exclude it from the scan. Scanning continues immediately. Memory-channel exclusions last until the radio is switched off.
+Everything that changed is listed in the [CHANGELOG](CHANGELOG.md).
 
-### Menu categories
+## Documentation
 
-**MENU** opens a category screen (Channels, Scan, Keys, Power, Display, Timers, Audio, Radio, DTMF, Msg and All). **UP/DOWN** selects a category, **MENU** opens it and **EXIT** goes back to the categories. Each category remembers its last position. **All** is the complete flat list with the original order and numbers; typing a number on the category screen jumps straight to that item in All. The status bar shows `MENU` or the open category. Service (hidden menu) appears only after an F-LOCK boot. Every menu item (what it does, its options, default and when to change it) is explained in [MANUAL.md, section 6](MANUAL.md#6-menu).
+The full user manual is in Portuguese: [MANUAL.md](MANUAL.md). Good places to
+start:
 
-### TX frequency lock (F Lock)
+- [Every menu item](MANUAL.md#6-menu): what it does, its options and default
+- [Messenger](MANUAL.md#9-messenger) and [CryKey](MANUAL.md#11-criptografia-crykey)
+- [Voice scrambler, fixed and HOP](MANUAL.md#12-scrambler-de-voz-fixo-e-hop)
+- [Spectrum](MANUAL.md#17-spectrum) and [CHIRP](MANUAL.md#25-chirp)
+- [Troubleshooting](MANUAL.md#28-solução-de-problemas) and
+  [legal notices](MANUAL.md#30-avisos-legais-e-licenças)
 
-`F Lock`, in the hidden menu (Service category), has three options:
+Release notes: [docs/releases/v0.1.0.md](docs/releases/v0.1.0.md).
 
-- **BRASIL**: TX only on the Brazilian license-free general-use radio channels of Anatel Ato 14448 (Tabela XII): 462.5625–462.7125 MHz and 467.5625–467.7125 MHz. This is the default.
-- **DISABLE ALL**: no TX on any frequency.
-- **UNLOCK ALL**: TX on every supported band (confirm three times). Licensed amateurs need this option for 2 m and 70 cm.
+## Build
 
-The firmware does not limit TX power, and the general-use rule is written for
-certified radios: check that your use is allowed. UNLOCK ALL lets the radio
-transmit on frequencies you may not be authorised to use.
-
-### CALLTX
-
-CALLTX transmits one of five selectable alert melodies using the existing radio TX path.
-
-- **F + 9** transmits the selected melody.
-- `CllTon` selects the melody and provides a preview.
-- `CllVol` selects low or high tone-generator level.
-- The melody completes its current phrase without clipping the final note.
-- CALLTX does not append the normal Roger beep or MDC tail.
-- Assign **CALLTX** to a side key for direct access.
-
-![Call melody selection](docs/screenshots/call_tone.png)
-
-### FM broadcast radio
-
-The BK1080 driver and storage bridge stay resident, but the interface runs
-from two required overlays. Install both `FMVFO.app` and
-`FMMemory.app` from UV Studio's **Apps** page. The split is transparent during
-normal use and makes room in the firmware without changing saved FM data.
-
-- **F + 0** opens the last-used FM mode from the normal radio screen.
-- Hold **3** to switch between FM VFO and FM Memory.
-- **EXIT** or **F + 0** closes FM and returns to the radio screen and VFO/MR
-  state from which it was opened.
-- If the selected radio channel receives a signal, FM temporarily yields to the
-  normal RX screen and audio. Five seconds after RX ends, the same FM mode,
-  band and frequency/channel resume automatically.
-- **MENU** opens the FM menu. **STAR** starts manual scan and
-  **F + STAR** starts confirmed automatic scan. During manual scan, UP/DOWN
-  continues in either direction and EXIT returns to normal VFO operation.
-- The radio retains 48 named FM memories, rename/delete controls, channel save,
-  four configurable bands and **LIVE RSSI**. Existing settings, memories and
-  names are reused without conversion.
-- In the FM overlays the complete resident status bar remains continuously
-  visible during tuning and menu actions. Holding **F** toggles the normal
-  keypad lock, and the resident F/lock indicators remain synchronized.
-
-| Saved broadcast station | Manual FM tuning |
-| --- | --- |
-| ![FM station memory with custom name](docs/screenshots/fm_radio_name.png) | ![FM frequency tuning scale](docs/screenshots/fm_radio_vfo.png) |
-
-### Search Frequency and Search Tone
-
-Open **Search Frequency** with **F + 4**, or **Search Tone** with **F + STAR**. Both screens use the same header, status, frequency/tone rows and footer controls as the other Messenger tools.
-
-Install the release's `Search.app` to use these shortcuts. Search v1.5 uses the
-corrected append-only overlay API, follows the displayed Full Watch A/B/C/D
-channel after watch rotations, and centres the status, frequency and tone rows
-between the dotted separators.
-
-After a result is found, press **MENU / SAVE**, choose a destination memory with **UP/DOWN** or the number keys, then press **MENU** and confirm `SAVE?`. Empty targets are marked `CH-xxxx`; occupied targets show the channel number and name, shortened with `..` when necessary. A saved result opens directly in MR mode without also opening the main menu.
-
-Scanner-created memories preserve the power setting that was active before the search, use **NARROW** bandwidth, and store airband results as **AM** rather than FM.
-
-| Frequency discovery | Tone identification |
-| --- | --- |
-| ![Active frequency search](docs/screenshots/search_freq.png) | ![Detected signalling tone](docs/screenshots/search_tone.png) |
-
-### Overlay apps
-
-KLEANFW provides 48 external-Flash app slots. Empty slots are hidden; hold UP/DOWN to move quickly through the list and press `*` to toggle the right column between app size and version. Install `.app` files from the **Apps** page in Armel's UV Studio while the radio is running normally.
-
-The firmware exposes F4HWN's append-only official ABI 1 / API 4 contract
-(memory-channel access/staging, app TX power and the GPS-position service
-slot), as in GOGUFW 3.6.x. GOGUFW-only services use `APP_CAP_GOGU_EXT` and a
-separately versioned extension table. Binaries from the old experimental
-GOGUFW API 4–9 layout are not compatible. Official API-3 apps work when their
-declared resident capabilities are available; Beam remains unsupported.
-
-### Channel policies and main-screen indicators
-
-- **No FSK TX** blocks Messenger and Range Check transmission on an individual memory channel while leaving ordinary voice TX and FSK reception available.
-- **No Roger** suppresses the selected Roger beep or MDC tail on an individual memory channel.
-- The radio-wave icon indicates that FSK TX is permitted on that memory channel.
-- The musical-note icon indicates that the global Roger/MDC selection is active and permitted on that memory channel.
-
-These settings appear as normal memory-list columns and under **Properties → Extra** in the custom CHIRP module.
-
-![FSK and Roger status symbols on the radio screen](docs/screenshots/radio_main_fsk_roger_signs.png)
-
-### Spectrum
-
-Open Spectrum with **F + 5**.
-
-- **MR mode** sweeps the channels of the active scan list (ScList, or the last
-  list chosen during a scan); excluded channels are skipped. The top-left label
-  shows the list and the channel count (`ALL 42`, `RPT 12`), and **4** moves to
-  the next list. The bottom labels show the first and last position inside the
-  list (`M:1` … `M:<n>`).
-- **VFO mode** scans a continuous range with 16 to 2048 samples. Higher values
-  combine several RF samples into each of the 128 display columns, with a
-  simplified ruler from 512x upward.
-- The peak frequency, modulation and listen bandwidth are shown on the top line
-  in both modes.
-- **PTT** stops on a peak and listens. **MENU** while listening adjusts the
-  LNA/PGA gains (restored on exit). **6** switches the listen bandwidth
-  25k / 12.5k / 6.25k at once; in MR it stays for every channel until EXIT or
-  a long MENU.
-- **PTT** again opens the saved MR channel that matches the peak, or lands in
-  the VFO like a typed frequency. It does not transmit.
-- **SIDE1** ignores the current peak until Spectrum is closed (nothing is
-  saved). **SIDE2** runs the F+8 backlight cycle (always on → always off →
-  `BLTime`). The backlight otherwise follows `BLTime`.
-- **UP/DOWN** resumes scanning, **EXIT** returns.
-
-![Stored-channel spectrum activity](docs/screenshots/memory_spectrum.png)
-
-### Multiboot
-
-Hold **MENU while powering on** to open the firmware-slot selector.
-
-- On first use, the firmware creates a one-time backup of the Main firmware in slot 0. Do not interrupt `Init Main`.
-- Slot images are completely CRC-checked before internal Flash is erased.
-- Each slot uses a private settings bank by default, including Messenger settings/drafts, CryKey and FM station names.
-- `SetCfg` can deliberately pair a slot with a compatible settings bank.
-- Calibration and the boot logo remain shared.
-- KLEANFW can run as Main or from a slot and uses the official F4HWN multiboot image format.
-
-## Quick shortcuts
-
-| Function | Shortcut |
-| --- | --- |
-| Messenger | **F + MENU** |
-| HEARD / Range Check | **F + 7** |
-| CALLTX | **F + 9** |
-| Broadcast FM | **F + 0**; requires both `FMVFO.app` and `FMMemory.app` |
-| Search Frequency | **F + 4**; requires `Search.app` |
-| Search Tone | **F + STAR**; requires `Search.app` |
-| Spectrum | **F + 5** |
-| Backlight override cycle | **F + 8**: always on → always off → saved strategy |
-| Keypad lock | Hold **F** |
-| Change scan list while scanning | **F + UP/DOWN** or two number keys |
-| Exclude channel/frequency while scanning | Hold **MENU** |
-| Multiboot | Hold **MENU** while powering on |
-
-## CHIRP
-
-Use the module that matches the firmware release. For KLEANFW 0.1.0:
-
-1. Start CHIRP and choose **File → Load Module**.
-2. Select `KLEANFW_0.1.0_chirp_module.py`.
-3. Download the radio using **Quansheng → UV-K1 / UV-K5 V3 KLEANFW**.
-4. Edit channels, side-key actions, Messenger/Call settings, CryKey, F Lock,
-   FM names, `No FSK TX`, `No Roger`, `Scrambler` (fixed carriers and HOP)
-   and `Compander` as required.
-5. Upload the completed image to the radio.
-
-The firmware and module support the radio's 1024 memory-channel layout. Only
-the module for the current firmware is kept in this repository; GOGUFW modules
-and modules of other releases are not compatible and can overwrite newer
-fields. The CHIRP module is licensed under the GNU GPL v2 or later (see
-[LICENSE-GPL-2.0.txt](LICENSE-GPL-2.0.txt)), not under the Apache License.
-
-## Build from source
-
-The release images are built with Docker:
+With Docker installed:
 
 ```bash
-./compile-with-docker.sh   # firmware only
-./build-all.sh             # firmware, every overlay app and the CHIRP module check
+./compile-with-docker.sh   # firmware only -> build/Fusion/kleanfw.bin
+./build-all.sh             # firmware + all apps + CHIRP module check -> build/dist/
 ```
 
-Without Docker, the Fusion preset requires CMake, Ninja and the ARM GNU
-Embedded toolchain (`arm-none-eabi-gcc`):
+A native build needs CMake, Ninja and `arm-none-eabi-gcc`:
 
 ```bash
 cmake --preset Fusion --fresh
 cmake --build --preset Fusion
 ```
 
-The build emits `build/Fusion/kleanfw.bin` and the multiboot file name
-`f4hwn.kleanfw.v0.1.0.bin`. The image must not exceed 120,832 bytes;
-`build-all.sh` checks it and collects everything in `build/dist/`. See
-`BUILD_VSCODE_MAC.md` or `BUILD_WITH_VSCODE.md` for environment setup.
+The image must stay within **120,832 bytes**, including the 920-byte
+multiboot loader. Release 0.1.0 uses 120,772 bytes, leaving 60 bytes free, so
+every change is measured. Setup guides:
+[BUILD_WITH_VSCODE.md](BUILD_WITH_VSCODE.md) (Docker) and
+[BUILD_VSCODE_MAC.md](BUILD_VSCODE_MAC.md) (native, macOS).
+
+## Status and feedback
+
+0.1.0 is the first KLEANFW release. Open questions, such as STE on strong
+repeaters and HOP timing under heavy load, are listed under *Known issues* in
+the [CHANGELOG](CHANGELOG.md). Report bugs in
+[GitHub Issues](https://github.com/AislanJefferson/KLEANFW/issues) with the
+firmware version, the channel settings and the steps to reproduce.
 
 ## Credits and license
 
