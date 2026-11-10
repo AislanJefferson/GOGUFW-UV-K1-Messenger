@@ -5,8 +5,9 @@ first. The GOGUFW history (upstream, by Gogu-Qs) is kept unchanged below them.
 
 ## KLEANFW 0.1.0 — 2026-11-10
 
-First KLEANFW release, based on GOGUFW 3.6.2. Radio identity
-`KLEANFW v0.1.0`, multiboot image `f4hwn.kleanfw.v0.1.0.bin`, CHIRP module
+First KLEANFW release, based on GOGUFW 3.6.2. Firmware identity
+`KLEANFW v0.1.0` (SystemInfo, multiboot; the USB host identity stays
+`v7 GGFW v6.3.0`), multiboot image `f4hwn.kleanfw.v0.1.0.bin`, CHIRP module
 `KLEANFW_0.1.0_chirp_module.py`. Image 120,772 / 120,832 bytes (60 bytes
 free) including the 920-byte multiboot load image; RAM 15,640 / 16,384 bytes
 at link time.

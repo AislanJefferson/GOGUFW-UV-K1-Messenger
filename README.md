@@ -16,7 +16,7 @@ FM features and adds the HOP voice scrambler, encrypted Messenger text
 
 | Statistic | Project status |
 | --- | --- |
-| 📦 **Current release** | KLEANFW 0.1.0 (radio identity `KLEANFW v0.1.0`) |
+| 📦 **Current release** | KLEANFW 0.1.0 (`KLEANFW v0.1.0` on the radio, SystemInfo and multiboot; the USB identity read by CHIRP/UV Studio stays `v7 GGFW v6.3.0`) |
 | ⬇️ **Release downloads** | [![Total release downloads](https://img.shields.io/github/downloads/AislanJefferson/KLEANFW/total?style=flat-square&label=downloads&color=blue)](https://github.com/AislanJefferson/KLEANFW/releases) |
 | ⭐ **GitHub stars** | [![GitHub stars](https://img.shields.io/github/stars/AislanJefferson/KLEANFW?style=flat-square&label=stars&color=yellow)](https://github.com/AislanJefferson/KLEANFW/stargazers) |
 | 🧩 **Firmware base** | GOGUFW 3.6.2 → F4HWN 6.3.0 + selected F4HWN 7.0 additions |
@@ -473,9 +473,10 @@ Bundled third-party components keep their own licenses: Arm CMSIS
   homologation) of the radio. `F Lock = UNLOCK ALL` allows TX outside the
   frequencies you may be authorised to use.
 - **Scrambler and encryption.** Transmissions encoded to obscure their meaning
-  are prohibited in the amateur service (ITU Radio Regulations, Article 25.2A;
-  for example FCC 47 CFR §97.113(a)(4) in the USA) and restricted on many other
-  services. Use the scrambler, HOP and CryKey only where they are allowed.
+  are prohibited in the amateur service by national rules in most countries
+  (for example FCC 47 CFR §97.113(a)(4) in the USA) and, between countries,
+  by the ITU Radio Regulations (Article 25.2A). They are restricted on many
+  other services too. Use the scrambler, HOP and CryKey only where they are allowed.
   None of them provides security: HOP is a hopping spectrum inversion, and
   the Messenger encryption has no authentication.
 - **Cryptography.** The firmware contains cryptographic software (XTEA). Check

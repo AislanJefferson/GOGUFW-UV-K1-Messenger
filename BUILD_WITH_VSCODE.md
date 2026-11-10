@@ -32,4 +32,4 @@ seconds.
 The firmware `.bin` must not exceed 120,832 bytes; `build-all.sh` checks it.
 
 The CMake preset is still named `Fusion` because KLEANFW keeps the F4HWN Fusion
-feature set through GOGUFW. The radio shows `KLEANFW v<version>`.
+feature set through GOGUFW. SystemInfo and the multiboot menu show `KLEANFW v<version>`.
