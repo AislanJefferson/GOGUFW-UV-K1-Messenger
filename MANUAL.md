@@ -1,11 +1,13 @@
-# Manual do Usuário — GOGUFW 3.6.2m
+# Manual do Usuário — KLEANFW 0.1.0
 
 Firmware customizado para **Quansheng UV-K1 / UV-K5 V3** (MCU PY32F071 + RF BK4829), baseado no **F4HWN 6.3.0**.
-Este manual descreve o build **Fusion** (o preset oficial) do código atual, versão `v3.6.2m`.
+O KLEANFW é uma versão modificada do **GOGUFW 3.6.2** (Gogu-Qs), que por sua vez é baseado no F4HWN. É um projeto independente, sem afiliação ou endosso do Gogu-Qs, do F4HWN ou da Quansheng.
+Este manual descreve o build **Fusion** (o preset oficial) do código atual, versão `v0.1.0`.
 
 > [!CAUTION]
 > Instale somente em rádios **UV-K1 / UV-K5 V3** (PY32F071 + BK4829). **Não** instale em UV-K5 V1/V2 ou em outros rádios com BK4819.
 > Faça backup com o CHIRP antes de atualizar e mantenha uma imagem de recuperação DFU à mão.
+> Leia os [avisos legais](#30-avisos-legais-e-licenças) antes de gravar o firmware ou transmitir: o scrambler e a criptografia são proibidos no radioamadorismo.
 
 ---
 
@@ -40,20 +42,21 @@ Este manual descreve o build **Fusion** (o preset oficial) do código atual, ver
 27. [Otimizações](#27-otimizações)
 28. [Solução de problemas](#28-solução-de-problemas)
 29. [Compilar a partir do código](#29-compilar-a-partir-do-código)
+30. [Avisos legais e licenças](#30-avisos-legais-e-licenças)
 
 ---
 
 ## 1. Visão geral
 
-O GOGUFW mantém o conjunto de recursos de rádio do F4HWN e adiciona:
+O KLEANFW mantém o conjunto de recursos de rádio do F4HWN e do GOGUFW. Principais recursos (★ = adicionado pelo KLEANFW):
 
 | Recurso | Resumo |
 |---|---|
 | **Messenger** | Mensagens de texto rádio-a-rádio por FSK, com ACK, retentativa e rascunhos |
 | **HEARD / Range Check** | Lista das estações ouvidas e teste de alcance com várias estações (PING/PONG) |
 | **AUTO CHECK** | Teste de alcance automático periódico em segundo plano |
-| **Criptografia (CryKey)** | Texto do Messenger cifrado (XTEA-CTR) com frase-senha compartilhada |
-| **Scrambler HOP** | Inversão de voz com portadora que salta a cada 500 ms |
+| **Criptografia (CryKey)** ★ | Texto do Messenger cifrado (XTEA-CTR) com frase-senha compartilhada |
+| **Scrambler HOP** ★ | Inversão de voz com portadora que salta a cada 500 ms |
 | **CALLTX** | Cinco melodias de chamada transmitidas pelo rádio |
 | **FM comercial** | 48 memórias nomeadas, 4 bandas e Live RSSI (via apps) |
 | **Search** | Busca de frequência e de tom (CTCSS/DCS) com gravação em canal |
@@ -61,7 +64,7 @@ O GOGUFW mantém o conjunto de recursos de rádio do F4HWN e adiciona:
 | **Full Watch** | Escuta de até 4 canais (A, B e 2 prioritários) |
 | **Apps overlay** | 48 slots para aplicativos instaláveis (APRS, SSTV, jogos etc.) |
 | **Multiboot** | Até 5 firmwares no rádio, com bancos de configuração separados |
-| **F Lock BRASIL** | TX restrito por padrão aos canais de uso geral da Anatel |
+| **F Lock BRASIL** ★ | TX restrito por padrão aos canais de uso geral da Anatel |
 
 ---
 
@@ -71,9 +74,9 @@ O GOGUFW mantém o conjunto de recursos de rádio do F4HWN e adiciona:
 
 | Arquivo | Uso |
 |---|---|
-| `GOGUFW-vX.Y.Z.bin` | Firmware normal |
-| `GOGUFW-vX.Y.Z-multiboot.bin` | Firmware no formato multiboot do F4HWN |
-| `Gogufw_X.Y.Z_chirp_module.py` | Módulo CHIRP da mesma versão |
+| `KLEANFW-vX.Y.Z.bin` | Firmware normal |
+| `KLEANFW-vX.Y.Z-multiboot.bin` | Firmware no formato multiboot do F4HWN (mesma imagem) |
+| `KLEANFW_X.Y.Z_chirp_module.py` | Módulo CHIRP da mesma versão |
 | `FMVFO.app` + `FMMemory.app` | Rádio FM (os **dois** são obrigatórios) |
 | `Search.app` | Necessário para F+4 e F+\* |
 | `Apps.zip` | Pacote de apps compatíveis |
@@ -91,7 +94,8 @@ O GOGUFW mantém o conjunto de recursos de rádio do F4HWN e adiciona:
 ### 2.3 Primeiro boot após atualizar
 
 - Na primeira vez, o multiboot cria um backup do firmware principal no slot 0 (`Init Main`). **Não desligue o rádio durante essa etapa.**
-- Quando a versão muda, o firmware zera KEY_LOCK, MENU_LOCK, SET_KEY e SET_INV.
+- Quando a versão muda (por exemplo, ao vir do GOGUFW 3.6.2 ou de um build de desenvolvimento `v3.6.2m`), o firmware zera uma vez KEY_LOCK, MENU_LOCK, SET_KEY e SET_INV, volta o `SetRxG` para ON e corrige linhas do logo com caracteres inválidos e correções de dBm apagadas. Canais, calibração e as demais configurações ficam.
+- Se você usava a CryKey pelo antigo `Crypto.app`, digite-a de novo em **MENU → Msg → CryKey** (seção 11).
 - O rádio liga direto, sem tela de boas-vindas, bipes ou atraso (a opção `POnMsg` foi removida).
 
 ---
@@ -1065,7 +1069,7 @@ Configure em **Keys → F1Shrt, F1Long, F2Shrt, F2Long, M Long** (ou pelo CHIRP)
 
 ## 9. Messenger
 
-Mensagens curtas de texto entre rádios GOGUFW, por FSK. Funciona em segundo plano: você recebe mensagens em qualquer tela.
+Mensagens curtas de texto entre rádios KLEANFW (e GOGUFW, para texto em claro), por FSK. Funciona em segundo plano: você recebe mensagens em qualquer tela.
 
 ### 9.1 Abrir
 
@@ -1501,7 +1505,7 @@ O rádio tem **48 slots** na Flash externa. Instale os `.app` pela página **App
 | **Jogos e demos** | Breakout, Tetris, Snake, Minesweeper, RapidRoll, SpaceImpact, Cube3D, Plasma |
 
 > [!NOTE]
-> O app **Beam** não é suportado no GOGUFW. Apps de terceiros funcionam quando os recursos que eles declaram estão disponíveis no firmware.
+> O app **Beam** não é suportado no KLEANFW. Apps de terceiros funcionam quando os recursos que eles declaram estão disponíveis no firmware.
 
 ---
 
@@ -1670,8 +1674,8 @@ Se as setas parecerem invertidas, ajuste `SetNav`.
 ## 25. CHIRP
 
 1. Abra o CHIRP e escolha **File → Load Module**.
-2. Selecione o `Gogufw_3.6.2_chirp_module.py` (mesma versão do firmware).
-3. Baixe do rádio com **Quansheng → UV-K1 / UV-K5 V3 GOGUFW Messenger**.
+2. Selecione o `KLEANFW_0.1.0_chirp_module.py` (mesma versão do firmware).
+3. Baixe do rádio com **Quansheng → UV-K1 / UV-K5 V3 KLEANFW**.
 4. Edite canais, ações de teclas, configurações do Messenger/CALLTX, CryKey, nomes de FM, F Lock, `No FSK TX`, `No Roger`, `Scrambler` (incluindo HOP) e `Compander`.
 5. Envie para o rádio e **espere cerca de 2 s** antes de desligá-lo (veja a seção 27.5).
 
@@ -1685,7 +1689,9 @@ Se as setas parecerem invertidas, ajuste `SetNav`.
 - SetNFM e as ações de teclas laterais deste build (inclusive **SCRAMBLE**).
 
 > [!WARNING]
-> Use só o módulo desta versão: módulos de outras versões do GOGUFW não são compatíveis e podem sobrescrever campos.
+> Use só o módulo desta versão: módulos do GOGUFW e de outras versões do KLEANFW não são compatíveis e podem sobrescrever campos.
+
+O módulo CHIRP é licenciado pela GNU GPL v2 ou posterior (`LICENSE-GPL-2.0.txt`), não pela licença Apache do firmware.
 
 **Observações:**
 
@@ -1815,14 +1821,16 @@ A memória Flash do rádio suporta um número limitado de apagamentos por setor.
 
 ### 29.1 Firmware
 
-Requer CMake, Ninja e `arm-none-eabi-gcc`:
+As imagens de release são compiladas em Docker: `./compile-with-docker.sh` (só o firmware) ou `./build-all.sh` (firmware, todos os apps e verificação do módulo CHIRP, tudo em `build/dist/`).
+
+Sem Docker, requer CMake, Ninja e `arm-none-eabi-gcc`:
 
 ```bash
 cmake --preset Fusion --fresh
 cmake --build --preset Fusion
 ```
 
-Saída em `build/Fusion/`: `gogufw.bin` e a imagem multiboot `f4hwn.gogufw.v3.6.2m.bin`.
+Saída em `build/Fusion/`: `kleanfw.bin` e a imagem multiboot `f4hwn.kleanfw.v0.1.0.bin`.
 
 Veja também `BUILD_WITH_VSCODE.md`, `BUILD_VSCODE_MAC.md` e `compile-with-docker.sh` (build em Docker).
 
@@ -1838,7 +1846,7 @@ Cada app tem no máximo 4 KiB de código.
 
 ### 29.3 Espaço e otimizações de build
 
-A Flash interna é de **120.832 bytes**, e o build atual usa **120.516 bytes** (incluindo os 920 bytes do stub do multiboot): restam **316 bytes**. Recursos novos precisam liberar espaço.
+A Flash interna é de **120.832 bytes**, e o build atual usa **120.772 bytes** (incluindo os 920 bytes do stub do multiboot): restam **60 bytes**. Recursos novos precisam liberar espaço.
 
 Técnicas já usadas no projeto:
 
@@ -1848,10 +1856,17 @@ Técnicas já usadas no projeto:
 - Recursos desligados no Fusion para liberar Flash/RAM: K5Viewer, RF Log Lite, Audio Scope, barra de progresso do scan (`SCAN_PROGRESS`), AirCopy, NOAA, Voice, Alarm, TX1750, DTMF Calling e Resume State (retomar scan/Spectrum/FM ao ligar).
 - Memória do Spectrum alocada só enquanto ele está aberto.
 - Gravação adiada na Flash SPI (seção 27.5): o driver `App/driver/py25q16.c` mantém o setor alterado no cache e chama `PY25Q16_Flush()` no tick ocioso de 2 s, ao trocar de setor e antes de reset, troca de banco, apps, Spectrum e multiboot. Código novo que reinicie o rádio ou reaproveite o cache deve chamar `PY25Q16_Flush()` antes.
-- Pilha mínima de **4 KiB** verificada no link. A RAM está praticamente cheia (cerca de 16.328 de 16.384 bytes), então evite novos buffers globais.
+- Pilha mínima de **4 KiB** verificada no link. A RAM está praticamente cheia (15.640 de 16.384 bytes no link, mais a reserva de pilha), então evite novos buffers globais.
 
 Os recursos ficam em flags `ENABLE_*` no `CMakePresets.json`. Para liberar espaço, desligue os que você não usa no preset `Fusion` (por exemplo `ENABLE_GOGUFW_CALLTX` ou `ENABLE_FEAT_F4HWN_SCAN_RSSI`) e recompile.
 
 ---
 
-*Este firmware é fornecido como está. Você é responsável por cumprir as regras de licenciamento, frequência, potência e emissão do seu país.*
+## 30. Avisos legais e licenças
+
+- **Sem garantia.** O KLEANFW é fornecido "NO ESTADO EM QUE SE ENCONTRA", sem garantias ou condições de qualquer tipo, e os autores não respondem por danos (Licença Apache 2.0, seções 7 e 8). Gravar firmware customizado pode inutilizar o rádio ou apagar a calibração. Faça backup do rádio e da calibração e tenha uma imagem DFU de recuperação.
+- **Sem afiliação.** O KLEANFW é um projeto independente, sem afiliação, patrocínio ou endosso do Gogu-Qs, do Armel / F4HWN, da Quansheng ou de qualquer outro projeto citado. Quansheng, UV-K1 e UV-K5 são marcas de seus donos, e GOGUFW é o nome do projeto do Gogu-Qs. Esses nomes aparecem só para indicar a origem do código e o hardware suportado.
+- **Regulamentação.** Você é responsável por cumprir as regras de licenciamento, frequência, potência, emissão e certificação de equipamentos do seu país. Um firmware modificado pode invalidar a homologação do rádio (por exemplo, na Anatel). `F Lock = UNLOCK ALL` permite TX fora das frequências em que você está autorizado a transmitir.
+- **Scrambler e criptografia.** Transmissões codificadas para ocultar o significado são proibidas no serviço de radioamador (Regulamento de Radiocomunicações da UIT, Artigo 25.2A; nos EUA, FCC 47 CFR §97.113(a)(4)) e restritas em muitos outros serviços. Use o scrambler, o HOP e a CryKey só onde forem permitidos. Nenhum deles dá segurança: o HOP é uma inversão de espectro com salto, e a criptografia do Messenger não tem autenticação.
+- **Software criptográfico.** O firmware contém criptografia (XTEA). Verifique as leis do seu país sobre uso, importação e exportação.
+- **Licenças.** O firmware é distribuído pela [Licença Apache 2.0](LICENSE), e o arquivo [NOTICE](NOTICE) deve acompanhar qualquer redistribuição. Os arquivos alterados pelo KLEANFW trazem o aviso "Modified by AislanJefferson for KLEANFW". O módulo CHIRP é GPL v2 ou posterior ([LICENSE-GPL-2.0.txt](LICENSE-GPL-2.0.txt)). CMSIS e CherryUSB (Apache-2.0) e o printf de mpaland (MIT) mantêm as próprias licenças.

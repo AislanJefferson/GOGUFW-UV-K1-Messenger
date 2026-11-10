@@ -1,6 +1,146 @@
 # Changelog
 
-## Unreleased
+KLEANFW is a modified version of GOGUFW by Gogu-Qs. The KLEANFW releases come
+first. The GOGUFW history (upstream, by Gogu-Qs) is kept unchanged below them.
+
+## KLEANFW 0.1.0 — 2026-11-10
+
+First KLEANFW release, based on GOGUFW 3.6.2. Radio identity
+`KLEANFW v0.1.0`, multiboot image `f4hwn.kleanfw.v0.1.0.bin`, CHIRP module
+`KLEANFW_0.1.0_chirp_module.py`. Image 120,772 / 120,832 bytes (60 bytes
+free) including the 920-byte multiboot load image; RAM 15,640 / 16,384 bytes
+at link time.
+
+### Upgrade notes
+
+- The first boot runs the version-change reset: KEY_LOCK, MENU_LOCK, SET_KEY
+  and SET_INV are cleared, `SetRxG` is turned back ON, invalid boot-logo lines
+  and erased dBm corrections are repaired (one write to the settings sector).
+- Use `KLEANFW_0.1.0_chirp_module.py`. The CHIRP model is now
+  **UV-K1 / UV-K5 V3 KLEANFW**; GOGUFW modules are not compatible.
+- Reinstall `FMVFO.app`, `FMMemory.app` and `Search.app` from this release if
+  they come from a GOGUFW build older than 3.6.0.
+- A CryKey set with the `Crypto.app` of a development build is not read:
+  enter it again in **MENU → Msg → CryKey**.
+
+### Added
+
+- HOP voice scrambler (scramble type 11): each PTT sends an 8-byte FSK seed
+  burst (~0.25 s), then the inversion carrier changes every 500 ms over 16
+  carriers following XTEA(CryKey, seed ‖ slot). Carrier windows per bandwidth
+  (N/N+ 2600–3100 Hz, Wide 2900–3400 Hz), a resync burst every 8 s, fade
+  tolerance (the RX session ends 2 s after the last signal) and a ±8 ms guard
+  mute at each hop. A HOP TX without a session uses a fixed key-derived
+  carrier, so it is never sent in clear. Not encryption.
+- CryKey (**MENU → Msg → CryKey**, up to 10 characters, also in CHIRP): with
+  a passphrase, Messenger TEXT packets are sent as type 6, XTEA-CTR encrypted
+  with a random salt and a 16-bit key check. No MAC. Stored at 0x012140 per
+  multiboot settings bank, written only when it changes.
+- SCRAMBLE side-key action: toggles the channel scrambler and restores its
+  last type (HOP by default).
+- F4HWN menu categories (`ENABLE_FEAT_F4HWN_MENU_CAT`) with an `Msg` category;
+  SetRxG under Audio. The status bar shows `MENU` or the open category.
+- Spectrum MR mode sweeps the active scan list (key 4 moves to the next list,
+  the label shows the list and count, bottom labels show the position inside
+  the list) and shows the channel frequency, modulation and listen bandwidth
+  like VFO.
+- Spectrum key 6 (25k / 12.5k / 6.25k) works in MR as in VFO and persists for
+  every channel until EXIT or a long MENU.
+- Spectrum backlight follows `BLTime`; SIDE2 runs the F+8 cycle (always on →
+  always off → `BLTime`) with the F+8 bulb in the status bar.
+- `build-all.sh` builds the firmware, every overlay app and checks the CHIRP
+  module, collecting everything in `build/dist/`.
+- MANUAL.md: complete user manual in Portuguese, with every menu item.
+
+### Changed
+
+- SPI flash wear: the PY25Q16 driver defers sector erases and commits a
+  changed sector once (2 s after the last write while idle, on another sector,
+  or before reset, bank switch, overlay app, Spectrum or multiboot work).
+  Messenger IDs are reserved in blocks of 64. Mute no longer writes volume 0
+  to the calibration sector. Leaving the menu commits pending writes on the
+  next idle tick.
+- F Lock offers only BRASIL (Anatel Ato 14448 general-use channels,
+  462.5625–462.7125 and 467.5625–467.7125 MHz, default), DISABLE ALL and
+  UNLOCK ALL. Other stored plans load as BRASIL.
+- Fresh channels and VFOs default to Narrow (12.5 kHz); a factory reset turns
+  SetNFM off.
+- Typing a VFO frequency starts a clean simplex setting (tones, offset and
+  reverse cleared); EXIT restores and re-saves the previous VFO.
+- Spectrum PTT×2: a peak that matches a saved MR channel opens it in MR mode;
+  any other peak lands in the VFO like a typed frequency.
+- Spectrum listen bandwidth starts from the VFO/channel mode and uses the VFO
+  REG_43 filters. Spectrum UI follows the GOGUFW HOP branch (own battery icon,
+  no forced `M---` refresh) with 16..2048 VFO samples and band-edge clamping.
+- The fixed and HOP scramblers are FM-only on TX and RX (menu preview, icon
+  and the SCRAMBLE key included).
+- Boot always behaves as `POnMsg = NONE`; the option was removed.
+- CHIRP module renamed to `KLEANFW_0.1.0_chirp_module.py` with the CryKey,
+  HOP and three-plan F Lock fields; older modules were removed.
+- Name, version and build artifacts: `KLEANFW v0.1.0`, edition `KLFW`,
+  `kleanfw.bin`, multiboot `f4hwn.kleanfw.v0.1.0.bin`, the `KLEANFW APPS`
+  header and the `KLEANFW MULTIBOOT` banner. `HostVersion` stays
+  `v7 GGFW v6.3.0` so UV Studio keeps selecting the matching app catalog.
+
+### Removed from the Fusion build
+
+- K5Viewer, Audio Scope, RF Log Lite, Resume State and the scan progress bar
+  (`SCAN_PROGRESS`), to fit the flash. The code stays behind its build flag.
+- PMR 446, GMRS/FRS/MURS, CA, FCC/CE/GB HAM and 430/438 F Lock plans and their
+  build flags.
+- `Crypto.app` (the CryKey is a menu item).
+
+### Fixed
+
+- The radio froze on any USB serial command (UV Studio Apps/handshake, CHIRP
+  over USB): the USB reply buffer is now 4-byte aligned and
+  `-Wl,--sort-section=alignment` is no longer used.
+- Spectrum: the graph froze with more than 128 MR channels/steps; the sparse
+  ruler stride could wrap with more than 32768 samples; SIDE1 excluded the
+  first channel and its list emptied after 256 entries; the MR and VFO fixed
+  listen lost the channel profile or never reopened the squelch; LNA/PGA gains
+  leaked into normal RX; the 6.25k listen filter flipped a TX power bit when
+  copied to the VFO.
+- AM: builds without `ENABLE_FEAT_F4HWN_AUDIO` write the stock REG_2B/2F
+  values again.
+- Roger = MDC no longer leaves the FSK sync word changed.
+- Messenger: the 30 ms squelch-close fallback runs only while the FSK sidecar
+  is armed.
+- UI overlaps: TX lock icon over `CALLTX`, scan-range tone label on the bottom
+  line, FM pointer into the band-edge labels.
+- The per-screen key/display tables are sized by `DISPLAY_N_ELEM`, so builds
+  without Messenger and RF Log (RDSProbe) compile again.
+- HOP: an RX session now ends when ScraEn is turned off (before, the guard
+  mute kept cutting the audio every 500 ms and the idle flash commit stayed
+  blocked until the squelch closed). The FM + HOP + ScraEn rule is one
+  predicate shared by every HOP path (-48 B).
+- HOP/CryKey now need `ENABLE_FEAT_F4HWN`, like the HOP menu entry: a
+  non-F4HWN build could store a scrambler type it then rejected and transmit
+  in clear. No change for Fusion.
+
+### Known issues and proposals
+
+- Squelch chopping on a strong repeater signal with STE ON: a false CTCSS/DCS
+  tail ends the reception while the carrier is up (same in GOGUFW and F4HWN).
+  Workaround: STE OFF on such channels (MANUAL, STE item and section 28). A
+  code proposal that resumes audio when the carrier is still present is kept,
+  untested on the radio, in tag `archive/ste-tail-resume`.
+- Deferred flash writes are committed only while the radio is idle (no RX,
+  TX, Messenger transaction or HOP session). A setting changed during a long
+  reception and followed by a power-off before the reception ends is lost.
+  Committing during RX would need a radio test (erase time vs. audio), so it
+  is not changed.
+- HOP RX timing: the receiver stamps the seed burst by polling REG_0C for up
+  to 80 ms. If the main loop serves the FSK sync late (both IRQ bits at once)
+  the slot clock is offset until the next 8 s resync, and on a HOP channel a
+  Messenger frame whose first FIFO IRQ comes after 80 ms does not get the
+  Dual Watch hold. Needs a radio A/B test before any change.
+- Spectrum: with the SIDE2 fixed light, the bulb icon covers the 10th
+  character of a 10-character channel name (documented in the MANUAL).
+
+<details>
+<summary>Development notes before 0.1.0 (chronological, newest first; some
+items were superseded by later ones, such as image sizes and build flags)</summary>
 
 - Spectrum: the backlight now follows BLTime instead of staying on. Keys
   restart the timer (EXIT on a dark screen only lights it, as on the main
@@ -249,6 +389,15 @@
 - Final image: 118,932 / 120,832 bytes (1,900 bytes free), including the
   920-byte multiboot load image. Linked firmware uses 118,012 bytes; RAM usage
   is 16,328 / 16,384 bytes, and multiboot RAM-stub isolation checks pass.
+
+</details>
+
+---
+
+# GOGUFW history (upstream, by Gogu-Qs)
+
+The entries below are the GOGUFW changelog as published by Gogu-Qs up to
+GOGUFW 3.6.2, the base of KLEANFW 0.1.0.
 
 ## GOGUFW 3.6.2 — 2026-11-07
 

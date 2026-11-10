@@ -1,34 +1,38 @@
-# GOGUFW 2.0.6 - VS Code build (macOS)
+# KLEANFW - native build on macOS (no Docker)
 
 ## Requirements
-- CMake
+- CMake (3.22 or newer)
 - Ninja
 - ARM GNU embedded toolchain (`arm-none-eabi-gcc`)
-- VS Code extension: CMake Tools
+- Optional: VS Code with the CMake Tools extension
 
 The included toolchain file searches both PATH and common Homebrew locations:
 - `/opt/homebrew/bin` (Apple Silicon)
 - `/usr/local/bin` (Intel/Homebrew)
 
-## Recommended build
-1. Open this project folder in VS Code.
-2. Install the recommended **CMake Tools** extension if prompted.
-3. Press `Cmd+Shift+B`.
-4. Select/default task: **GGFW: Build Fusion**.
-
-The task always runs `cmake --preset Fusion` before building, so a fresh ZIP does not need a pre-existing `build/` directory.
-
-The same build can be run directly from Terminal:
+## Build
 
 ```bash
 cmake --preset Fusion
 cmake --build --preset Fusion
 ```
 
+With CMake Tools, select the `Fusion` configure preset and run **CMake: Build**.
+
 ## Clean build
-Command Palette -> `Tasks: Run Task` -> **GGFW: Clean + Build Fusion**.
+
+```bash
+rm -rf build/Fusion
+cmake --preset Fusion
+cmake --build --preset Fusion
+```
 
 ## Important
-Do not copy an old `build/` directory between machines or project folders. CMake caches absolute paths.
+- Do not copy an old `build/` directory between machines or project folders.
+  CMake caches absolute paths.
+- The release images are built with the Docker toolchain
+  (`./compile-with-docker.sh`). A different GCC version can produce a different
+  size, and the image must not exceed 120,832 bytes.
 
-The generated firmware files are written to `build/Fusion/` with the `gogufw` target name.
+The generated firmware files are written to `build/Fusion/` with the `kleanfw`
+target name.
