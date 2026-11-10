@@ -27,6 +27,8 @@
 #endif
 
 #include "driver/backlight.h"
+#include "app/action.h"
+#include "bitmaps.h"
 #include "frequencies.h"
 #include "ui/helper.h"
 #include "ui/main.h"
@@ -127,7 +129,6 @@ SpectrumSettings settings = {.stepsCount = STEPS_64,
                              .frequencyChangeStep = 80000,
                              .scanDelay = 3200,
                              .rssiTriggerLevel = 150,
-                             .backlightState = true,
                              .bw = BK4819_FILTER_BW_WIDE,
                              .listenBw = BK4819_FILTER_BW_WIDE,
                              .modulationType = false,
@@ -940,6 +941,8 @@ static void ToggleRX(bool on)
 
     if (on)
     {
+        // A transmission found lights the screen and restarts BLTime.
+        BACKLIGHT_TurnOn();
         listenLowCount = 0;
         // Seed with the RSSI that opened the squelch so the very first measure
         // can already detect an abrupt drop (quick-PTT case where the operator
@@ -1603,21 +1606,6 @@ static void ToggleListeningBW()
     redrawScreen = true;
 }
 
-static void ToggleBacklight()
-{
-    settings.backlightState = !settings.backlightState;
-    if (settings.backlightState)
-    {
-        // BACKLIGHT_TurnOn();
-        BACKLIGHT_SetBrightness(gEeprom.BACKLIGHT_MAX);
-    }
-    else
-    {
-        // BACKLIGHT_TurnOff();
-        BACKLIGHT_SetBrightness(gEeprom.BACKLIGHT_MIN);
-    }
-}
-
 static void ToggleStepsCount()
 {
     settings.stepsCount = (settings.stepsCount == STEPS_2048)
@@ -2010,6 +1998,15 @@ static void BuildCurrentSpectrumTopY(uint8_t *topY)
         SmoothTopY(topY);
 }
 
+// Bulb of the fixed SIDE2 light (same icons as F+8), next to the battery.
+static void DrawBacklightIcon()
+{
+    if (gBackLight)
+        memcpy(gStatusLine + 107,
+               gEeprom.BACKLIGHT_TIME == 0 ? gFontLightOff : gFontLight,
+               sizeof(gFontLight));
+}
+
 static void DrawStatus()
 {
     if (manualSetFlag)
@@ -2040,6 +2037,7 @@ static void DrawStatus()
 
     if (spectrumChannelMode && spectrumDisplayName[0])
         UI_PrintStringSmallBufferNormal(spectrumDisplayName, gStatusLine + 43);
+    DrawBacklightIcon();
 
     BOARD_ADC_GetBatteryInfo(&gBatteryVoltages[gBatteryCheckCounter++ % 4],
                              &gBatteryCurrent);
@@ -2103,6 +2101,7 @@ static void ShowChannelName(uint32_t f)
             UI_PrintStringSmallBufferNormal(channelName, gStatusLine + 43);
         }
     }
+    DrawBacklightIcon();
 
     ST7565_BlitStatusLine();
 }
@@ -2377,7 +2376,9 @@ static bool OnKeyDownCommon(uint8_t key) {
         ToggleListeningBW();
         return true;
     case KEY_SIDE2:
-        ToggleBacklight();
+        // Same 3-step cycle as F+8: always on, always off, back to BLTime.
+        ACTION_BackLightOnDemand();
+        redrawStatus = true;
         return true;
     }
     return false;
@@ -2756,6 +2757,16 @@ static bool HandleUserInput()
 
     if (kbd.counter == 3 || kbd.counter == 16)
     {
+        // Keys restart BLTime; EXIT on a dark screen only lights it, as on
+        // the main screen. A fixed SIDE2 light (BLTime 0/61) is respected.
+        if (kbd.current == KEY_EXIT && !BACKLIGHT_IsOn() &&
+            gEeprom.BACKLIGHT_TIME > 0)
+        {
+            BACKLIGHT_TurnOn();
+            return true;
+        }
+        BACKLIGHT_TurnOn();
+
         if (currentState == SPECTRUM && kbd.current == KEY_MENU)
         {
             if (kbd.counter == 3)
@@ -3139,11 +3150,15 @@ static void Tick()
         BACKLIGHT_Update();
     }
 
-#ifdef ENABLE_SCAN_RANGES
     if (gNextTimeslice_500ms)
     {
         gNextTimeslice_500ms = false;
 
+        // BLTime runs here: this loop bypasses the main 500 ms tick.
+        if (gBacklightCountdown_500ms > 0 && --gBacklightCountdown_500ms == 0)
+            BACKLIGHT_TurnOff();
+
+#ifdef ENABLE_SCAN_RANGES
         // For large scans (>128 steps), refresh display periodically but
         // wait for the full sweep to complete before triggering listen mode.
         // This avoids showing stale rssiHistory data from a previous sweep.
@@ -3152,8 +3167,8 @@ static void Tick()
             redrawScreen = true;
             preventKeypress = false;
         }
-    }
 #endif
+    }
 
     if (!preventKeypress)
     {
@@ -3212,7 +3227,6 @@ void APP_RunSpectrum()
 {
     SpectrumScratch_t scratch;
     spectrumScratch = &scratch;
-    settings.backlightState = gEeprom.BACKLIGHT_TIME == 0 ? false : true;
 
     // TX here coz it always? set to active VFO
     vfo = gEeprom.TX_VFO;
@@ -3324,6 +3338,7 @@ void APP_RunSpectrum()
         Tick();
     }
 
-    BACKLIGHT_TurnOn();
+    // Leave any fixed SIDE2 light behind: restore BLTime and light up.
+    ACTION_BackLight();
     spectrumScratch = NULL;
 }

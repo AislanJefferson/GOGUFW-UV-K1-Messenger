@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Spectrum: the backlight now follows BLTime instead of staying on. Keys
+  restart the timer (EXIT on a dark screen only lights it, as on the main
+  screen). Finding a transmission lights the screen and restarts the
+  timer; the end of the transmission leaves the light as it is. SIDE2 now runs the F+8 cycle (always on, always off, back to
+  BLTime) with the F+8 bulb next to the battery; the fixed light holds
+  against keys and transmissions and is cancelled on exit. Before, SIDE2
+  toggled BLMax / BLMin outside the timer. +108 B of program flash.
 - Fixed: the radio froze on any USB serial command (UV Studio Apps/handshake,
   CHIRP over USB). The `-Wl,--sort-section=alignment` link flag placed the USB
   reply buffer at an odd address, and the 16-bit store of the reply footer

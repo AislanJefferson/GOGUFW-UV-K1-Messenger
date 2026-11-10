@@ -1409,12 +1409,15 @@ Canais criados pela busca mantêm a potência que estava em uso, ficam em **NARR
 | **6** | Largura de banda de escuta 25k / 12,5k / 6,25k, aplicada na hora. Em MR vale para todos os canais, no gráfico e na escuta, até sair ou segurar MENU; antes dela, cada canal usa a própria banda. O canal não muda |
 | **UP/DOWN** | Desloca a faixa / retoma a varredura |
 | **SIDE1** | Ignora o pico atual (o canal ou passo que está tocando) até sair do Spectrum |
-| **SIDE2** | Luz no máximo / mínimo |
+| **SIDE2** | Luz sempre acesa → sempre apagada → automática (como **F+8**). Vale até sair do Spectrum |
 | **Segurar MENU** | Volta tudo ao padrão |
 | **PTT** | Para no pico e escuta |
 | **EXIT** | Sai. Em VFO salva o passo de varredura, o número de pontos, o topo da escala e o nível de disparo; em MR não grava nada |
 
 Em MR, as teclas 1, 7, 2, 8, 5 e 0 ficam inativas: o gráfico mostra a lista inteira, sem uma faixa para deslocar ou digitar, e cada canal usa a própria modulação.
+
+**Luz de fundo:** segue o `BLTime`. Qualquer tecla acende a luz e reinicia o tempo, e **EXIT** com a tela apagada só acende. Quando uma transmissão é encontrada, a luz acende e o tempo recomeça. O fim da transmissão não muda a luz. Com `BLTime = OFF` a luz fica no `BLMin`; com `ON` fica sempre acesa.
+- **Luz fixa (SIDE2):** o 1º toque deixa a luz sempre acesa e o 2º sempre apagada, mesmo com teclas e transmissões; o 3º volta ao `BLTime`. A barra de status mostra a lâmpada do **F+8** ao lado da bateria (cheia = acesa, vazia = apagada); com ela, um nome de canal de 10 letras perde a última. Com a luz apagada fixa, **EXIT** sai direto. Ao sair do Spectrum a luz fixa é cancelada, inclusive a que vinha do **F+8**.
 
 **Ignorar um canal (SIDE1):** funciona como excluir no scan, mas só vale enquanto o Spectrum está aberto e não grava nada na flash. O canal ou passo some do gráfico (a coluna fica vazia), deixa de ser medido, e a varredura continua.
 - Sem pico ainda, por exemplo logo depois de outra exclusão, o SIDE1 não faz nada. Espere a varredura achar o próximo sinal.
