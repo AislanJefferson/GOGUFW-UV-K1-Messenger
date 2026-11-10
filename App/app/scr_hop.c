@@ -189,6 +189,12 @@ void SCR_HOP_Stop(void)
     gScrHop.rx_wait = 0;
 }
 
+bool SCR_HOP_VfoUsesHop(const VFO_Info_t *vfo)
+{
+    return vfo->SCRAMBLING_TYPE == SCRAMBLE_TYPE_HOP &&
+           vfo->Modulation == MODULATION_FM && gSetting_ScrambleEnable;
+}
+
 void SCR_HOP_Tick(void)
 {
     if (!gScrHop.active)
@@ -199,8 +205,7 @@ void SCR_HOP_Tick(void)
         if (FUNCTION_IsRx())
             gScrHop.last_rx = SCHEDULER_GetMs();
         if (SCHEDULER_GetMs() - gScrHop.last_rx > HOP_HANG_MS ||
-            gRxVfo->SCRAMBLING_TYPE != SCRAMBLE_TYPE_HOP ||
-            gRxVfo->Modulation != MODULATION_FM) {
+            !SCR_HOP_VfoUsesHop(gRxVfo)) {
             SCR_HOP_Stop();
             return;
         }

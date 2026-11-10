@@ -42,6 +42,10 @@ void SCR_HOP_TxBurst(uint16_t idx);
 bool SCR_HOP_RxStart(const uint16_t *words, uint32_t stamp_ms);
 void SCR_HOP_Stop(void);
 void SCR_HOP_Tick(void);
+/* HOP is active on this VFO: same rule as RADIO_ApplyScramble() (FM only,
+ * ScraEn on). Every HOP path that bypasses RADIO_ApplyScramble() uses it. */
+struct VFO_Info_t;
+bool SCR_HOP_VfoUsesHop(const struct VFO_Info_t *vfo);
 
 #endif
 #endif

@@ -239,9 +239,7 @@ void FUNCTION_Transmit()
     RADIO_ApplyScramble(gCurrentVfo, true);
 #ifdef ENABLE_GOGUFW_CRYPTO
     /* HOP: send the seed burst (NO_FSK_TX does not apply: HOP needs it). */
-    if (gCurrentVfo->SCRAMBLING_TYPE == SCRAMBLE_TYPE_HOP && gSetting_ScrambleEnable &&
-        gCurrentVfo->Modulation == MODULATION_FM &&
-        !gCallToneTxActive)
+    if (SCR_HOP_VfoUsesHop(gCurrentVfo) && !gCallToneTxActive)
         SCR_HOP_TxBurst(0);
 #endif
 
