@@ -77,8 +77,8 @@ O KLEANFW mantém o conjunto de recursos de rádio do F4HWN e do GOGUFW. Princip
 | `KLEANFW-vX.Y.Z.bin` | Firmware normal |
 | `KLEANFW-vX.Y.Z-multiboot.bin` | Firmware no formato multiboot do F4HWN (mesma imagem) |
 | `KLEANFW_X.Y.Z_chirp_module.py` | Módulo CHIRP da mesma versão |
-| `FMVFO.app` + `FMMemory.app` | Rádio FM (os **dois** são obrigatórios) |
-| `Search.app` | Necessário para F+4 e F+\* |
+| `FM-Search-Apps.zip` | `FMVFO.app` + `FMMemory.app` (rádio FM, os **dois** são obrigatórios) e `Search.app` (necessário para F+4 e F+\*) |
+| `SHA256SUMS.txt` | Somas de verificação dos arquivos |
 | `Apps.zip` | Pacote de apps compatíveis (todos os do código, menos o Beam) |
 
 ### 2.2 Passo a passo
