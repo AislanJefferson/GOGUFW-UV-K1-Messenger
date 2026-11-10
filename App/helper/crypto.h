@@ -7,7 +7,9 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#if defined(ENABLE_MESSENGER) && defined(ENABLE_GOGUFW_SCRAMBLER)
+/* Same condition as the "HOP" entry of gSubMenu_SCRAMBLER (ui/menu.c): without
+ * F4HWN there is no HOP menu entry, so SCRAMBLE_TYPE_HOP must not exist. */
+#if defined(ENABLE_FEAT_F4HWN) && defined(ENABLE_MESSENGER) && defined(ENABLE_GOGUFW_SCRAMBLER)
 #define ENABLE_GOGUFW_CRYPTO 1
 
 #define CRYPTO_KEY_TEXT_LEN   10u
