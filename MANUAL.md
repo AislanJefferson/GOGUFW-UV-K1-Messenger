@@ -79,7 +79,7 @@ O KLEANFW mantém o conjunto de recursos de rádio do F4HWN e do GOGUFW. Princip
 | `KLEANFW_X.Y.Z_chirp_module.py` | Módulo CHIRP da mesma versão |
 | `FMVFO.app` + `FMMemory.app` | Rádio FM (os **dois** são obrigatórios) |
 | `Search.app` | Necessário para F+4 e F+\* |
-| `Apps.zip` | Pacote de apps compatíveis |
+| `Apps.zip` | Pacote de apps compatíveis (todos os do código, menos o Beam) |
 
 ### 2.2 Passo a passo
 

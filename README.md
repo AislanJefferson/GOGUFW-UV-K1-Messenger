@@ -43,7 +43,8 @@ Release 0.1.0 contains:
 - `KLEANFW_0.1.0_chirp_module.py`: the matching custom CHIRP module;
 - `FMVFO.app` and `FMMemory.app`: the two required Broadcast FM overlays;
 - `Search.app`: the Frequency/Tone Search overlay used by F+4 and F+STAR;
-- `Apps.zip`: every overlay app built from this source tree.
+- `Apps.zip`: every overlay app built from this source tree, except the
+  unsupported Beam.
 
 **Broadcast FM is not a resident screen. Install both `FMVFO.app` and
 `FMMemory.app`; installing only one leaves mode switching incomplete. Install
