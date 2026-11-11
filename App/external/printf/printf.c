@@ -604,9 +604,13 @@ static int _vsnprintf(out_fct_type out, char* buffer, const size_t maxlen, const
       switch (*format) {
         case '0': flags |= FLAGS_ZEROPAD; format++; n = 1U; break;
         case '-': flags |= FLAGS_LEFT;    format++; n = 1U; break;
+#if !defined(PRINTF_DISABLE_SUPPORT_RARE)
         case '+': flags |= FLAGS_PLUS;    format++; n = 1U; break;
+#endif
         case ' ': flags |= FLAGS_SPACE;   format++; n = 1U; break;
+#if !defined(PRINTF_DISABLE_SUPPORT_RARE)
         case '#': flags |= FLAGS_HASH;    format++; n = 1U; break;
+#endif
         default :                                   n = 0U; break;
       }
     } while (n);
@@ -644,6 +648,7 @@ static int _vsnprintf(out_fct_type out, char* buffer, const size_t maxlen, const
     }
 
     // evaluate length field
+#if !defined(PRINTF_DISABLE_SUPPORT_RARE)
     switch (*format) {
       case 'l' :
         flags |= FLAGS_LONG;
@@ -678,16 +683,20 @@ static int _vsnprintf(out_fct_type out, char* buffer, const size_t maxlen, const
       default :
         break;
     }
+#endif
 
     // evaluate specifier
     switch (*format) {
       case 'd' :
-      case 'i' :
       case 'u' :
-      case 'x' :
       case 'X' :
       case 'o' :
-      case 'b' : {
+#if !defined(PRINTF_DISABLE_SUPPORT_RARE)
+      case 'i' :
+      case 'x' :
+      case 'b' :
+#endif
+      {
         // set the base
         unsigned int base;
         if (*format == 'x' || *format == 'X') {
@@ -819,6 +828,7 @@ static int _vsnprintf(out_fct_type out, char* buffer, const size_t maxlen, const
         break;
       }
 
+#if !defined(PRINTF_DISABLE_SUPPORT_RARE)
       case 'p' : {
         width = sizeof(void*) * 2U;
         flags |= FLAGS_ZEROPAD | FLAGS_UPPERCASE;
@@ -836,6 +846,7 @@ static int _vsnprintf(out_fct_type out, char* buffer, const size_t maxlen, const
         format++;
         break;
       }
+#endif  // PRINTF_DISABLE_SUPPORT_RARE
 
       case '%' :
         out('%', buffer, idx++, maxlen);
