@@ -106,8 +106,8 @@ LoopFillZerobss:
   cmp r2, r4
   bcc FillZerobss
 
-/* Call static constructors */
-  bl __libc_init_array
+/* No static constructors: the firmware is C only and links with
+   -nostartfiles, so __libc_init_array is not called. */
 /* Call the application s entry point.*/
   bl main
 

@@ -59,6 +59,11 @@ set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -fno-rtti -fno-exceptions -fno-threadsafe-
 set(CMAKE_EXE_LINKER_FLAGS "${TARGET_FLAGS}")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --specs=nano.specs")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--gc-sections")
+# No crt0/crti/crtbegin: Reset_Handler (Core/startup_py32f071xx.s) is the
+# entry point and there are no static constructors or destructors, so the
+# libc start files only add dead code (frame_dummy, __do_global_dtors_aux,
+# _init/_fini). Measured -184 B, plus -76 B from dropping __libc_init_array.
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -nostartfiles")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--print-memory-usage")
 # Not used: -Wl,--sort-section=alignment (-100 B) moves byte arrays to odd
 # addresses; code that casts them to wider structs then HardFaults (it froze
