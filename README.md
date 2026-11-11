@@ -53,8 +53,9 @@ direction:
   and signal strength, on demand or every 30 s to 10 min.
 
 **Listen and scan**
-- **Spectrum.** Sweep a frequency range, or only the channels of the active
-  scan list, then listen to a peak or jump straight to its saved channel.
+- **Spectrum.** Sweep a frequency range, or only the channels of the current
+  channel's scan list, then listen to a peak or jump straight to its saved
+  channel.
 - **Scanning** with an RSSI trail, scan-list switching on the fly and Full
   Watch over up to four channels.
 - **Broadcast FM** with 48 named memories, through two small overlay apps.

@@ -104,7 +104,7 @@ static SpectrumScratch_t *spectrumScratch;
 
 static bool spectrumChannelMode = false;
 static uint16_t spectrumChannelCount = 0;
-static uint8_t spectrumList; // scan list swept in MR mode (25 = ALL)
+static uint8_t spectrumList; // MR sweep: 0 = every channel, 1..24 = list, 25 = ALL
 static uint16_t spectrumDisplayChannel;
 static uint16_t spectrumDisplayOrdinal = 0;
 static uint32_t spectrumDisplayFreq;
@@ -746,14 +746,14 @@ static uint16_t SpectrumChannelOrdinal(uint16_t wantedChannel)
     return 0;
 }
 
-// MR mode sweeps the active scan list (excluded channels skipped, like the
-// memory scan). An empty list falls back to every valid channel, shown as ALL.
+// MR mode sweeps spectrumList: a scan list (excluded channels skipped, like
+// the memory scan), ALL (channels in any list) or, with 0, every valid
+// channel. An empty list falls back to ALL, then to every valid channel.
 static void LoadSpectrumChannels(void)
 {
-    spectrumList = UI_MAIN_GetActiveScanList();
-    bool checkList = true;
     for (;;)
     {
+        const bool checkList = spectrumList != 0;
         spectrumChannelCount = 0;
         spectrumCacheOrdinal = 0xFFFF;
         memset(spectrumValidChannels, 0, sizeof(spectrumValidChannels));
@@ -769,8 +769,7 @@ static void LoadSpectrumChannels(void)
         }
         if (spectrumChannelCount || !checkList)
             return;
-        checkList = false;
-        spectrumList = MR_CHANNELS_LIST + 1;
+        spectrumList = spectrumList > MR_CHANNELS_LIST ? 0 : MR_CHANNELS_LIST + 1;
     }
 }
 
@@ -2436,9 +2435,15 @@ static void OnKeyDown(uint8_t key) {
     case KEY_4:
         if (spectrumChannelMode)
         {
-            // Next scan list. RAM only: no flash write here, a later
-            // settings save keeps it like a list chosen during a scan.
-            RADIO_NextValidList(1);
+            // Next list with channels, then ALL, then every channel (0).
+            // Local to Spectrum: the memory scan list (ScList) is untouched.
+            // RADIO_CheckValidList() accepts ALL, which ends the loop.
+            if (spectrumList > MR_CHANNELS_LIST)
+                spectrumList = 0;
+            else
+                do
+                    spectrumList++;
+                while (!RADIO_CheckValidList(spectrumList));
             LoadSpectrumChannels();
             spectrumDisplayChannel = 0xFFFF;
             CacheSpectrumChannel(0);
@@ -3261,6 +3266,8 @@ void APP_RunSpectrum()
 
     if (spectrumChannelMode)
     {
+        // Sweep the scan list of the channel on screen (ChList).
+        spectrumList = gTxVfo->SCANLIST_PARTICIPATION;
         LoadSpectrumChannels();
         if (spectrumChannelCount == 0)
             spectrumChannelMode = false;

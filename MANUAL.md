@@ -1386,12 +1386,12 @@ Canais criados pela busca mantêm a potência que estava em uso, ficam em **NARR
 
 **F + 5** abre o analisador.
 
-- **Em MR**: varre os canais da lista de scan ativa (**ScList** ou a última lista escolhida no scan) e mostra nome, frequência, modulação e banda de escuta do canal selecionado. Depois da tecla 6, a banda mostrada é a escolhida.
-  - Canais excluídos (MENU segurado) ficam de fora, como no scan de memória.
-  - **ALL** pega os canais que estão em alguma lista. Canais com `ChList OFF` ficam de fora.
-  - Com a prioridade ligada (`+`), os 2 canais prioritários ficam de fora de uma lista 01–24, mas aparecem em ALL.
-  - Se a lista não tiver nenhum canal válido, o Spectrum varre todos os canais válidos e mostra `ALL`.
-  - No canto superior esquerdo aparecem a lista e o número de canais varridos, por exemplo `ALL 42`, `RPT 12` ou `03 7`.
+- **Em MR**: varre a lista de scan do canal que estava na tela (**ChList**) e mostra nome, frequência, modulação e banda de escuta do canal selecionado. Depois da tecla 6, a banda mostrada é a escolhida. A **ScList** do scan de memória não é usada nem alterada.
+  - Canal com `ChList` **01–24**: varre os canais dessa lista. Canais excluídos (MENU segurado) ficam de fora, como no scan de memória. Com a prioridade ligada (`+`), os 2 canais prioritários também ficam de fora.
+  - Canal com `ChList` **ALL**: varre os canais que estão em alguma lista. Canais com `ChList OFF` e canais excluídos ficam de fora.
+  - Canal com `ChList` **OFF**: varre todos os canais gravados, com ou sem lista, inclusive os excluídos e os prioritários.
+  - Se a lista não tiver nenhum canal para varrer (por exemplo, o único canal dela está excluído), o Spectrum passa para `ALL` e, se `ALL` também estiver vazia, para todos os canais (`OFF`).
+  - No canto superior esquerdo aparecem a lista e o número de canais varridos, por exemplo `RPT 12`, `03 7`, `ALL 42` ou `OFF 60`.
   - Embaixo, `M:1` e `M:<n>` são a primeira e a última posição dentro da lista, não o número do canal. Uma lista com os canais 150–154 mostra `M:1` e `M:5`.
 - **Em VFO**: varre uma faixa contínua.
   - Durante a escuta, a barra de status mostra o nome do canal MR que tem exatamente a frequência do pico. Varrendo, ou sem canal nessa frequência, a barra fica sem nome.
@@ -1407,7 +1407,7 @@ Canais criados pela busca mantêm a potência que estava em uso, ficam em **NARR
 | **2 / 8** | Passo de deslocamento + / − |
 | **3 / 9** | Topo da escala +5 / −5 dB |
 | **\* / F** | Nível de disparo sobe / desce |
-| **4** | VFO: número de pontos 128 / 64 / 32 / 16 · MR: próxima lista de scan |
+| **4** | VFO: número de pontos 128 / 64 / 32 / 16 · MR: próxima lista com canais, depois `ALL`, depois `OFF` (todos os canais). Vale só no Spectrum: não muda a **ScList** nem a lista do canal |
 | **5** | Digitar uma frequência (\* = ponto decimal, MENU confirma) |
 | **0** | Muda a modulação (só em VFO) |
 | **6** | Largura de banda de escuta 25k / 12,5k / 6,25k, aplicada na hora. Em MR vale para todos os canais, no gráfico e na escuta, até sair ou segurar MENU; antes dela, cada canal usa a própria banda. O canal não muda |

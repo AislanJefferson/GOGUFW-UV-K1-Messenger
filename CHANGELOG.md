@@ -3,6 +3,23 @@
 KLEANFW is a modified version of GOGUFW by Gogu-Qs. The KLEANFW releases come
 first. The GOGUFW history (upstream, by Gogu-Qs) is kept unchanged below them.
 
+## Unreleased
+
+Image 120,816 / 120,832 bytes (16 bytes free); RAM 15,640 / 16,384 bytes at
+link time.
+
+### Changed
+
+- Spectrum (F+5) in MR mode sweeps the scan list of the channel on screen
+  (`ChList`) instead of the active memory scan list (`ScList`). `01`–`24`
+  sweeps that list and `ALL` sweeps the channels that are in any list, both
+  with the memory scan rules (excluded channels skipped). `OFF` sweeps every
+  saved channel, with or without a list, excluded and priority channels
+  included; the label shows `OFF <n>`. A list with nothing to sweep falls
+  back to `ALL`, then to every channel.
+- Spectrum key 4 (MR) is local to Spectrum: next list that has channels, then
+  `ALL`, then `OFF` (every channel). `ScList` is no longer changed.
+
 ## KLEANFW 0.1.0 — 2026-11-10
 
 First KLEANFW release, based on GOGUFW 3.6.2. Firmware identity

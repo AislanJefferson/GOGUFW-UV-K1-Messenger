@@ -292,11 +292,16 @@ uint8_t UI_MAIN_GetActiveScanList(void)
     return scan_list;
 }
 
-// Writes "ALL", the list name (up to 3 chars) or its 2-digit number at p,
-// NUL-terminated. Returns a pointer to the terminator.
+// Writes "OFF" (0), "ALL", the list name (up to 3 chars) or its 2-digit
+// number at p, NUL-terminated. Returns a pointer to the terminator.
 char *UI_MAIN_FormatScanListName(char *p, uint8_t scan_list)
 {
-    if (scan_list > MR_CHANNELS_LIST) {
+    if (scan_list == 0) {
+        // Spectrum: no list, every channel.
+        *p++ = 'O';
+        *p++ = 'F';
+        *p++ = 'F';
+    } else if (scan_list > MR_CHANNELS_LIST) {
         *p++ = 'A';
         *p++ = 'L';
         *p++ = 'L';
