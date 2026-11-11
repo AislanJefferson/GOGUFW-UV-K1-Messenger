@@ -5,7 +5,7 @@ first. The GOGUFW history (upstream, by Gogu-Qs) is kept unchanged below them.
 
 ## Unreleased
 
-Image 120,816 / 120,832 bytes (16 bytes free); RAM 15,640 / 16,384 bytes at
+Image 120,148 / 120,832 bytes (684 bytes free); RAM 15,608 / 16,384 bytes at
 link time.
 
 ### Changed
@@ -19,6 +19,12 @@ link time.
   back to `ALL`, then to every channel.
 - Spectrum key 4 (MR) is local to Spectrum: next list that has channels, then
   `ALL`, then `OFF` (every channel). `ScList` is no longer changed.
+- Image size, no behaviour change: the libc start files and the
+  static-constructor call are gone (C-only firmware, -260 bytes, -32 bytes of
+  RAM) and the embedded printf no longer carries the `+` and `#` flags, the
+  length modifiers and the `%i`, `%x`, `%b` and `%p` conversions, which no
+  format in the firmware uses (-408 bytes). The Spectrum, BK4829 register
+  access and SysTick code and the multiboot RAM stub are byte-identical.
 
 ## KLEANFW 0.1.0 — 2026-11-10
 
