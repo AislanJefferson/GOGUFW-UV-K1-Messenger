@@ -5,20 +5,30 @@ first. The GOGUFW history (upstream, by Gogu-Qs) is kept unchanged below them.
 
 ## Unreleased
 
-Image 120,148 / 120,832 bytes (684 bytes free); RAM 15,608 / 16,384 bytes at
+Image 120,196 / 120,832 bytes (636 bytes free); RAM 15,608 / 16,384 bytes at
 link time.
+
+### Fixed
+
+- Spectrum (F+5) in MR mode with the scan priority on (`ScPri`, `+`) left the
+  2 priority channels out of a `01`–`24` list. A list made of them swept
+  nothing and Spectrum fell back to `ALL`, and key 4 only alternated `ALL`
+  and `OFF`. Spectrum has no priority watch, so the priority channels are
+  now swept with their list. The memory scan is unchanged.
 
 ### Changed
 
 - Spectrum (F+5) in MR mode sweeps the scan list of the channel on screen
   (`ChList`) instead of the active memory scan list (`ScList`). `01`–`24`
   sweeps that list and `ALL` sweeps the channels that are in any list, both
-  with the memory scan rules (excluded channels skipped). `OFF` sweeps every
+  with the memory scan rules (excluded channels skipped; priority channels
+  included). `OFF` sweeps every
   saved channel, with or without a list, excluded and priority channels
   included; the label shows `OFF <n>`. A list with nothing to sweep falls
   back to `ALL`, then to every channel.
-- Spectrum key 4 (MR) is local to Spectrum: next list that has channels, then
-  `ALL`, then `OFF` (every channel). `ScList` is no longer changed.
+- Spectrum key 4 (MR) is local to Spectrum and cycles `ALL`, then each list
+  that has channels to sweep (`01`, `02`, ...), then `OFF` (every channel),
+  then `ALL` again. `ScList` is no longer changed.
 - Image size, no behaviour change: the libc start files and the
   static-constructor call are gone (C-only firmware, -260 bytes, -32 bytes of
   RAM) and the embedded printf no longer carries the `+` and `#` flags, the

@@ -1387,7 +1387,7 @@ Canais criados pela busca mantêm a potência que estava em uso, ficam em **NARR
 **F + 5** abre o analisador.
 
 - **Em MR**: varre a lista de scan do canal que estava na tela (**ChList**) e mostra nome, frequência, modulação e banda de escuta do canal selecionado. Depois da tecla 6, a banda mostrada é a escolhida. A **ScList** do scan de memória não é usada nem alterada.
-  - Canal com `ChList` **01–24**: varre os canais dessa lista. Canais excluídos (MENU segurado) ficam de fora, como no scan de memória. Com a prioridade ligada (`+`), os 2 canais prioritários também ficam de fora.
+  - Canal com `ChList` **01–24**: varre os canais dessa lista. Canais excluídos (MENU segurado) ficam de fora, como no scan de memória. Com a prioridade ligada (`+`), os 2 canais prioritários entram na varredura da lista deles (o Spectrum não vigia a prioridade).
   - Canal com `ChList` **ALL**: varre os canais que estão em alguma lista. Canais com `ChList OFF` e canais excluídos ficam de fora.
   - Canal com `ChList` **OFF**: varre todos os canais gravados, com ou sem lista, inclusive os excluídos e os prioritários.
   - Se a lista não tiver nenhum canal para varrer (por exemplo, o único canal dela está excluído), o Spectrum passa para `ALL` e, se `ALL` também estiver vazia, para todos os canais (`OFF`).
@@ -1407,7 +1407,7 @@ Canais criados pela busca mantêm a potência que estava em uso, ficam em **NARR
 | **2 / 8** | Passo de deslocamento + / − |
 | **3 / 9** | Topo da escala +5 / −5 dB |
 | **\* / F** | Nível de disparo sobe / desce |
-| **4** | VFO: número de pontos 128 / 64 / 32 / 16 · MR: próxima lista com canais, depois `ALL`, depois `OFF` (todos os canais). Vale só no Spectrum: não muda a **ScList** nem a lista do canal |
+| **4** | VFO: número de pontos 128 / 64 / 32 / 16 · MR: `ALL`, depois cada lista com canais (`01`, `02`…), depois `OFF` (todos os canais) e volta para `ALL`. Vale só no Spectrum: não muda a **ScList** nem a lista do canal |
 | **5** | Digitar uma frequência (\* = ponto decimal, MENU confirma) |
 | **0** | Muda a modulação (só em VFO) |
 | **6** | Largura de banda de escuta 25k / 12,5k / 6,25k, aplicada na hora. Em MR vale para todos os canais, no gráfico e na escuta, até sair ou segurar MENU; antes dela, cada canal usa a própria banda. O canal não muda |
