@@ -746,31 +746,40 @@ static uint16_t SpectrumChannelOrdinal(uint16_t wantedChannel)
     return 0;
 }
 
-// MR mode sweeps spectrumList: a scan list (excluded channels skipped, like
+// One pass over spectrumList: a scan list (excluded channels skipped, like
 // the memory scan), ALL (channels in any list) or, with 0, every valid
-// channel. An empty list falls back to ALL, then to every valid channel.
+// channel. Returns the channel count.
+static uint16_t FillSpectrumChannels(void)
+{
+    // Spectrum has no priority watch: with ScPri on, the memory scan rule
+    // would drop the 2 priority channels from their list. RAM only.
+    const bool priority = gEeprom.SCAN_LIST_ENABLED;
+    gEeprom.SCAN_LIST_ENABLED = false;
+
+    const bool checkList = spectrumList != 0;
+    spectrumChannelCount = 0;
+    spectrumCacheOrdinal = 0xFFFF;
+    memset(spectrumValidChannels, 0, sizeof(spectrumValidChannels));
+    for (uint16_t channel = MR_CHANNEL_FIRST; IS_MR_CHANNEL(channel); channel++)
+    {
+        if (!RADIO_CheckValidChannel(channel, checkList, spectrumList))
+            continue;
+
+        const uint16_t index = channel - MR_CHANNEL_FIRST;
+        spectrumValidChannels[index >> 3] |= 1u << (index & 7);
+
+        spectrumChannelCount++;
+    }
+
+    gEeprom.SCAN_LIST_ENABLED = priority;
+    return spectrumChannelCount;
+}
+
+// An empty list falls back to ALL, then to every valid channel (0).
 static void LoadSpectrumChannels(void)
 {
-    for (;;)
-    {
-        const bool checkList = spectrumList != 0;
-        spectrumChannelCount = 0;
-        spectrumCacheOrdinal = 0xFFFF;
-        memset(spectrumValidChannels, 0, sizeof(spectrumValidChannels));
-        for (uint16_t channel = MR_CHANNEL_FIRST; IS_MR_CHANNEL(channel); channel++)
-        {
-            if (!RADIO_CheckValidChannel(channel, checkList, spectrumList))
-                continue;
-
-            const uint16_t index = channel - MR_CHANNEL_FIRST;
-            spectrumValidChannels[index >> 3] |= 1u << (index & 7);
-
-            spectrumChannelCount++;
-        }
-        if (spectrumChannelCount || !checkList)
-            return;
+    while (!FillSpectrumChannels() && spectrumList)
         spectrumList = spectrumList > MR_CHANNELS_LIST ? 0 : MR_CHANNELS_LIST + 1;
-    }
 }
 
 // Listen filter for a VFO/channel bandwidth bit: N becomes N+ with SetNFM,
@@ -2435,15 +2444,17 @@ static void OnKeyDown(uint8_t key) {
     case KEY_4:
         if (spectrumChannelMode)
         {
-            // Next list with channels, then ALL, then every channel (0).
+            // ALL -> each list with channels -> OFF (every channel) -> ALL.
             // Local to Spectrum: the memory scan list (ScList) is untouched.
-            // RADIO_CheckValidList() accepts ALL, which ends the loop.
-            if (spectrumList > MR_CHANNELS_LIST)
-                spectrumList = 0;
-            else
-                do
-                    spectrumList++;
-                while (!RADIO_CheckValidList(spectrumList));
+            // RADIO_CheckValidList() wants a channel tagged with exactly
+            // this list (ALL-tagged ones would fill every list); the fill
+            // skips a list whose sweep would still be empty.
+            do
+                spectrumList = spectrumList > MR_CHANNELS_LIST ? 1
+                             : spectrumList == 0 ? MR_CHANNELS_LIST + 1
+                             : (spectrumList + 1) % (MR_CHANNELS_LIST + 1);
+            while (spectrumList - 1u < MR_CHANNELS_LIST &&
+                   !(RADIO_CheckValidList(spectrumList) && FillSpectrumChannels()));
             LoadSpectrumChannels();
             spectrumDisplayChannel = 0xFFFF;
             CacheSpectrumChannel(0);
