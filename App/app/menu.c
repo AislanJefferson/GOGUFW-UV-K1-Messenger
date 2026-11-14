@@ -2209,20 +2209,13 @@ static void MENU_Key_UP_DOWN(bool bKeyPressed, bool bKeyHeld, int8_t Direction)
 
     if(m == MENU_S_PRI_CH_1 || m == MENU_S_PRI_CH_2)
     {
-        static int16_t last;
+        if(gSubMenuSelection == MR_CHANNELS_MAX && Direction > 0)
+            gSubMenuSelection = -1;
 
-        if(gSubMenuSelection == MR_CHANNELS_MAX) {
-            if(Direction > 0)
-            {
-                gSubMenuSelection = -1;
-                last = -1;
-            }
-            else if(Direction < 0)
-            {
-                gSubMenuSelection = MR_CHANNELS_MAX;
-                last = MR_CHANNELS_MAX;
-            }
-        }
+        /* The selection before this step: a wrap past either end goes to
+         * "None". (A static here kept the value of the previous visit, or of
+         * the other PriCh menu, and jumped to "None" by mistake.) */
+        const int32_t last = gSubMenuSelection;
 
         Channel = RADIO_FindNextChannel(gSubMenuSelection + Direction, Direction, bCheckScanList, VFO);
         if (Channel != 0xFFFF)
@@ -2235,10 +2228,6 @@ static void MENU_Key_UP_DOWN(bool bKeyPressed, bool bKeyHeld, int8_t Direction)
         else if(Direction < 0 && gSubMenuSelection > last)
         {
             gSubMenuSelection = MR_CHANNELS_MAX;           
-        }
-        else
-        {
-            last = Channel;
         }
 
         gRequestDisplayScreen = DISPLAY_MENU;
