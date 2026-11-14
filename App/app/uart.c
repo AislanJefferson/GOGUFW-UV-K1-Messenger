@@ -707,18 +707,38 @@ bool UART_IsCommandAvailable(uint32_t Port)
         return false;
     }
 
+    /* The USB writer leaves its pointer at ReadBufSize when a packet ends at
+     * the end of the ring (it wraps on the next packet). The reader then
+     * stops at ReadBufSize too (see the end of this function), and restarts
+     * from 0 once new data has arrived. */
+    if (*pReadPointer >= ReadBufSize && DmaLength != *pReadPointer)
+        *pReadPointer = 0;
+
     // Limit iterations to prevent long loops when buffer is full of non-command data
     uint16_t maxIterations = ReadBufSize + 1;
 
-    while (maxIterations--)
+    for (;;)
     {
+        /* Test before decrementing: "while (n--)" leaves n at 0xFFFF when it
+         * runs out, so a later "n == 0" check never fired. */
+        if (maxIterations == 0)
+        {
+            // Safety: too many outer loop iterations
+            *pReadPointer = DmaLength;
+            return false;
+        }
+        maxIterations--;
+
         if ((*pReadPointer) == DmaLength)
             return false;
 
         // Find 0xAB with iteration limit
         uint16_t searchLimit = ReadBufSize;
-        while ((*pReadPointer) != DmaLength && ReadBuf[*pReadPointer] != 0xABU && searchLimit--)
+        while ((*pReadPointer) != DmaLength && ReadBuf[*pReadPointer] != 0xABU && searchLimit)
+        {
             *pReadPointer = DMA_INDEX((*pReadPointer), 1, ReadBufSize);
+            searchLimit--;
+        }
 
         if (searchLimit == 0)
         {
@@ -742,13 +762,6 @@ bool UART_IsCommandAvailable(uint32_t Port)
             break;
 
         *pReadPointer = DMA_INDEX(*pReadPointer, 1, ReadBufSize);
-    }
-
-    if (maxIterations == 0)
-    {
-        // Safety: too many outer loop iterations
-        *pReadPointer = DmaLength;
-        return false;
     }
 
     Index = DMA_INDEX(*pReadPointer, 2, ReadBufSize);
@@ -790,7 +803,10 @@ bool UART_IsCommandAvailable(uint32_t Port)
     else
         memset(ReadBuf + (*pReadPointer), 0, TailIndex - (*pReadPointer));
 
-    *pReadPointer = TailIndex;
+    /* Consumed up to a writer parked at ReadBufSize: park here too, so the
+     * ring reads as empty instead of being rescanned (or the same frame
+     * parsed again) until the next packet. */
+    *pReadPointer = (DmaLength == ReadBufSize && TailIndex == 0) ? DmaLength : TailIndex;
 
     /* --
     if (pUART_Command->Header.ID == 0x0514)
