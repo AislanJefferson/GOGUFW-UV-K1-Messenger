@@ -1902,7 +1902,8 @@ void UI_DisplayMenu(void)
     if (m == MENU_R_DCS ||
         m == MENU_T_DCS) {
         const uint8_t approved_index =
-            (gSubMenuSelection > 0) ? DCS_GetDcsApprovedIndex(gSubMenuSelection - 1) : 0xFF;
+            (gSubMenuSelection > 0) ? DCS_GetDcsApprovedIndex(gSubMenuSelection -
+                                      (gSubMenuSelection < 105 ? 1 : 105)) : 0xFF;   // N / I codes
 
         if (gSubMenuSelection == 0)
             sprintf(top_right_badge, "000/00");

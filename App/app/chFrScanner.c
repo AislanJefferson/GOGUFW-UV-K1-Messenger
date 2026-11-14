@@ -1,3 +1,4 @@
+/* Modified by AislanJefferson for KLEANFW, 2026 (see git history). */
 
 #include <stddef.h>
 #include <string.h>
@@ -214,7 +215,7 @@ void CHFRSCANNER_UpdateCssDetection(void)
     if (result == BK4819_CSS_RESULT_CDCSS)
     {
         const uint8_t Code = DCS_GetCdcssCode(cdcssFreq);
-        if (Code != 0xFF && Code != gScanRangeCssCode)
+        if (Code != 0xFF && (Code != gScanRangeCssCode || gScanRangeCssType != CODE_TYPE_DIGITAL))
         {
             gScanRangeCssType    = CODE_TYPE_DIGITAL;
             gScanRangeCssCode    = Code;
@@ -230,7 +231,8 @@ void CHFRSCANNER_UpdateCssDetection(void)
         {
             if (Code == scanRangeCssCandidate)
             {
-                if (++scanRangeCssHitCount >= 2 && Code != gScanRangeCssCode)
+                if (++scanRangeCssHitCount >= 2 &&
+                    (Code != gScanRangeCssCode || gScanRangeCssType != CODE_TYPE_CONTINUOUS_TONE))
                 {
                     gScanRangeCssType = CODE_TYPE_CONTINUOUS_TONE;
                     gScanRangeCssCode = Code;
