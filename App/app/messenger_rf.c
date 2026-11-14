@@ -1866,6 +1866,7 @@ void MSG_RF_OnRadioInterrupt(uint16_t status)
             if (s_rx_words == 4u && SCR_HOP_RxStart(g_FSK_Buffer, gScrHop.stamp)) {
                 /* Seed burst: drop the capture and give the audio back. */
                 s_rx_capture_active = false;
+                s_rx_stale_ticks = 0;
                 s_rx_words = 0;
                 gFSKWriteIndex = 0;
                 MSG_RF_KeepFskRxEnabled();
