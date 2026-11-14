@@ -1346,6 +1346,10 @@ void MENU_ShowCurrentSetting(void)
                 &gEeprom.KEY_M_LONG_PRESS_ACTION};
             uint8_t id = *fun[UI_MENU_GetCurrentMenuId()-MENU_F1SHRT];
 
+            /* An id this build has no entry for (ALARM, 1750, BACKLIGHT...,
+             * accepted by the settings load and offered by CHIRP) shows NONE
+             * instead of indexing the table with the previous item's value. */
+            gSubMenuSelection = 0;
             for(int i = 0; i < gSubMenu_SIDEFUNCTIONS_size; i++) {
                 if(gSubMenu_SIDEFUNCTIONS[i].id==id) {
                     gSubMenuSelection = i;
