@@ -1,6 +1,6 @@
-# KLEANFW UV-K1 / UV-K5 V3 CHIRP module v0.1.0
-# Release build: 2026-11-10
-# Matches only the current firmware (KLEANFW v0.1.0); GOGUFW and older builds
+# KLEANFW UV-K1 / UV-K5 V3 CHIRP module v0.2.0
+# Release build: 2026-11-14
+# Matches only the current firmware (KLEANFW v0.2.0); GOGUFW and older builds
 # are not supported.
 #
 # Modified by AislanJefferson for KLEANFW, 2026-11-10: adapted from the
@@ -72,7 +72,7 @@ DEBUG_SHOW_OBFUSCATED_COMMANDS = False
 DEBUG_SHOW_MEMORY_ACTIONS = False
 
 # TODO: remove the driver version when it's in mainline chirp
-DRIVER_VERSION = "KLEANFW UV-K1 / UV-K5 V3 CHIRP driver v0.1.0 (2026-11-10)"
+DRIVER_VERSION = "KLEANFW UV-K1 / UV-K5 V3 CHIRP driver v0.2.0 (2026-11-14)"
 FIRMWARE_VERSION_UPDATE = "https://github.com/AislanJefferson/KLEANFW/releases"
 CHIRP_DRIVER_VERSION_UPDATE = "https://github.com/AislanJefferson/KLEANFW/releases"
 
@@ -1302,7 +1302,7 @@ class UVK5RadioEgzumer(chirp_common.CloneModeRadio):
     """Quansheng UV-K1 / UV-K5 V3 running KLEANFW."""
     VENDOR = "Quansheng"
     MODEL = "UV-K1 / UV-K5 V3 KLEANFW"
-    VARIANT = "0.1.0"
+    VARIANT = "0.2.0"
     BAUD_RATE = 38400
     NEEDS_COMPAT_SERIAL = False
     FIRMWARE_VERSION = ""
@@ -2301,7 +2301,7 @@ class UVK5RadioEgzumer(chirp_common.CloneModeRadio):
 
 # add menu firmware with version and option display if version 3.0 and up
         ValFirm = "Firmware : " + self.FIRMWARE_VERSION
-        Compair1 = "KLEANFW v0.1.0"
+        Compair1 = "KLEANFW v0.2.0"
 
         if self.FIRMWARE_VERSION == "":
             ValFirm = "Firmware : Only when read from the radio "

@@ -3,10 +3,17 @@
 KLEANFW is a modified version of GOGUFW by Gogu-Qs. The KLEANFW releases come
 first. The GOGUFW history (upstream, by Gogu-Qs) is kept unchanged below them.
 
-## Unreleased
+## KLEANFW 0.2.0 — 2026-11-14
 
-Image 120,452 / 120,832 bytes (380 bytes free); RAM 15,616 / 16,384 bytes at
-link time.
+Firmware identity `KLEANFW v0.2.0` (the USB host identity stays
+`v7 GGFW v6.3.0`), multiboot image `f4hwn.kleanfw.v0.2.0.bin`, CHIRP module
+`KLEANFW_0.2.0_chirp_module.py` (same EEPROM layout as 0.1.0). Image
+120,464 / 120,832 bytes (368 bytes free); RAM 15,616 / 16,384 bytes at link
+time. Before the release the whole firmware was reviewed against the BK4829
+register table: the driver, the 166 register writes outside it (apps
+included), the flash write paths and the serial command parser. None of the
+changes below has been tested on a radio yet; see the release notes for the
+checks.
 
 ### Fixed
 
@@ -32,7 +39,11 @@ link time.
   opened from: with a fixed scrambler (or a live HOP session) every FM signal
   found came out inverted. Spectrum now listens in clear and the channel gets
   its scrambler back on exit (+4 B).
-
+- USB/serial: the EEPROM read command copied a host-chosen size (up to 255
+  bytes) into a 128-byte reply buffer on the stack, and the write command
+  could read past the 256-byte command buffer. Sizes that do not fit are now
+  ignored; CHIRP (0x80-byte blocks) and the other working hosts are not
+  affected. Inherited from upstream (+12 B).
 - Spectrum (F+5) in MR mode with the scan priority on (`ScPri`, `+`) left the
   2 priority channels out of a `01`–`24` list. A list made of them swept
   nothing and Spectrum fell back to `ALL`, and key 4 only alternated `ALL`
@@ -41,9 +52,10 @@ link time.
 
 ### Changed
 
-- HOP RX follows the transmitter's clock rate. From the first 8 s resync of an
-  over (the second if the opening burst was stamped late), the receiver compares the resync interval with its own clock and
-  scales the slot clock by the ratio, so a clock difference between radios no
+- HOP RX follows the transmitter's clock rate. From the first 8 s resync of
+  an over (the second if the opening burst was stamped late), the receiver
+  compares the resync interval with its own clock and scales the slot clock
+  by the ratio, so a clock difference between radios no
   longer drifts past the 8 ms guard before the next resync. Only resyncs
   stamped in the REG_0C spin (~1 ms) are used. Under 12 ms of difference
   nothing changes, so radios without drift behave exactly as before. A host
@@ -75,11 +87,14 @@ link time.
   format in the firmware uses (-408 bytes). The Spectrum, BK4829 register
   access and SysTick code and the multiboot RAM stub are byte-identical.
 
+- BK4829 driver comments now match the register table (REG_48 has no mute
+  value; REG_51 0xA033 sets the table's "negative CDCSS" bit, kept on purpose
+  from F4HWN's DCS fix; the CTCSS Tx gain is 64). No code change.
+
 ### Known issues and proposals
 
-From a review of HOP, Messenger and Spectrum against the BK4829 register
-table (register use matches it). None of these is changed without a radio
-A/B test:
+From the review against the BK4829 register table (register use matches
+it). None of these is changed without a radio A/B test:
 
 - HOP RX guard: zeroing REG_48<9:4> (AF Rx Gain2) is about 30 dB of
   attenuation, not a mute (the table's range is -28 to +3.5 dB). The
@@ -93,6 +108,9 @@ A/B test:
   a live RX session), while the HOP seed burst turns it off. The table does
   not say whether REG_31<1> affects the FSK modem; both ends use the same
   setting today, so changing one side alone could break what works.
+- `BK4819_GetAfTxRx()` masks REG_6F with 0x3F while the table defines
+  <7:0> (AF Tx/Rx input amplitude in dB); only the scale of the audio bar is
+  affected.
 
 ## KLEANFW 0.1.0 — 2026-11-10
 

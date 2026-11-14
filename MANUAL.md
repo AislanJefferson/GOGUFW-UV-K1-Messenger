@@ -1,8 +1,8 @@
-# Manual do Usuário — KLEANFW 0.1.0
+# Manual do Usuário — KLEANFW 0.2.0
 
 Firmware customizado para **Quansheng UV-K1 / UV-K5 V3** (MCU PY32F071 + RF BK4829), baseado no **F4HWN 6.3.0**.
 O KLEANFW é uma versão modificada do **GOGUFW 3.6.2** (Gogu-Qs), que por sua vez é baseado no F4HWN. É um projeto independente, sem afiliação ou endosso do Gogu-Qs, do F4HWN ou da Quansheng.
-Este manual descreve o build **Fusion** (o preset oficial) do código atual, versão `v0.1.0`.
+Este manual descreve o build **Fusion** (o preset oficial) do código atual, versão `v0.2.0`.
 
 > [!CAUTION]
 > Instale somente em rádios **UV-K1 / UV-K5 V3** (PY32F071 + BK4829). **Não** instale em UV-K5 V1/V2 ou em outros rádios com BK4819.
@@ -1679,7 +1679,7 @@ Se as setas parecerem invertidas, ajuste `SetNav`.
 ## 25. CHIRP
 
 1. Abra o CHIRP e escolha **File → Load Module**.
-2. Selecione o `KLEANFW_0.1.0_chirp_module.py` (mesma versão do firmware).
+2. Selecione o `KLEANFW_0.2.0_chirp_module.py` (mesma versão do firmware).
 3. Baixe do rádio com **Quansheng → UV-K1 / UV-K5 V3 KLEANFW**.
 4. Edite canais, ações de teclas, configurações do Messenger/CALLTX, CryKey, nomes de FM, F Lock, `No FSK TX`, `No Roger`, `Scrambler` (incluindo HOP) e `Compander`.
 5. Envie para o rádio e **espere cerca de 2 s** antes de desligá-lo (veja a seção 27.5).
@@ -1836,7 +1836,7 @@ cmake --preset Fusion --fresh
 cmake --build --preset Fusion
 ```
 
-Saída em `build/Fusion/`: `kleanfw.bin` e a imagem multiboot `f4hwn.kleanfw.v0.1.0.bin`.
+Saída em `build/Fusion/`: `kleanfw.bin` e a imagem multiboot `f4hwn.kleanfw.v0.2.0.bin`.
 
 Veja também `BUILD_WITH_VSCODE.md`, `BUILD_VSCODE_MAC.md` e `compile-with-docker.sh` (build em Docker).
 

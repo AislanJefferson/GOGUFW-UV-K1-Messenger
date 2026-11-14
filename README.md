@@ -81,9 +81,9 @@ direction:
 
    | File | What it is for |
    | --- | --- |
-   | `KLEANFW-v0.1.0.bin` | The firmware |
-   | `KLEANFW-v0.1.0-multiboot.bin` | The same image, named for a multiboot slot |
-   | `KLEANFW_0.1.0_chirp_module.py` | CHIRP module for this version |
+   | `KLEANFW-v0.2.0.bin` | The firmware |
+   | `KLEANFW-v0.2.0-multiboot.bin` | The same image, named for a multiboot slot |
+   | `KLEANFW_0.2.0_chirp_module.py` | CHIRP module for this version |
    | `FM-Search-Apps.zip` | `FMVFO.app`, `FMMemory.app` and `Search.app` |
    | `Apps.zip` | Every other overlay app (Beam is not supported) |
    | `SHA256SUMS.txt` | Checksums to verify the downloads |
@@ -146,10 +146,10 @@ default HOP sequence.
 
 - **Messenger** still talks to GOGUFW radios in plain text. Encrypted text only
   works between KLEANFW radios with the same CryKey; GOGUFW rejects it.
-- **CHIRP** needs `KLEANFW_0.1.0_chirp_module.py`. Over USB, CHIRP and UV Studio
+- **CHIRP** needs `KLEANFW_0.2.0_chirp_module.py`. Over USB, CHIRP and UV Studio
   read the host identity `v7 GGFW v6.3.0`, which UV Studio uses to choose the
   app catalog. The radio itself, SystemInfo and multiboot show
-  `KLEANFW v0.1.0`.
+  `KLEANFW v0.2.0`.
 - **Apps** use the same official F4HWN API 4 as GOGUFW 3.6.x, so your
   installed apps keep working. The CryKey of the old `Crypto.app` test builds
   must be typed again in the menu.
@@ -171,7 +171,7 @@ start:
 - [Troubleshooting](MANUAL.md#28-solução-de-problemas) and
   [legal notices](MANUAL.md#30-avisos-legais-e-licenças)
 
-Release notes: [docs/releases/v0.1.0.md](docs/releases/v0.1.0.md).
+Release notes: [docs/releases/v0.2.0.md](docs/releases/v0.2.0.md).
 
 ## Build
 
@@ -190,14 +190,14 @@ cmake --build --preset Fusion
 ```
 
 The image must stay within **120,832 bytes**, including the 920-byte
-multiboot loader. Release 0.1.0 uses 120,772 bytes, leaving 60 bytes free, so
+multiboot loader. Release 0.2.0 uses 120,464 bytes, leaving 368 bytes free, so
 every change is measured. Setup guides:
 [BUILD_WITH_VSCODE.md](BUILD_WITH_VSCODE.md) (Docker) and
 [BUILD_VSCODE_MAC.md](BUILD_VSCODE_MAC.md) (native, macOS).
 
 ## Status and feedback
 
-0.1.0 is the first KLEANFW release. Open questions, such as STE on strong
+0.2.0 is the second KLEANFW release. Open questions, such as STE on strong
 repeaters and HOP timing under heavy load, are listed under *Known issues* in
 the [CHANGELOG](CHANGELOG.md). Report bugs in
 [GitHub Issues](https://github.com/AislanJefferson/KLEANFW/issues) with the
