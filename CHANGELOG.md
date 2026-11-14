@@ -5,7 +5,7 @@ first. The GOGUFW history (upstream, by Gogu-Qs) is kept unchanged below them.
 
 ## Unreleased
 
-Image 120,212 / 120,832 bytes (620 bytes free); RAM 15,608 / 16,384 bytes at
+Image 120,440 / 120,832 bytes (392 bytes free); RAM 15,608 / 16,384 bytes at
 link time.
 
 ### Fixed
@@ -16,6 +16,21 @@ link time.
   the scrambler off (REG_31<1>) over the fixed one, and the first reception
   on it came out inverted. The end of a HOP RX session now reapplies the
   scrambler of the channel being received (+16 B).
+- Messenger: after every HOP seed burst it received, the Messenger stayed
+  "busy" for 1.2 s (SEND, ACK and PONG deferred, battery save held, the
+  squelch-close fallback off) and then reset the FSK RX FIFO late. The
+  accepted burst now clears that timer (+8 B).
+- Spectrum (F+5): the sweep filter (REG_43) was cut to 8 bits, inherited from
+  F4HWN. Steps of 5–12.5 kHz swept with a 2 kHz RF filter and steps of
+  15 kHz and up (25 kHz is the default) with 4 kHz instead of 7 kHz, so a
+  signal off the step centre could be weak or missing in the graph. The
+  full value from the step table is now used (steps under 5 kHz unchanged;
+  the noise floor on 25 kHz steps reads ~2 dB higher and AUTO recalibrates;
+  -4 B).
+- Spectrum (F+5) listened through the voice scrambler of the channel it was
+  opened from: with a fixed scrambler (or a live HOP session) every FM signal
+  found came out inverted. Spectrum now listens in clear and the channel gets
+  its scrambler back on exit (+4 B).
 
 - Spectrum (F+5) in MR mode with the scan priority on (`ScPri`, `+`) left the
   2 priority channels out of a `01`–`24` list. A list made of them swept
@@ -25,6 +40,19 @@ link time.
 
 ### Changed
 
+- HOP RX follows the transmitter's clock rate. From the first 8 s resync of an
+  over (the second if the opening burst was stamped late), the receiver compares the resync interval with its own clock and
+  scales the slot clock by the ratio, so a clock difference between radios no
+  longer drifts past the 8 ms guard before the next resync. Only resyncs
+  stamped in the REG_0C spin (~1 ms) are used. Under 12 ms of difference
+  nothing changes, so radios without drift behave exactly as before. A host
+  simulation gives at most 7–8 ms of slot error for 0.1–3 % of drift (before:
+  13–238 ms). RX only; TX and the over-the-air format are unchanged (+144 B).
+- HOP and battery save: while the RX (or either VFO with Dual Watch) listens
+  to a HOP channel that can decode the seed burst (MsgRx ON, VOX OFF),
+  `BatSav` does not sleep, as with `BatSav` OFF. A sleeping receiver (1:4 is
+  ~400 ms off per 500 ms) could miss the ~0.2 s burst and stay scrambled
+  until the 8 s resync (+76 B).
 - Spectrum (F+5) in MR mode sweeps the scan list of the channel on screen
   (`ChList`) instead of the active memory scan list (`ScList`). `01`–`24`
   sweeps that list and `ALL` sweeps the channels that are in any list, both
@@ -45,20 +73,22 @@ link time.
 
 ### Known issues and proposals
 
-From a review of HOP against the BK4829 register table (register use
-matches it). None of these is changed without a radio A/B test:
+From a review of HOP, Messenger and Spectrum against the BK4829 register
+table (register use matches it). None of these is changed without a radio
+A/B test:
 
 - HOP RX guard: zeroing REG_48<9:4> (AF Rx Gain2) is about 30 dB of
   attenuation, not a mute (the table's range is -28 to +3.5 dB). The
   Messenger FSK audio mute uses the same method. A full mute would also need
   REG_48<3:0> = 0 or REG_47<11:8> = 0, if the slot-boundary click is audible.
-- HOP slot clock: the ±8 ms guard over the 8 s resync needs about 0.1 %
-  relative clock accuracy between radios. The MCU clock is set by the
-  bootloader and its source is not known here; listen for more garbling
-  just before each resync.
-- HOP with `BatSav`: a sleeping receiver (1:4 = ~400 ms off per 500 ms) can
-  miss the ~200 ms seed burst and hear scrambled audio until the 8 s resync.
-  Not measured yet.
+- HOP slot clock: the drift tracking above starts at the first resync, so
+  the first 8 s of an over still need about 0.1 % relative clock accuracy
+  between radios. The MCU clock is set by the bootloader and its source is
+  not known here.
+- Messenger TX keeps the channel's voice scrambler as set (fixed, or HOP with
+  a live RX session), while the HOP seed burst turns it off. The table does
+  not say whether REG_31<1> affects the FSK modem; both ends use the same
+  setting today, so changing one side alone could break what works.
 
 ## KLEANFW 0.1.0 — 2026-11-10
 
