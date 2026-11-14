@@ -17,6 +17,7 @@
  * Modified by AislanJefferson for KLEANFW, 2026 (see git history).
  */
 
+#include <stddef.h>
 #include <string.h>
 
 #if !defined(ENABLE_OVERLAY)
@@ -410,6 +411,11 @@ static void CMD_051B(uint32_t Port, const uint8_t *pBuffer)
         gFmRadioCountdown_500ms = fm_radio_countdown_500ms;
     #endif
 
+    /* Size comes from the host: never read past the 128-byte reply buffer
+     * (it is on the stack). CHIRP reads 0x80-byte blocks. */
+    if (pCmd->Size > sizeof(Reply.Data.Data))
+        return;
+
     memset(&Reply, 0, sizeof(Reply));
     Reply.Header.ID   = 0x051C;
     Reply.Header.Size = pCmd->Size + 4;
@@ -460,6 +466,10 @@ static void CMD_051D(uint32_t Port, const uint8_t *pBuffer)
 
     gSerialConfigCountDown_500ms = 12; // 6 sec
     
+    /* Size comes from the host: the data must lie inside the command buffer. */
+    if (pCmd->Size > sizeof(SharedCommand.Buffer) - offsetof(CMD_051D_t, Data))
+        return;
+
     bReloadEeprom = false;
 
     #ifdef ENABLE_FMRADIO_EMBEDDED
