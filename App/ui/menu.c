@@ -1688,8 +1688,12 @@ void UI_DisplayMenu(void)
         case MENU_SET_CTR:
             #ifdef ENABLE_FEAT_F4HWN_CTR
                 sprintf(String, "%d", gSubMenuSelection);
-                gSetting_set_ctr = gSubMenuSelection;
-                ST7565_ContrastAndInv();
+                {   /* Preview only: EXIT must leave the setting unchanged. */
+                    const uint8_t saved = gSetting_set_ctr;
+                    gSetting_set_ctr = gSubMenuSelection;
+                    ST7565_ContrastAndInv();
+                    gSetting_set_ctr = saved;
+                }
             #else
                 strcpy(String, gSubMenu_NA);
             #endif
@@ -1698,7 +1702,12 @@ void UI_DisplayMenu(void)
         case MENU_SET_INV:
             #ifdef ENABLE_FEAT_F4HWN_INV
                 strcpy(String, gSubMenu_OFF_ON[gSubMenuSelection]);
-                ST7565_ContrastAndInv();
+                {   /* Preview the selection, as SetCtr does. */
+                    const bool saved = gSetting_set_inv;
+                    gSetting_set_inv = gSubMenuSelection;
+                    ST7565_ContrastAndInv();
+                    gSetting_set_inv = saved;
+                }
             #else
                 strcpy(String, gSubMenu_NA);
             #endif
