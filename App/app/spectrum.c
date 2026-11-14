@@ -1466,7 +1466,7 @@ static void UpdateRssiTriggerLevel(bool inc)
  * (100 kHz) always does. */
 static void __attribute__((noinline)) FitRangeStep(void)
 {
-    while (gScanRangeStart &&
+    while (gScanRangeStart && settings.scanStepIndex < S_STEP_100_0kHz &&
            (gScanRangeStop - gScanRangeStart) / GetScanStep() >= 0xFFFFu)
         settings.scanStepIndex++;
 }

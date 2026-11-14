@@ -8,7 +8,8 @@ first. The GOGUFW history (upstream, by Gogu-Qs) is kept unchanged below them.
 Review of the whole v0.2.0 firmware against the BK4829 register table
 (driver, radio setup, the register writes of firmware and apps) and of the
 code that parses external input (USB/serial, Messenger RF), storage and menu
-logic. Image 120,708 / 120,832 bytes (124 bytes free). None of these changes
+logic. Image 120,712 / 120,832 bytes (120 bytes free); RAM 15,608 / 16,384
+bytes at link time. None of these changes
 has been tested on a radio yet; the checks are listed at the end.
 
 ### Fixed
@@ -42,8 +43,9 @@ has been tested on a radio yet; the checks are listed at the end.
 - Messenger: ACK and PONG frames were accepted whoever they were addressed
   to, and every radio numbers its messages from 1. An ACK from station C to
   station B could mark our own message with the same number as delivered,
-  cancelling its retry. Replies are now accepted only when they are addressed
-  to our callsign (+44 B).
+  cancelling its retry. ACK and PONG frames are now accepted only when they
+  are addressed to our callsign (+44 B). The legacy text ACK (`ACK:hhhh`)
+  has no addressee and is still accepted as before.
 - Menu keypad entry ignored each menu's minimum: `ScList` accepted 0 (its
   label then read out of range) and `SetCtr` accepted contrast 0. `BatCal`
   (1500–3500) could not be typed at all, because the entry stopped at 3
@@ -54,7 +56,8 @@ has been tested on a radio yet; the checks are listed at the end.
 - Spectrum (F+5) in scan-range mode: the number of steps was cut to 16 bits.
   144–146 MHz at a 0.01 kHz step swept about 34 kHz under an axis showing
   the whole range. Entering scan-range mode and changing the step now move up
-  to the first step that fits (+72 B).
+  to the first step that fits. Key 7 stops at that step instead of wrapping
+  to the smallest one (+76 B).
 - TX compander followed the RX VFO's setting. With cross-band on and Dual
   Watch off, that is the other channel. It now follows the TX VFO.
   Inherited from upstream.
@@ -109,7 +112,9 @@ has been tested on a radio yet; the checks are listed at the end.
 2. Messenger with three radios: an ACK from C to B does not mark A's message
    with the same number as delivered.
 3. Keypad entry: `0` in `ScList` is ignored, `2000` in `BatCal` is accepted,
-   and EXIT from `SetCtr` restores the contrast.
+   and EXIT from `SetCtr` restores the contrast. Leaving the menu during the
+   preview by PTT or an incoming call: check that the contrast returns to
+   the saved value.
 4. Spectrum in scan-range mode over 2 MHz with step 0.01 kHz: the step moves
    up and the sweep covers the whole range.
 
