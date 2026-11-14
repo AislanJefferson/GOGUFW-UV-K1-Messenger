@@ -475,7 +475,8 @@ void RADIO_ConfigureChannel(const unsigned int VFO, const unsigned int configure
 
     pVfo->freq_config_RX.Frequency = frequency;
 
-    if (frequency >= frequencyBandTable[BAND2_108MHz].upper && frequency < frequencyBandTable[BAND2_108MHz].upper)
+    // Airband: no TX offset (the 2023 refactor compared against .upper twice).
+    if (frequency >= frequencyBandTable[BAND2_108MHz].lower && frequency < frequencyBandTable[BAND2_108MHz].upper)
         pVfo->TX_OFFSET_FREQUENCY_DIRECTION = TX_OFFSET_FREQUENCY_DIRECTION_OFF;
     else if (!IS_MR_CHANNEL(channel))
         pVfo->TX_OFFSET_FREQUENCY = FREQUENCY_RoundToStep(pVfo->TX_OFFSET_FREQUENCY, pVfo->StepFrequency);
@@ -1084,10 +1085,11 @@ static void RADIO_SetTxParametersEx(bool fm)
 
     BK4819_SetFrequency(gCurrentVfo->pTX->Frequency);
 
-    // TX compressor (F4HWN 6.3.0 analog transmit behavior).
-    BK4819_SetCompander((gRxVfo->Modulation == MODULATION_FM &&
-                        (gRxVfo->Compander == 1 || gRxVfo->Compander >= 3))
-                       ? gRxVfo->Compander : 0);
+    // TX compressor (F4HWN 6.3.0 analog transmit behavior). The TX VFO's
+    // setting: with cross-band and no DW, gRxVfo is the other VFO.
+    BK4819_SetCompander((gCurrentVfo->Modulation == MODULATION_FM &&
+                        (gCurrentVfo->Compander == 1 || gCurrentVfo->Compander >= 3))
+                       ? gCurrentVfo->Compander : 0);
 
     BK4819_PrepareTransmit();
 
