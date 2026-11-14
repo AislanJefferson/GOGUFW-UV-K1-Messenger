@@ -1837,6 +1837,9 @@ void APP_Update(void)
 #ifdef ENABLE_MESSENGER
             || MSG_RF_TransactionActive()
 #endif
+#ifdef ENABLE_GOGUFW_CRYPTO
+            || SCR_HOP_Watching()
+#endif
         ) {
             gBatterySaveCountdown_10ms = battery_save_count_10ms;
         } else {

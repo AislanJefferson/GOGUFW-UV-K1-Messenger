@@ -70,6 +70,9 @@ void SCR_HOP_Tick(void);
  * ScraEn on). Every HOP path that bypasses RADIO_ApplyScramble() uses it. */
 struct VFO_Info_t;
 bool SCR_HOP_VfoUsesHop(const struct VFO_Info_t *vfo);
+/* The RX listens to a HOP channel (either VFO with Dual Watch) and can decode
+ * its seed burst: battery save must not sleep through that ~0.2 s burst. */
+bool SCR_HOP_Watching(void);
 
 #endif
 #endif

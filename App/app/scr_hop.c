@@ -20,6 +20,7 @@
 
 #ifdef ENABLE_GOGUFW_CRYPTO
 
+#include "app/messenger_store.h"
 #include "driver/bk4819.h"
 #include "driver/bk4819-regs.h"
 #include "driver/system.h"
@@ -27,6 +28,7 @@
 #include "misc.h"
 #include "radio.h"
 #include "scheduler.h"
+#include "settings.h"
 
 #define HOP_MAGIC      0x47u     /* word0 = 'G' << 8 | resync index */
 #define HOP_CHECK_N    0x48505351u
@@ -252,6 +254,22 @@ bool SCR_HOP_VfoUsesHop(const VFO_Info_t *vfo)
 {
     return vfo->SCRAMBLING_TYPE == SCRAMBLE_TYPE_HOP &&
            vfo->Modulation == MODULATION_FM && gSetting_ScrambleEnable;
+}
+
+bool SCR_HOP_Watching(void)
+{
+    /* Without MsgRx (or with VOX) the seed burst is never decoded: sleeping
+     * costs nothing then. */
+    if (!gMessengerConfig.msg_rx)
+        return false;
+#ifdef ENABLE_VOX
+    if (gEeprom.VOX_SWITCH)
+        return false;
+#endif
+    return SCR_HOP_VfoUsesHop(gRxVfo) ||
+           (gEeprom.DUAL_WATCH != DUAL_WATCH_OFF &&
+            (SCR_HOP_VfoUsesHop(&gEeprom.VfoInfo[0]) ||
+             SCR_HOP_VfoUsesHop(&gEeprom.VfoInfo[1])));
 }
 
 void SCR_HOP_Tick(void)
