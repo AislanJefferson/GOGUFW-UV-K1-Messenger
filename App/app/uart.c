@@ -225,7 +225,10 @@ static void SendReply_VCP(void *pReply, uint16_t Size)
     memcpy(VCP_ReplyBuf + sizeof(Header_t), pReply, Size);
 
     Header_t *pHeader = (Header_t *)VCP_ReplyBuf;
-    Footer_t *pFooter = (Footer_t *)(VCP_ReplyBuf + sizeof(Header_t) + Size);
+    /* The footer follows a host-sized payload: it can sit at an odd address,
+     * where a 16-bit store HardFaults. Build it here and copy it bytewise. */
+    Footer_t Footer;
+    Footer_t *pFooter = &Footer;
     pReply = VCP_ReplyBuf + sizeof(Header_t);
 
     if (bIsEncrypted)
@@ -253,8 +256,7 @@ static void SendReply_VCP(void *pReply, uint16_t Size)
         pFooter->Padding[1] = 0xFF;
     }
     pFooter->ID = 0xBADC;
-
-    // VCP_Send((uint8_t *)&Footer, sizeof(Footer));
+    memcpy(VCP_ReplyBuf + sizeof(Header_t) + Size, &Footer, sizeof(Footer));
 
     VCP_SendAsync(VCP_ReplyBuf, sizeof(Header_t) + Size + sizeof(Footer_t));
 }
@@ -986,7 +988,10 @@ void UART_HandleCommand(uint32_t Port)
             uint8_t status;
             if (ts != mb_port_timestamp(Port))
                 status = MB_ERR_AUTH;
-            else if (len > pUART_Command->Header.Size - 12u)
+            /* Header.Size is host data, not the received length: bound len by
+             * the command buffer too, or the copy runs past RAM. */
+            else if (len > pUART_Command->Header.Size - 12u ||
+                     len > sizeof(pUART_Command->Data) - 12u)
                 status = MB_ERR_SIZE;
             else
                 status = MB_SlotWrite(slot, offset, &pUART_Command->Data[12], len);
@@ -1111,7 +1116,10 @@ void UART_HandleCommand(uint32_t Port)
             uint8_t status;
             if (ts != mb_port_timestamp(Port))
                 status = APP_ERR_AUTH;
-            else if (len > pUART_Command->Header.Size - 12u)
+            /* Header.Size is host data, not the received length: bound len by
+             * the command buffer too, or the copy runs past RAM. */
+            else if (len > pUART_Command->Header.Size - 12u ||
+                     len > sizeof(pUART_Command->Data) - 12u)
                 status = APP_ERR_SIZE;
             else
                 status = APP_SlotWrite(slot, offset, &pUART_Command->Data[12], len);
