@@ -313,12 +313,17 @@ void MSG_STORE_AddInboxMessage(const char *text, const char *from, const char *t
 
 void MSG_STORE_AddOutboxMessage(const char *text, const char *from, const char *to, uint16_t id, uint8_t ttl_init, uint8_t ttl_remain)
 {
+    /* text may point into the outbox itself (RESEND of a Sent message):
+     * copy it before the entries are shifted and slot 0 is cleared. */
+    char copy[MSG_TEXT_LEN + 1];
+    strncpy(copy, text ? text : "TEST", MSG_TEXT_LEN);
+    copy[MSG_TEXT_LEN] = 0;
     for (int i = MSG_OUTBOX_CAPACITY - 1; i > 0; --i) gMessengerOutbox[i] = gMessengerOutbox[i - 1];
     memset(&gMessengerOutbox[0], 0, sizeof(gMessengerOutbox[0]));
     gMessengerOutbox[0].used = true;
     gMessengerOutbox[0].id = id;
     strncpy(gMessengerOutbox[0].to, to && to[0] ? to : "ALL", MSG_CALLSIGN_LEN);
-    strncpy(gMessengerOutbox[0].text, text ? text : "TEST", MSG_TEXT_LEN);
+    strncpy(gMessengerOutbox[0].text, copy, MSG_TEXT_LEN);
     gMessengerOutbox[0].status = MSG_STATUS_PENDING;
     (void)from;
     (void)ttl_init;
