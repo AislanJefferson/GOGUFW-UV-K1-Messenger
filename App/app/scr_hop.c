@@ -187,9 +187,11 @@ void SCR_HOP_TxBurst(uint16_t idx)
     if (wide)
         BK4819_SetFilterBandwidth(BK4819_FILTER_BW_WIDE, false);
 
-    if (idx)
+    if (idx) {
+        /* A late tick runs the resync before the slot switch: catch up. */
+        gScrHop.slot = (uint16_t)(elapsed() / HOP_SLOT_MS);
         SCR_HOP_Apply(true);
-    else
+    } else
         start(seed, t_start + HOP_ANCHOR_MS, HOP_POS_MS, false);
     BK4819_ExitTxMute();
 }
