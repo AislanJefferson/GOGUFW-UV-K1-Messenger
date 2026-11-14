@@ -5,10 +5,17 @@ first. The GOGUFW history (upstream, by Gogu-Qs) is kept unchanged below them.
 
 ## Unreleased
 
-Image 120,196 / 120,832 bytes (636 bytes free); RAM 15,608 / 16,384 bytes at
+Image 120,212 / 120,832 bytes (620 bytes free); RAM 15,608 / 16,384 bytes at
 link time.
 
 ### Fixed
+
+- HOP: a channel with a fixed scrambler (2600–3500 Hz) could receive without
+  descrambling. When a HOP reception ended (2 s hang) after a channel change
+  or a Dual Watch switch to that channel, the end of the HOP session turned
+  the scrambler off (REG_31<1>) over the fixed one, and the first reception
+  on it came out inverted. The end of a HOP RX session now reapplies the
+  scrambler of the channel being received (+16 B).
 
 - Spectrum (F+5) in MR mode with the scan priority on (`ScPri`, `+`) left the
   2 priority channels out of a `01`–`24` list. A list made of them swept
@@ -35,6 +42,23 @@ link time.
   length modifiers and the `%i`, `%x`, `%b` and `%p` conversions, which no
   format in the firmware uses (-408 bytes). The Spectrum, BK4829 register
   access and SysTick code and the multiboot RAM stub are byte-identical.
+
+### Known issues and proposals
+
+From a review of HOP against the BK4829 register table (register use
+matches it). None of these is changed without a radio A/B test:
+
+- HOP RX guard: zeroing REG_48<9:4> (AF Rx Gain2) is about 30 dB of
+  attenuation, not a mute (the table's range is -28 to +3.5 dB). The
+  Messenger FSK audio mute uses the same method. A full mute would also need
+  REG_48<3:0> = 0 or REG_47<11:8> = 0, if the slot-boundary click is audible.
+- HOP slot clock: the ±8 ms guard over the 8 s resync needs about 0.1 %
+  relative clock accuracy between radios. The MCU clock is set by the
+  bootloader and its source is not known here; listen for more garbling
+  just before each resync.
+- HOP with `BatSav`: a sleeping receiver (1:4 = ~400 ms off per 500 ms) can
+  miss the ~200 ms seed burst and hear scrambled audio until the 8 s resync.
+  Not measured yet.
 
 ## KLEANFW 0.1.0 — 2026-11-10
 

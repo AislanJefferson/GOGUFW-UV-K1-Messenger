@@ -199,10 +199,14 @@ static void guard_mute(bool mute)
 
 void SCR_HOP_Stop(void)
 {
-    if (gScrHop.active && gScrHop.rx)
-        BK4819_DisableScramble();
+    const bool rx_session = gScrHop.active && gScrHop.rx;
+
     gScrHop.active  = 0;
     gScrHop.rx_wait = 0;
+    /* The RX VFO may already be a fixed-scrambler channel (channel change or
+     * DW within the hang): restore its state instead of forcing REG_31<1> off. */
+    if (rx_session)
+        RADIO_ApplyScramble(gRxVfo, false);
 }
 
 bool SCR_HOP_VfoUsesHop(const VFO_Info_t *vfo)
