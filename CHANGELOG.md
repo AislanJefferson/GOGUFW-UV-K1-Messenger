@@ -5,7 +5,7 @@ first. The GOGUFW history (upstream, by Gogu-Qs) is kept unchanged below them.
 
 ## Unreleased
 
-Image 120,452 / 120,832 bytes (380 bytes free); RAM 15,608 / 16,384 bytes at
+Image 120,452 / 120,832 bytes (380 bytes free); RAM 15,616 / 16,384 bytes at
 link time.
 
 ### Fixed
