@@ -190,7 +190,7 @@ cmake --build --preset Fusion
 ```
 
 The image must stay within **120,832 bytes**, including the 920-byte
-multiboot loader. Release 0.2.0 uses 120,464 bytes, leaving 368 bytes free, so
+multiboot loader. Release 0.2.0 uses 120,712 bytes, leaving 120 bytes free, so
 every change is measured. Setup guides:
 [BUILD_WITH_VSCODE.md](BUILD_WITH_VSCODE.md) (Docker) and
 [BUILD_VSCODE_MAC.md](BUILD_VSCODE_MAC.md) (native, macOS).

@@ -3,130 +3,17 @@
 KLEANFW is a modified version of GOGUFW by Gogu-Qs. The KLEANFW releases come
 first. The GOGUFW history (upstream, by Gogu-Qs) is kept unchanged below them.
 
-## Unreleased
-
-Review of the whole v0.2.0 firmware against the BK4829 register table
-(driver, radio setup, the register writes of firmware and apps) and of the
-code that parses external input (USB/serial, Messenger RF), storage and menu
-logic. Image 120,712 / 120,832 bytes (120 bytes free); RAM 15,608 / 16,384
-bytes at link time. None of these changes
-has been tested on a radio yet; the checks are listed at the end.
-
-### Fixed
-
-- USB: when a USB packet ended exactly at the end of the 256-byte receive
-  ring, the reader never saw the ring as empty: every main-loop pass rescanned
-  it (~65,000 steps, about 0.1 s). CHIRP hits this after its 12th read and
-  every 64 reads after. A 256-byte frame starting at the ring start was also
-  executed again on every pass. The search guards of the parser never fired
-  ("while (n--)" leaves n at 0xFFFF). Checked with a host harness running the
-  extracted ISR and parser code (+28 B).
-- USB: a 0x051B read with an odd size put the reply footer at an odd
-  address, and its 16-bit store hung the radio (HardFault). Inherited from
-  upstream.
-- USB/serial: the multiboot and app slot-write commands (0x0724/0x0734)
-  bounded the chunk length only by a size field sent by the host. A large
-  value made them copy past the end of RAM (HardFault) or copy RAM contents
-  to external flash. The length is now also bounded by the command buffer
-  (valid frames carry at most 232 bytes, so working hosts are not affected)
-  (+12 B with the previous item).
-- F1Shrt/F1Long/F2Shrt/F2Long/M Long menus: a key action that this build does
-  not have (ALARM, 1750Hz, BLMIN, BACKLIGHT, POWER HIGH, REMOVE OFFSET or BEAM,
-  all offered by CHIRP) made the menu read its label through a garbage
-  pointer, which could hang the radio. It now shows NONE.
-- A NOAA channel number stored as the current channel (from a NOAA-enabled
-  firmware or an external tool) was accepted although NOAA is not built in.
-  It led to a NULL dereference and reads past the band tables. Only memory
-  and VFO channels are accepted now.
-- Messenger: RESEND of a Sent message that failed without a TX block (FSK
-  still busy) stored an empty text, or the text of the next message (+12 B).
-- Messenger: ACK and PONG frames were accepted whoever they were addressed
-  to, and every radio numbers its messages from 1. An ACK from station C to
-  station B could mark our own message with the same number as delivered,
-  cancelling its retry. ACK and PONG frames are now accepted only when they
-  are addressed to our callsign (+44 B). The legacy text ACK (`ACK:hhhh`)
-  has no addressee and is still accepted as before.
-- Menu keypad entry ignored each menu's minimum: `ScList` accepted 0 (its
-  label then read out of range) and `SetCtr` accepted contrast 0. `BatCal`
-  (1500–3500) could not be typed at all, because the entry stopped at 3
-  digits; it now takes 4.
-- `SetCtr`: the preview changed the real setting, so EXIT kept the cancelled
-  contrast and the next settings save wrote it. `SetInv` now previews the
-  inversion too (+52 B with the previous item).
-- Spectrum (F+5) in scan-range mode: the number of steps was cut to 16 bits.
-  144–146 MHz at a 0.01 kHz step swept about 34 kHz under an axis showing
-  the whole range. Entering scan-range mode and changing the step now move up
-  to the first step that fits. Key 7 stops at that step instead of wrapping
-  to the smallest one (+76 B).
-- TX compander followed the RX VFO's setting. With cross-band on and Dual
-  Watch off, that is the other channel. It now follows the TX VFO.
-  Inherited from upstream.
-- 108–137 MHz (airband): the check that clears the TX offset direction could
-  never be true; a 2023 refactor of the original 108–136 MHz test introduced
-  the error. A stored airband channel with an offset now loads with the
-  offset off. Inherited from upstream.
-- PriCh1/PriCh2: browsing jumped to "None" by mistake after visiting the
-  other PriCh menu or a high channel (-12 B for the last three items).
-- Smaller fixes (+36 B):
-  - The Messenger channel lock could trigger a spurious dual-watch swap (and
-    lose an FSK capture) if a timer tick fell between two stores.
-  - The VFO-save timer flags shared with the timer interrupt were not
-    `volatile`.
-  - The DCS menu's "approved" badge was always `/--` for inverted codes.
-  - The scan-range tone display kept the wrong tone type when a DCS and a
-    CTCSS code had the same index.
-  - HOP TX: a resync sent after a late tick applied the previous slot's
-    carrier for up to 10 ms.
-- BK4829 driver comments now match the register table (REG_4E delays,
-  REG_7A VOX delay 256 ms, MDC length 14 bytes, LNA-short gains); no code
-  change.
-
-### Known issues (need A/B tests on a radio, not changed)
-
-- REG_7D: radio setup writes 0xE940 | mic gain. Bit 6 is "ALC disable" in the
-  BK4829 table, while the init value 0xE920 leaves ALC on. Turning ALC on
-  would change the TX audio level.
-- TX power: in the lower half of each calibration band,
-  `FREQUENCY_CalculateOutputPower` interpolates from the mid value instead of
-  the low one (since the first reverse-engineered code). Fixing it changes
-  the output power and needs measuring.
-- The RX DAC gain (REG_48<3:0>) is forced to 15 on every reception
-  (`RADIO_SetModulation`), so the `DAC_GAIN` calibration value is ignored.
-  Inherited from F4HWN.
-- Messenger:
-  - A new message sent while one is still waiting for its ACK abandons the
-    first one, which stays PENDING.
-  - On a channel that stays busy, the ACK wait has no absolute deadline.
-  - A send failure without a TX block adds a PENDING outbox entry that was
-    never sent.
-- Multiboot: the slot marker is written before a restore, on purpose. If the
-  restore is then refused by its final validation (a transient SPI/CRC
-  error), the next boot adopts the running firmware as Main and overwrites
-  the slot 0 backup. Restoring the old marker would add a flash write in
-  boot-critical code for a trigger that has not been seen.
-
-### To check on a radio
-
-1. CHIRP download and upload over USB: complete, with no pauses at the 12th
-   block and every 64 blocks after.
-2. Messenger with three radios: an ACK from C to B does not mark A's message
-   with the same number as delivered.
-3. Keypad entry: `0` in `ScList` is ignored, `2000` in `BatCal` is accepted,
-   and EXIT from `SetCtr` restores the contrast. Leaving the menu during the
-   preview by PTT or an incoming call: check that the contrast returns to
-   the saved value.
-4. Spectrum in scan-range mode over 2 MHz with step 0.01 kHz: the step moves
-   up and the sweep covers the whole range.
-
 ## KLEANFW 0.2.0 — 2026-11-14
 
 Firmware identity `KLEANFW v0.2.0` (the USB host identity stays
 `v7 GGFW v6.3.0`), multiboot image `f4hwn.kleanfw.v0.2.0.bin`, CHIRP module
 `KLEANFW_0.2.0_chirp_module.py` (same EEPROM layout as 0.1.0). Image
-120,464 / 120,832 bytes (368 bytes free); RAM 15,616 / 16,384 bytes at link
+120,712 / 120,832 bytes (120 bytes free); RAM 15,608 / 16,384 bytes at link
 time. Before the release the whole firmware was reviewed against the BK4829
 register table: the driver, the 166 register writes outside it (apps
-included), the flash write paths and the serial command parser. None of the
+included), the flash write paths and the serial command parser. The release
+files were replaced the same day with a build including the fixes of a full
+code review (see "Fixed by the full code review" below). None of the
 changes below has been tested on a radio yet; see the release notes for the
 checks.
 
@@ -226,6 +113,117 @@ it). None of these is changed without a radio A/B test:
 - `BK4819_GetAfTxRx()` masks REG_6F with 0x3F while the table defines
   <7:0> (AF Tx/Rx input amplitude in dB); only the scale of the audio bar is
   affected.
+
+### Fixed by the full code review
+
+A second pass over the whole firmware (driver and radio setup against the
+BK4829 register table, the code that parses USB/serial and Messenger RF
+input, storage and menu logic) before the release files were replaced;
+not tested on a radio either.
+
+- USB: when a USB packet ended exactly at the end of the 256-byte receive
+  ring, the reader never saw the ring as empty: every main-loop pass rescanned
+  it (~65,000 steps, about 0.1 s). CHIRP hits this after its 12th read and
+  every 64 reads after. A 256-byte frame starting at the ring start was also
+  executed again on every pass. The search guards of the parser never fired
+  ("while (n--)" leaves n at 0xFFFF). Checked with a host harness running the
+  extracted ISR and parser code (+28 B).
+- USB: a 0x051B read with an odd size put the reply footer at an odd
+  address, and its 16-bit store hung the radio (HardFault). Inherited from
+  upstream.
+- USB/serial: the multiboot and app slot-write commands (0x0724/0x0734)
+  bounded the chunk length only by a size field sent by the host. A large
+  value made them copy past the end of RAM (HardFault) or copy RAM contents
+  to external flash. The length is now also bounded by the command buffer
+  (valid frames carry at most 232 bytes, so working hosts are not affected)
+  (+12 B with the previous item).
+- F1Shrt/F1Long/F2Shrt/F2Long/M Long menus: a key action that this build does
+  not have (ALARM, 1750Hz, BLMIN, BACKLIGHT, POWER HIGH, REMOVE OFFSET or BEAM,
+  all offered by CHIRP) made the menu read its label through a garbage
+  pointer, which could hang the radio. It now shows NONE.
+- A NOAA channel number stored as the current channel (from a NOAA-enabled
+  firmware or an external tool) was accepted although NOAA is not built in.
+  It led to a NULL dereference and reads past the band tables. Only memory
+  and VFO channels are accepted now.
+- Messenger: RESEND of a Sent message that failed without a TX block (FSK
+  still busy) stored an empty text, or the text of the next message (+12 B).
+- Messenger: ACK and PONG frames were accepted whoever they were addressed
+  to, and every radio numbers its messages from 1. An ACK from station C to
+  station B could mark our own message with the same number as delivered,
+  cancelling its retry. ACK and PONG frames are now accepted only when they
+  are addressed to our callsign (+44 B). The legacy text ACK (`ACK:hhhh`)
+  has no addressee and is still accepted as before.
+- Menu keypad entry ignored each menu's minimum: `ScList` accepted 0 (its
+  label then read out of range) and `SetCtr` accepted contrast 0. `BatCal`
+  (1500–3500) could not be typed at all, because the entry stopped at 3
+  digits; it now takes 4.
+- `SetCtr`: the preview changed the real setting, so EXIT kept the cancelled
+  contrast and the next settings save wrote it. `SetInv` now previews the
+  inversion too (+52 B with the previous item).
+- Spectrum (F+5) in scan-range mode: the number of steps was cut to 16 bits.
+  144–146 MHz at a 0.01 kHz step swept about 34 kHz under an axis showing
+  the whole range. Entering scan-range mode and changing the step now move up
+  to the first step that fits. Key 7 stops at that step instead of wrapping
+  to the smallest one (+76 B).
+- TX compander followed the RX VFO's setting. With cross-band on and Dual
+  Watch off, that is the other channel. It now follows the TX VFO.
+  Inherited from upstream.
+- 108–137 MHz (airband): the check that clears the TX offset direction could
+  never be true; a 2023 refactor of the original 108–136 MHz test introduced
+  the error. A stored airband channel with an offset now loads with the
+  offset off. Inherited from upstream.
+- PriCh1/PriCh2: browsing jumped to "None" by mistake after visiting the
+  other PriCh menu or a high channel (-12 B for the last three items).
+- Smaller fixes (+36 B):
+  - The Messenger channel lock could trigger a spurious dual-watch swap (and
+    lose an FSK capture) if a timer tick fell between two stores.
+  - The VFO-save timer flags shared with the timer interrupt were not
+    `volatile`.
+  - The DCS menu's "approved" badge was always `/--` for inverted codes.
+  - The scan-range tone display kept the wrong tone type when a DCS and a
+    CTCSS code had the same index.
+  - HOP TX: a resync sent after a late tick applied the previous slot's
+    carrier for up to 10 ms.
+- BK4829 driver comments now match the register table (REG_4E delays,
+  REG_7A VOX delay 256 ms, MDC length 14 bytes, LNA-short gains); no code
+  change.
+
+### More known issues from the code review (need A/B tests, not changed)
+
+- REG_7D: radio setup writes 0xE940 | mic gain. Bit 6 is "ALC disable" in the
+  BK4829 table, while the init value 0xE920 leaves ALC on. Turning ALC on
+  would change the TX audio level.
+- TX power: in the lower half of each calibration band,
+  `FREQUENCY_CalculateOutputPower` interpolates from the mid value instead of
+  the low one (since the first reverse-engineered code). Fixing it changes
+  the output power and needs measuring.
+- The RX DAC gain (REG_48<3:0>) is forced to 15 on every reception
+  (`RADIO_SetModulation`), so the `DAC_GAIN` calibration value is ignored.
+  Inherited from F4HWN.
+- Messenger:
+  - A new message sent while one is still waiting for its ACK abandons the
+    first one, which stays PENDING.
+  - On a channel that stays busy, the ACK wait has no absolute deadline.
+  - A send failure without a TX block adds a PENDING outbox entry that was
+    never sent.
+- Multiboot: the slot marker is written before a restore, on purpose. If the
+  restore is then refused by its final validation (a transient SPI/CRC
+  error), the next boot adopts the running firmware as Main and overwrites
+  the slot 0 backup. Restoring the old marker would add a flash write in
+  boot-critical code for a trigger that has not been seen.
+
+### More checks on a radio
+
+1. CHIRP download and upload over USB: complete, with no pauses at the 12th
+   block and every 64 blocks after.
+2. Messenger with three radios: an ACK from C to B does not mark A's message
+   with the same number as delivered.
+3. Keypad entry: `0` in `ScList` is ignored, `2000` in `BatCal` is accepted,
+   and EXIT from `SetCtr` restores the contrast. Leaving the menu during the
+   preview by PTT or an incoming call: check that the contrast returns to
+   the saved value.
+4. Spectrum in scan-range mode over 2 MHz with step 0.01 kHz: the step moves
+   up and the sweep covers the whole range.
 
 ## KLEANFW 0.1.0 — 2026-11-10
 
