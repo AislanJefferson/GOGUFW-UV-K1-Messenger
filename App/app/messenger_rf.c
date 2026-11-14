@@ -1841,6 +1841,7 @@ void MSG_RF_OnRadioInterrupt(uint16_t status)
             if (SCR_HOP_VfoUsesHop(gRxVfo)) {
                 gScrHop.rx_wait = 1;
                 gScrHop.stamp   = SCHEDULER_GetMs();
+                gScrHop.stamp_ok = 0;   // late if FIFO is already in this status
             } else
 #endif
             MSG_RF_FskSyncHoldStart(gEeprom.RX_VFO);
@@ -1863,7 +1864,8 @@ void MSG_RF_OnRadioInterrupt(uint16_t status)
 #ifdef ENABLE_GOGUFW_CRYPTO
         if (gScrHop.rx_wait) {
             gScrHop.rx_wait = 0;
-            if (s_rx_words == 4u && SCR_HOP_RxStart(g_FSK_Buffer, gScrHop.stamp)) {
+            if (s_rx_words == 4u && SCR_HOP_RxStart(g_FSK_Buffer, gScrHop.stamp,
+                                                     gScrHop.stamp_ok)) {
                 /* Seed burst: drop the capture and give the audio back. */
                 s_rx_capture_active = false;
                 s_rx_stale_ticks = 0;
@@ -1902,7 +1904,8 @@ void MSG_RF_OnRadioInterrupt(uint16_t status)
                 return;
             }
         }
-        gScrHop.stamp = SCHEDULER_GetMs();
+        gScrHop.stamp    = SCHEDULER_GetMs();
+        gScrHop.stamp_ok = 1;
     }
 #endif
 #else
