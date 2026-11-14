@@ -228,10 +228,17 @@ uint16_t Data16[8];
 
 PY25Q16_ReadBuffer(0x00A010, Data16, sizeof(Data16));
 
-gEeprom.ScreenChannel[0] = IS_VALID_CHANNEL(Data16[0]) ? Data16[0] : (FREQ_CHANNEL_FIRST + BAND6_400MHz);
+/* Without NOAA, channels 1031..1040 have no attributes (NULL) and no band:
+ * accept only memory and VFO channels. */
+#ifdef ENABLE_NOAA
+    #define IS_SCREEN_CHANNEL(x) IS_VALID_CHANNEL(x)
+#else
+    #define IS_SCREEN_CHANNEL(x) (IS_MR_CHANNEL(x) || IS_FREQ_CHANNEL(x))
+#endif
+gEeprom.ScreenChannel[0] = IS_SCREEN_CHANNEL(Data16[0]) ? Data16[0] : (FREQ_CHANNEL_FIRST + BAND6_400MHz);
 gEeprom.MrChannel[0]     = IS_MR_CHANNEL(Data16[1]) ? Data16[1] : MR_CHANNEL_FIRST;
 gEeprom.FreqChannel[0]   = IS_FREQ_CHANNEL(Data16[2]) ? Data16[2] : (FREQ_CHANNEL_FIRST + BAND6_400MHz);
-gEeprom.ScreenChannel[1] = IS_VALID_CHANNEL(Data16[3]) ? Data16[3] : (FREQ_CHANNEL_FIRST + BAND6_400MHz);
+gEeprom.ScreenChannel[1] = IS_SCREEN_CHANNEL(Data16[3]) ? Data16[3] : (FREQ_CHANNEL_FIRST + BAND6_400MHz);
 gEeprom.MrChannel[1]     = IS_MR_CHANNEL(Data16[4]) ? Data16[4] : MR_CHANNEL_FIRST;
 gEeprom.FreqChannel[1]   = IS_FREQ_CHANNEL(Data16[5]) ? Data16[5] : (FREQ_CHANNEL_FIRST + BAND6_400MHz);
 
