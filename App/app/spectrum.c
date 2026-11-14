@@ -1459,6 +1459,19 @@ static void UpdateRssiTriggerLevel(bool inc)
 }
 
 
+#ifdef ENABLE_SCAN_RANGES
+/* The sweep counts steps in 16 bits: a scan range with a step that needs
+ * 65536 points or more was truncated (144-146 MHz at 0.01 kHz swept 34 kHz
+ * under a 2 MHz axis). Move up to the first step that fits; the largest
+ * (100 kHz) always does. */
+static void __attribute__((noinline)) FitRangeStep(void)
+{
+    while (gScanRangeStart &&
+           (gScanRangeStop - gScanRangeStart) / GetScanStep() >= 0xFFFFu)
+        settings.scanStepIndex++;
+}
+#endif
+
 static void UpdateScanStep(bool inc)
 {
     if (inc)
@@ -1469,6 +1482,9 @@ static void UpdateScanStep(bool inc)
     {
         settings.scanStepIndex = settings.scanStepIndex != 0 ? settings.scanStepIndex - 1 : S_STEP_100_0kHz;
     }
+#ifdef ENABLE_SCAN_RANGES
+    FitRangeStep();
+#endif
 
     settings.frequencyChangeStep = GetBW() >> 1;
     /* Scan steps below 15 kHz use a much narrower BK4819 filter than the
@@ -3300,6 +3316,7 @@ void APP_RunSpectrum()
     else if (gScanRangeStart)
     {
         currentFreq = initialFreq = gScanRangeStart;
+        FitRangeStep();
         // Keep saved spectrum step/count in scan-range mode.
         // Previously this branch forced scanStepIndex from VFO step and
         // stepsCount to STEPS_128 on every entry, which made the user think
