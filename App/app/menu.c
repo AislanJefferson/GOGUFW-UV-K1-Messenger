@@ -1627,7 +1627,7 @@ static void MENU_Key_0_to_9(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
         return;
     }
 
-    Offset = (Max >= 100) ? 3 : (Max >= 10) ? 2 : 1;
+    Offset = (Max >= 1000) ? 4 : (Max >= 100) ? 3 : (Max >= 10) ? 2 : 1;
 
     /*
     switch (gInputBoxIndex)
@@ -1651,10 +1651,18 @@ static void MENU_Key_0_to_9(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
     if (Offset == gInputBoxIndex)
         gInputBoxIndex = 0;
 
+    /* Below Min the value would index the menu's tables out of range
+     * (ScList 0 -> gListName[-1]): a partial entry just waits for more
+     * digits, a complete one is refused like a value above Max. */
     if (Value <= Max)
     {
-        gSubMenuSelection = Value;
-        return;
+        if (Value >= Min)
+        {
+            gSubMenuSelection = Value;
+            return;
+        }
+        if (gInputBoxIndex != 0)
+            return;
     }
 
     gBeepToPlay = BEEP_500HZ_60MS_DOUBLE_BEEP_OPTIONAL;
