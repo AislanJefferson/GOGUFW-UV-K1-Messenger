@@ -12,6 +12,8 @@
  *     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *     See the License for the specific language governing permissions and
  *     limitations under the License.
+ *
+ * Modified by AislanJefferson for KLEANFW, 2026 (see git history).
  */
 
 #ifndef MISC_H
@@ -487,8 +489,8 @@ extern volatile uint8_t      boot_counter_10ms;
     extern uint8_t               gPttOnePushCounter;
     extern uint32_t              gBlinkCounter;
 
-    extern uint16_t gVfoSaveCountdown_10ms;
-    extern bool gScheduleVfoSave;
+    extern volatile uint16_t gVfoSaveCountdown_10ms;
+    extern volatile bool gScheduleVfoSave;
     extern bool gVfoStateChanged;
 
     extern char gListName[MR_CHANNELS_LIST][4];

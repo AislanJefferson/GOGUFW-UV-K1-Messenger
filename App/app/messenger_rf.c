@@ -427,8 +427,10 @@ static void MSG_RF_RxChannelLockStartTarget(uint8_t vfo, uint16_t ticks,
         gCurrentVfo = target;
         RADIO_SetupRegisters(false);
     }
-    gScheduleDualWatch = false;
+    /* Countdown first: a SysTick between the two stores with the old count
+     * at 1 would set gScheduleDualWatch again (spurious VFO swap). */
     gDualWatchCountdown_10ms = ticks ? ticks : 1u;
+    gScheduleDualWatch = false;
     gDualWatchActive = false;
     gUpdateStatus = true;
 }
@@ -458,11 +460,12 @@ static void MSG_RF_RxChannelLockStop(void)
         RADIO_SetupRegisters(false);
     }
     gDualWatchActive = s_rx_channel_lock_old_dw_active;
-    gScheduleDualWatch = false;
     /* A scheduler ISR may have observed the old zero/expired countdown while
      * the lock was being released.  Start a fresh normal dwell explicitly so
-     * Full Watch cannot immediately race into another swap. */
+     * Full Watch cannot immediately race into another swap; the countdown is
+     * stored before the flag is cleared, or a tick in between re-arms it. */
     gDualWatchCountdown_10ms = dual_watch_count_toggle_10ms;
+    gScheduleDualWatch = false;
     gUpdateStatus = true;
 }
 
@@ -507,8 +510,8 @@ static void MSG_RF_RxChannelLockTick(void)
         gCurrentVfo = lock_target;
         RADIO_SetupRegisters(false);
     }
-    gScheduleDualWatch = false;
     gDualWatchCountdown_10ms = s_rx_channel_lock_ticks ? s_rx_channel_lock_ticks : 1u;
+    gScheduleDualWatch = false;   // after the countdown, as above
     gDualWatchActive = false;
     if (s_rx_channel_lock_ticks > 0u) --s_rx_channel_lock_ticks;
     if (s_rx_channel_lock_ticks == 0u) MSG_RF_RxChannelLockStop();

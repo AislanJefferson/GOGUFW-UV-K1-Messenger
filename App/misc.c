@@ -12,6 +12,8 @@
  *     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *     See the License for the specific language governing permissions and
  *     limitations under the License.
+ *
+ * Modified by AislanJefferson for KLEANFW, 2026 (see git history).
  */
 
 #include <string.h>
@@ -366,8 +368,8 @@ uint8_t           gIsLocked = 0xFF;
     uint8_t       gPttOnePushCounter = 0;
     uint32_t      gBlinkCounter = 0;
 
-    uint16_t gVfoSaveCountdown_10ms = 0;
-    bool gScheduleVfoSave = false;
+    volatile uint16_t gVfoSaveCountdown_10ms = 0;   // SysTick_Handler
+    volatile bool gScheduleVfoSave = false;
     bool gVfoStateChanged = false;
     char    gListName[MR_CHANNELS_LIST][4];
 #endif
