@@ -3330,6 +3330,10 @@ void APP_RunSpectrum()
     PY25Q16_Flush();
 
     BackupRegisters();
+    /* Listen in clear: the entry channel's voice scrambler would invert every
+     * FM signal found. On exit VFO_CONFIGURE -> RADIO_SetupRegisters()
+     * reapplies the channel's scrambler. */
+    BK4819_DisableScramble();
 
     isListening = true; // to turn off RX later
     newScanStart = true;
