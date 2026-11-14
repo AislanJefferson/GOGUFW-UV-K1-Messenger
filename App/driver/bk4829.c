@@ -420,7 +420,7 @@ int8_t BK4819_GetRxGain_dB(void)
     reg7e.__raw = BK4819_ReadRegister(BK4819_REG_7E);
     uint8_t gainAddr = reg7e.gainIdx < 0 ? BK4819_REG_14 : BK4819_REG_10 + reg7e.gainIdx;
     agcGainReg.__raw = BK4819_ReadRegister(gainAddr);
-    int8_t lnaShortTab[] = {-28, -24, -19, 0};
+    int8_t lnaShortTab[] = {-19, -16, -11, 0};   // BK4829 table: 00/01/10/11
     int8_t lnaTab[] = {-24, -19, -14, -9, -6, -4, -2, 0};
     int8_t mixerTab[] = {-8, -6, -3, 0};
     int8_t pgaTab[] = {-33, -27, -21, -15, -9, -6, -3, 0};
@@ -629,7 +629,7 @@ void BK4819_EnableVox(uint16_t VoxEnableThreshold, uint16_t VoxDisableThreshold)
     BK4819_WriteRegister(BK4819_REG_79, 0x1800 | (VoxDisableThreshold & 0x07FF));
 
     // Bottom 12 bits are undocumented, 15:12 vox disable delay *128ms
-    BK4819_WriteRegister(BK4819_REG_7A, 0x289A); // vox disable delay = 128*5 = 640ms
+    BK4819_WriteRegister(BK4819_REG_7A, 0x289A); // <15:12> = 2: vox disable delay = 2*128 = 256 ms
 
     // Enable VOX
     BK4819_WriteRegister(BK4819_REG_31, REG_31_Value | (1u << 2));    // VOX Enable
@@ -793,21 +793,16 @@ void BK4819_SetupSquelch(
     //
     BK4819_WriteRegister(BK4819_REG_4D, 0xA000 | SquelchCloseGlitchThresh);
 
-    // REG_4E
+    // REG_4E (BK4829 table; the BK4819 field split below gives the same word)
     //
-    // <15:14> 1 ???
+    // <15:12> 6  Squelch = 1 (open)  Delay Setting  (table default 0b0110)
     //
-    // <13:11> 5 Squelch = open  Delay Setting
-    //         0 ~ 7
-    //
-    // <10:9>  3 Squelch = close Delay Setting
-    //         0 ~ 3
-    //
-    // <8>     1 ???
+    // <11:8>  15 Squelch = 0 (close) Delay Setting  (table default 0b1111)
     //
     // <7:0>   8 Glitch threshold for Squelch = open
     //         0 ~ 255
     //
+    // The fields below add up to 0x6F00: open delay 6, close delay 15.
     BK4819_WriteRegister(BK4819_REG_4E,
     (1u << 14) |                  // 1 ???
     (5u << 11) |                  // 5 squelch = open  delay .. 0 ~ 7
@@ -1905,7 +1900,7 @@ void BK4819_PlayRogerMDC(void)
                                         // TX FFSK 1200/1800
         { BK4819_REG_72, 0x3065 },  // Set Tone-2 to 1200Hz
         { BK4819_REG_70, 0x00C3 },  // Enable Tone-2 and Set Tone2 Gain
-        { BK4819_REG_5D, 0x0D00 },  // Set FSK data length to 13 bytes
+        { BK4819_REG_5D, 0x0D00 },  // FSK data length 0x0D + 1 = 14 bytes (7 words)
         { BK4819_REG_59, 0x8068 },  // 4 byte sync length, 6 byte preamble, clear TX FIFO
         { BK4819_REG_59, 0x0068 },  // Same, but clear TX FIFO is now unset (clearing done)
         { BK4819_REG_5A, 0x5555 },  // First two sync bytes
