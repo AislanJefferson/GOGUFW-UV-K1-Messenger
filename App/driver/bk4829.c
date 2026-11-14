@@ -135,9 +135,9 @@ void BK4819_Init(void)
     //         2 = -12dB
     //         3 = -18dB
     //
-    // <9:4>   60 AF Rx Gain-2  -26dB ~ 5.5dB   0.5dB/step
+    // <9:4>   60 AF Rx Gain-2  -28dB ~ 3.5dB   0.5dB/step (BK4829 table)
     //         63 = max
-    //          0 = mute
+    //          0 = min (-28 dB; there is no mute value)
     //
     // <3:0>   15 AF DAC Gain (after Gain-1 and Gain-2) approx 2dB/step
     //         15 = max
@@ -488,7 +488,9 @@ void BK4819_SetCDCSSCodeWord(uint32_t CodeWord)
     //       127 = max
 
     // Enable CDCSS
-    // Transmit positive CDCSS code
+    // REG_51<13> = 1: "transmit negative CDCSS code" in the BK4829 table.
+    // Kept on purpose: F4HWN's "Fix DCS" (8020 -> 0xA033) made BK4829 DCS
+    // interoperate, so the bit's effective polarity differs from the table.
     // CDCSS Mode
     // CDCSS 23bit
     // Enable Auto CDCSS Bw Mode
@@ -553,7 +555,7 @@ void BK4819_SetCTCSSFrequency(uint32_t FreqControlWord)
         // 1050/4 Detect Enable
         // Enable Auto CDCSS Bw Mode
         // Enable Auto CTCSS Bw Mode
-        // CTCSS/CDCSS Tx Gain1 Tuning = 74
+        // CTCSS/CDCSS Tx Gain1 Tuning = 64 (0x40)
         //
         Config = 0x9440;   // 1 0 0 1 0 1 0 0 0 1001010
     }
@@ -562,7 +564,7 @@ void BK4819_SetCTCSSFrequency(uint32_t FreqControlWord)
         // CTCSS Mode
         // Enable Auto CDCSS Bw Mode
         // Enable Auto CTCSS Bw Mode
-        // CTCSS/CDCSS Tx Gain1 Tuning = 74
+        // CTCSS/CDCSS Tx Gain1 Tuning = 64 (0x40)
         //
         Config = 0x9040;   // 1 0 0 1 0 0 0 0 0 1001010
     }
