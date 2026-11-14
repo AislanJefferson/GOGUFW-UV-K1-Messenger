@@ -78,11 +78,15 @@ static uint32_t tx_wide(void)
 }
 
 /* Slot clock in TX ms. RX scales the time since the anchor by the measured
- * TX/RX clock ratio (adj = 0: plain difference, as on TX). */
+ * TX/RX clock ratio (adj = 0: plain difference, as on TX). The correction
+ * stops growing after HOP_DRIFT_MAX_MS without a resync (a carrier can keep
+ * the session alive): no int32 overflow, and the clock stays monotonic. */
+#define HOP_DRIFT_MAX_MS  (1u << 19)   /* ~8.7 min */
 static uint32_t elapsed(void)
 {
     const int32_t d = (int32_t)(SCHEDULER_GetMs() - gScrHop.anchor);
-    return gScrHop.base + (uint32_t)(d + ((d * gScrHop.adj) >> 16));
+    const int32_t c = d < (int32_t)HOP_DRIFT_MAX_MS ? d : (int32_t)HOP_DRIFT_MAX_MS;
+    return gScrHop.base + (uint32_t)(d + ((c * gScrHop.adj) >> 16));
 }
 
 void SCR_HOP_Apply(bool tx)

@@ -637,7 +637,7 @@ Cada categoria começa com uma tabela de consulta rápida. Abaixo dela, cada ite
 - **Padrão**: 1:4.
 - **Quando mudar**: `OFF` ou `1:1` quando o início das transmissões não pode ser perdido (o receptor dormindo pode cortar a primeira sílaba). Valores altos servem para escuta longa.
 - **Atenção**: durante o sono do receptor aparece um ícone na barra de status.
-- **Atenção**: enquanto o receptor escuta um canal **HOP** (com `MsgRx` ON e `VOX` OFF; com Dual Watch, qualquer um dos dois VFOs), o BatSav fica suspenso, como em `OFF`, para não perder o burst de ~0,2 s do início do câmbio. Nos outros canais a economia funciona normalmente.
+- **Atenção**: enquanto o receptor escuta um canal **HOP** (com `MsgRx` ON e `VOX` OFF; com Dual Watch, qualquer um dos dois VFOs), o BatSav fica suspenso, como em `OFF`, para não perder o burst de ~0,2 s do início do câmbio, inclusive com a tela apagada pelo `SetOff`. Nos outros canais a economia funciona normalmente.
 
 #### `BatTxt`: texto da bateria
 
@@ -1810,7 +1810,7 @@ A memória Flash do rádio suporta um número limitado de apagamentos por setor.
 | Áudio picota e o LED verde apaga num sinal forte de repetidora | `STE` ON detectando em falso o fim de transmissão | Use `STE` OFF nesse canal (e `RP STE` para a cauda da repetidora) |
 | Tons/offset sumiram ao digitar uma frequência | Frequência digitada entra em simplex limpo | Configure tons e offset depois de digitar, ou use F+1 a partir de um canal |
 | HOP sai embaralhado | Receptor perdeu o burst, VOX ON ou MsgRx OFF | Confira os requisitos da seção 12.3 e espere o próximo resync (8 s) |
-| HOP: receptor fica mudo o câmbio todo | CryKey diferente, ou canal do receptor fora de HOP (Scramb ≠ HOP ou ScraEn OFF) com MsgRx ON: o burst é tratado como mensagem e o áudio fica mudo até o sinal acabar | Use a mesma CryKey e Scramb = HOP no canal de RX |
+| HOP sai mudo (ou embaralhado) o câmbio todo | CryKey diferente, ou canal do receptor fora de HOP (Scramb ≠ HOP ou ScraEn OFF) com MsgRx ON: o burst é tratado como mensagem e o áudio costuma ficar mudo até o sinal acabar (com CTCSS/DCS no receptor pode sair embaralhado) | Use a mesma CryKey e Scramb = HOP no canal de RX |
 | Início da fala cortado no HOP | Mic mudo durante o burst | Espere meio segundo após o PTT |
 | F+0 só dá bipe duplo | Faltam `FMVFO.app` / `FMMemory.app` | Instale os dois |
 | F+4 / F+\* só dão bipe duplo | Falta `Search.app` | Instale-o |

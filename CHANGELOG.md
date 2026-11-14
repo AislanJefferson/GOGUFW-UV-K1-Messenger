@@ -5,7 +5,7 @@ first. The GOGUFW history (upstream, by Gogu-Qs) is kept unchanged below them.
 
 ## Unreleased
 
-Image 120,440 / 120,832 bytes (392 bytes free); RAM 15,608 / 16,384 bytes at
+Image 120,452 / 120,832 bytes (380 bytes free); RAM 15,608 / 16,384 bytes at
 link time.
 
 ### Fixed
@@ -25,8 +25,9 @@ link time.
   15 kHz and up (25 kHz is the default) with 4 kHz instead of 7 kHz, so a
   signal off the step centre could be weak or missing in the graph. The
   full value from the step table is now used (steps under 5 kHz unchanged;
-  the noise floor on 25 kHz steps reads ~2 dB higher and AUTO recalibrates;
-  -4 B).
+  -4 B). The noise floor on 25 kHz steps reads ~2 dB higher: AUTO
+  recalibrates, but a manual trigger and the fixed MR trigger (-110 dBm) stay
+  where they were, ~2 dB closer to the noise.
 - Spectrum (F+5) listened through the voice scrambler of the channel it was
   opened from: with a fixed scrambler (or a live HOP session) every FM signal
   found came out inverted. Spectrum now listens in clear and the channel gets
@@ -47,12 +48,15 @@ link time.
   stamped in the REG_0C spin (~1 ms) are used. Under 12 ms of difference
   nothing changes, so radios without drift behave exactly as before. A host
   simulation gives at most 7–8 ms of slot error for 0.1–3 % of drift (before:
-  13–238 ms). RX only; TX and the over-the-air format are unchanged (+144 B).
+  13–238 ms). The correction stops growing after ~8.7 min without a resync
+  (a carrier can keep the session alive), so it cannot overflow. RX only; TX
+  and the over-the-air format are unchanged (+156 B).
 - HOP and battery save: while the RX (or either VFO with Dual Watch) listens
   to a HOP channel that can decode the seed burst (MsgRx ON, VOX OFF),
-  `BatSav` does not sleep, as with `BatSav` OFF. A sleeping receiver (1:4 is
-  ~400 ms off per 500 ms) could miss the ~0.2 s burst and stay scrambled
-  until the 8 s resync (+76 B).
+  `BatSav` does not sleep, as with `BatSav` OFF, also while `SetOff` has
+  turned the screen off. A sleeping receiver (1:4 is ~400 ms off per 500 ms)
+  could miss the ~0.2 s burst and stay scrambled until the 8 s resync
+  (+76 B).
 - Spectrum (F+5) in MR mode sweeps the scan list of the channel on screen
   (`ChList`) instead of the active memory scan list (`ScList`). `01`–`24`
   sweeps that list and `ALL` sweeps the channels that are in any list, both
